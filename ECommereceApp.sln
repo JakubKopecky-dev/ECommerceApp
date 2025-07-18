@@ -1,0 +1,61 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36301.6
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UserService", "UserService", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ProductService", "ProductService", "{4B0839D8-CD73-421B-986C-E5B501C63827}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CartService", "CartService", "{E6091EA0-774D-4521-86FD-941E8961F84F}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "OrderService", "OrderService", "{7EDC640E-B93C-4A5B-9F2F-54603478D0C4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DeliveryService", "DeliveryService", "{344ACC50-95DD-4D94-AAD3-FD9027AE1316}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "NotificationService", "NotificationService", "{2D58ADA0-B355-4A9E-8ECC-E2703C0C57BA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProductService.Api", "ProductService.Api\ProductService.Api.csproj", "{D07FD59C-63DB-44C8-B116-3DB13FD4CF6D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProductService.Application", "ProductService.Application\ProductService.Application.csproj", "{F10EC4A1-3515-4180-BF50-9324CFEF76F6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProductService.Domain", "ProductService.Domain\ProductService.Domain.csproj", "{4EDBF1FC-C13A-4F67-8E1C-07F904C7C80B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProductService.Persistence", "ProductService.Persistence\ProductService.Persistence.csproj", "{63E7DA1E-8DC6-488D-B93B-F47867BB5841}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D07FD59C-63DB-44C8-B116-3DB13FD4CF6D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D07FD59C-63DB-44C8-B116-3DB13FD4CF6D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D07FD59C-63DB-44C8-B116-3DB13FD4CF6D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D07FD59C-63DB-44C8-B116-3DB13FD4CF6D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F10EC4A1-3515-4180-BF50-9324CFEF76F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F10EC4A1-3515-4180-BF50-9324CFEF76F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F10EC4A1-3515-4180-BF50-9324CFEF76F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F10EC4A1-3515-4180-BF50-9324CFEF76F6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4EDBF1FC-C13A-4F67-8E1C-07F904C7C80B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4EDBF1FC-C13A-4F67-8E1C-07F904C7C80B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4EDBF1FC-C13A-4F67-8E1C-07F904C7C80B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4EDBF1FC-C13A-4F67-8E1C-07F904C7C80B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{63E7DA1E-8DC6-488D-B93B-F47867BB5841}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{63E7DA1E-8DC6-488D-B93B-F47867BB5841}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{63E7DA1E-8DC6-488D-B93B-F47867BB5841}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{63E7DA1E-8DC6-488D-B93B-F47867BB5841}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{D07FD59C-63DB-44C8-B116-3DB13FD4CF6D} = {4B0839D8-CD73-421B-986C-E5B501C63827}
+		{F10EC4A1-3515-4180-BF50-9324CFEF76F6} = {4B0839D8-CD73-421B-986C-E5B501C63827}
+		{4EDBF1FC-C13A-4F67-8E1C-07F904C7C80B} = {4B0839D8-CD73-421B-986C-E5B501C63827}
+		{63E7DA1E-8DC6-488D-B93B-F47867BB5841} = {4B0839D8-CD73-421B-986C-E5B501C63827}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {19EBBEF1-8991-417A-AACA-2B4BF39FA9FB}
+	EndGlobalSection
+EndGlobal
