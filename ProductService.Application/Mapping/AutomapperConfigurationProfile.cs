@@ -1,0 +1,43 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using AutoMapper;
+using ProductService.Application.DTOs.Brand;
+using ProductService.Application.DTOs.Category;
+using ProductService.Application.DTOs.Product;
+using ProductService.Application.DTOs.ProductReview;
+using ProductService.Domain.Entity;
+
+namespace ProductService.Application.Mapping
+{
+    public class AutomapperConfigurationProfile : Profile
+    {
+
+        public AutomapperConfigurationProfile()
+        {
+            CreateMap<CreateUpdateBrandDto, Brand>();
+            CreateMap<Brand, BrandDto>();
+
+
+            CreateMap<CreateUpdateCategoryDto, Category>();
+            CreateMap<Category, CategoryDto>();
+
+
+            CreateMap<CreateProductDto, Product>();
+            CreateMap<UpdateProductDto, Product>()
+                .ForMember(dest => dest.Categories, opt => opt.Ignore());
+
+            CreateMap<Product, ProductDto>();
+
+
+            CreateMap<CreateUpdateProductReviewDto, ProductReview>();
+            CreateMap<ProductReview, ProductReviewDto>();
+
+
+
+        }
+
+    }
+}

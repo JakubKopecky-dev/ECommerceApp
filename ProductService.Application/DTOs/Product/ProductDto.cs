@@ -3,12 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using ProductService.Domain.Common;
+using ProductService.Domain.Entity;
 
-namespace ProductService.Domain.Entity
+namespace ProductService.Application.DTOs.Product
 {
-    public class Product : BaseEntity
+    public class ProductDto
     {
+        public Guid Id { get; set; }
+
+        public string Title { get; set; } = "";
+
         public string Description { get; set; } = "";
 
         public uint QuantityInStock { get; set; }
@@ -21,14 +25,12 @@ namespace ProductService.Domain.Entity
 
         public string ImageUrl { get; set; } = "";
 
+        public DateTime CreatedAt { get; set; }
 
-        public ICollection<Category> Categories = [];
-
-
-        public ICollection<ProductReview> Reviews = [];
+        public DateTime? UpdatedAt { get; set; }
 
         public Guid BrandId { get; set; }
-        public required Brand Brand { get; set; }
+
 
     }
 }

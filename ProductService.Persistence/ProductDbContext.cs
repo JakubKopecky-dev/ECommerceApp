@@ -23,6 +23,8 @@ namespace ProductService.Persistence
 
         public DbSet<Product> Products { get; set; }
 
+        public DbSet<ProductReview> ProductReviews { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

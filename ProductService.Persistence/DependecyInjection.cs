@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using ProductService.Application.Interfaces.Repositories;
+using ProductService.Persistence.Repositories;
 
 namespace ProductService.Persistence
 {
@@ -21,8 +23,11 @@ namespace ProductService.Persistence
 
 
 
-            // DI Repostitories
-
+            // Register Repostitories
+            services.AddScoped<IBrandRepository, BrandRepository>();
+            services.AddScoped<ICategoryRepository, CategoryRepository>();
+            services.AddScoped<IProductRepository, ProductRepository>();
+            services.AddScoped<IProductReviewRepository, ProductReviewRepository>();
 
 
 

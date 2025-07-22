@@ -1,14 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using ProductService.Domain.Common;
 
-namespace ProductService.Domain.Entity
+namespace ProductService.Application.DTOs.Product
 {
-    public class Product : BaseEntity
+    public class UpdateProductDto
     {
+        [MinLength(2)]
+        public string Title { get; set; } = "";
+
+        [MaxLength(2000)]
         public string Description { get; set; } = "";
 
         public uint QuantityInStock { get; set; }
@@ -19,16 +23,12 @@ namespace ProductService.Domain.Entity
 
         public decimal Price { get; set; }
 
+        //[Url]
         public string ImageUrl { get; set; } = "";
 
-
-        public ICollection<Category> Categories = [];
-
-
-        public ICollection<ProductReview> Reviews = [];
-
         public Guid BrandId { get; set; }
-        public required Brand Brand { get; set; }
 
+
+        public List<string> Categories { get; set; } = [];
     }
 }
