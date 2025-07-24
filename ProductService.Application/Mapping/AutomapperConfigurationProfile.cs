@@ -32,10 +32,9 @@ namespace ProductService.Application.Mapping
             CreateMap<Product, ProductDto>();
 
 
-            CreateMap<CreateUpdateProductReviewDto, ProductReview>();
+            CreateMap<CreateProductReviewDto, ProductReview>();
+            CreateMap<UpdateProductReviewDto, ProductReview>();
             CreateMap<ProductReview, ProductReviewDto>();
-
-
 
         }
 

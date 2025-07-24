@@ -99,6 +99,50 @@ namespace ProductService.Application.Services
 
 
 
+        public async Task<ProductDto?> InactivateProductAsync(Guid productId)
+        {
+            _logger.LogInformation("Inactive product. ProductId: {ProductId}", productId);
+
+            Product? product = await _productRepository.FindByIdAsync(productId);
+            if (product is null)
+            {
+                _logger.LogWarning("Cannot inactive. Product not found. ProductId: {ProductId}", productId);
+                return null;
+            }
+
+            product.UpdatedAt = DateTime.UtcNow;
+            product.IsActive = false;
+
+            Product updatedProduct = await _productRepository.UpdateAsync(product);
+            _logger.LogInformation("Product inactived. ProductId: {ProductId}.",productId);
+
+            return _mapper.Map<ProductDto>(updatedProduct);
+        }
+
+
+
+        public async Task<ProductDto?> ActivateProductAsync(Guid productId)
+        {
+            _logger.LogInformation("Activating product. ProductId: {ProductId}", productId);
+
+            Product? product = await _productRepository.FindByIdAsync(productId);
+            if (product is null)
+            {
+                _logger.LogWarning("Cannot activate. Product not found. ProductId: {ProductId}", productId);
+                return null;
+            }
+
+            product.UpdatedAt = DateTime.UtcNow;
+            product.IsActive = true;
+
+            Product updatedProduct = await _productRepository.UpdateAsync(product);
+            _logger.LogInformation("Product activated. ProductId: {ProductId}.", productId);
+
+            return _mapper.Map<ProductDto>(updatedProduct);
+        }
+
+
+
         public async Task<ProductDto?> DeleteProductAsync(Guid productId)
         {
             _logger.LogInformation("Deleting product. ProductId: {ProductId}.", productId);

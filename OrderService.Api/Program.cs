@@ -1,6 +1,8 @@
-using ProductService.Persistence;
-using ProductService.Application;
-using ProductService.Api.DependencyInjection;
+
+using System.Text.Json.Serialization;
+using OrderService.Api.DependencyInjection;
+using OrderService.Application;
+using OrderService.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,8 +17,9 @@ builder.Services.AddApplicationServices();
 // Autentization
 builder.Services.AddAuthenticationServiceCollection(builder.Configuration);
 
-// Controllers
-builder.Services.AddControllers();
+// Controllers & JSON setting
+builder.Services.AddControllers().AddJsonOptions(options =>
+options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 // Swagger
 builder.Services.AddSwaggerWithJwt();
@@ -28,7 +31,6 @@ var app = builder.Build();
 
 #region Middleware pipeline
 
-// Swagger in DEV solution
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -55,3 +57,4 @@ app.MapControllers();
 app.Run();
 
 public partial class Program { };
+

@@ -57,5 +57,27 @@ namespace ProductService.Api.Controllers
 
 
 
+        [HttpPatch("{productId}/inactivate")]
+        public async Task<IActionResult> InActivateProduct(Guid productId)
+        {
+            ProductDto? product = await _productService.InactivateProductAsync(productId);
+
+            return product is not null ? Ok(product) :NotFound();
+                 
+        }
+
+
+
+        [HttpPatch("{productId}/activate")]
+        public async Task<IActionResult> ActivateProduct(Guid productId)
+        {
+            ProductDto? product = await _productService.ActivateProductAsync(productId);
+
+            return product is not null ? Ok(product) : NotFound();
+
+        }
+
+
+
     }
 }

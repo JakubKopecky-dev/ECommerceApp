@@ -29,7 +29,7 @@ namespace ProductService.Api.Controllers
 
 
         [HttpPost]
-        public async Task<IActionResult> CreateProductReview([FromBody] CreateUpdateProductReviewDto createDto)
+        public async Task<IActionResult> CreateProductReview([FromBody] CreateProductReviewDto createDto)
         {
             ProductReviewDto review = await _productReviewService.CreateProductReviewAsync(createDto);
 
@@ -39,7 +39,7 @@ namespace ProductService.Api.Controllers
 
 
         [HttpPut("{reviewId}")]
-        public async Task<IActionResult> UpdateProductReview(Guid reviewId, [FromBody] CreateUpdateProductReviewDto updateDto)
+        public async Task<IActionResult> UpdateProductReview(Guid reviewId, [FromBody] UpdateProductReviewDto updateDto)
         {
             ProductReviewDto? review = await _productReviewService.UpdateProductReviewAsync(reviewId,updateDto);
 

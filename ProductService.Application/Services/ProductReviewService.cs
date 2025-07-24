@@ -50,7 +50,7 @@ namespace ProductService.Application.Services
 
 
 
-        public async Task<ProductReviewDto> CreateProductReviewAsync(CreateUpdateProductReviewDto createDto)
+        public async Task<ProductReviewDto> CreateProductReviewAsync(CreateProductReviewDto createDto)
         {
             _logger.LogInformation("Creating productReview. Title: {Title}.", createDto.Title);
 
@@ -67,7 +67,7 @@ namespace ProductService.Application.Services
 
 
 
-        public async Task<ProductReviewDto?> UpdateProductReviewAsync(Guid reviewId, CreateUpdateProductReviewDto updateDto)
+        public async Task<ProductReviewDto?> UpdateProductReviewAsync(Guid reviewId, UpdateProductReviewDto updateDto)
         {
             _logger.LogInformation("Updating productReview. ProductReviewId: {reviewId}.", reviewId);
 
@@ -78,7 +78,7 @@ namespace ProductService.Application.Services
                 return null;
             }
 
-            _mapper.Map<CreateUpdateProductReviewDto, ProductReview>(updateDto, reviewDb);
+            _mapper.Map<UpdateProductReviewDto, ProductReview>(updateDto, reviewDb);
 
             reviewDb.UpdatedAt = DateTime.UtcNow;
 
