@@ -1,0 +1,27 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
+using UserService.Infrastructure.Mapping;
+using UserService.Application.Interfaces.Services;
+using UserService.Infrastructure.Services;
+
+namespace UserService.Infrastructure
+{
+    public static class DependencyInjection
+    {
+        public static IServiceCollection AddInfrastructureServices(this IServiceCollection services)
+        {
+            services.AddScoped<IApplicationUserService, ApplicationUserService>();
+            services.AddScoped<IAuthService, AuthService>();
+
+
+            services.AddAutoMapper(cfg => { }, typeof(AutomapperConfigurationProfile).Assembly);
+
+            return services;
+        }
+        
+    }
+}

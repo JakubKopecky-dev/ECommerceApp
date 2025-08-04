@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using ProductService.Application.DTOs.Product;
 using ProductService.Application.Interfaces.Services;
+using ProductService.Domain.Enum;
 
 namespace ProductService.Api.Controllers
 {
@@ -27,6 +29,7 @@ namespace ProductService.Api.Controllers
 
 
 
+        [Authorize(Roles = UserRoles.Admin)]
         [HttpPost]
         public async Task<IActionResult> CreateProduct([FromBody] CreateProductDto createDto)
         {
@@ -37,6 +40,7 @@ namespace ProductService.Api.Controllers
 
 
 
+        [Authorize(Roles = UserRoles.Admin)]
         [HttpPut("{productId}")]
         public async Task<IActionResult> UpdateProduct(Guid productId, [FromBody] UpdateProductDto updateDto)
         {
@@ -47,6 +51,7 @@ namespace ProductService.Api.Controllers
 
 
 
+        [Authorize(Roles = UserRoles.Admin)]
         [HttpDelete("{productId}")]
         public async Task<IActionResult> DeleteProduct(Guid productId)
         {
@@ -57,6 +62,7 @@ namespace ProductService.Api.Controllers
 
 
 
+        [Authorize(Roles = UserRoles.Admin)]
         [HttpPatch("{productId}/inactivate")]
         public async Task<IActionResult> InActivateProduct(Guid productId)
         {
@@ -68,6 +74,7 @@ namespace ProductService.Api.Controllers
 
 
 
+        [Authorize(Roles = UserRoles.Admin)]
         [HttpPatch("{productId}/activate")]
         public async Task<IActionResult> ActivateProduct(Guid productId)
         {

@@ -12,11 +12,18 @@ namespace OrderService.Persistence.Repositories
     public class OrderRepository(OrderDbContext dbContext) : BaseRepository<Order>(dbContext), IOrderRepository
     {
         public async Task<Order?> FindOrderByIdIncludeOrderItemAsync(Guid orderId) => await _dbSet
-                                                                                            .Where(o => o.Id == orderId)
                                                                                             .Include(o => o.Items)
-                                                                                            .FirstOrDefaultAsync();
+                                                                                            .FirstOrDefaultAsync(o => o.Id == orderId);
 
-        
+
+
+
+        public async Task<IReadOnlyList<Order>> GetAllOrderByUserIdAsync(Guid userId) => await _dbSet
+                                                                                                    .Where(o => o.UserId == userId)
+                                                                                                    .ToListAsync();
+
+
+
 
     }
 }

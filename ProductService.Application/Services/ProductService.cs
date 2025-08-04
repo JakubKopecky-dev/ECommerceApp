@@ -53,7 +53,7 @@ namespace ProductService.Application.Services
 
         public async Task<ProductDto> CreateProductAsync(CreateProductDto createDto)
         {
-            _logger.LogInformation("Creating product. Title: {Title}.", createDto.Title);
+            _logger.LogInformation("Creating new product. Title: {Title}.", createDto.Title);
 
             Product product = _mapper.Map<Product>(createDto);
             product.Id = default;

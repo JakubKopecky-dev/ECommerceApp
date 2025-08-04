@@ -52,7 +52,7 @@ namespace ProductService.Application.Services
 
         public async Task<ProductReviewDto> CreateProductReviewAsync(CreateProductReviewDto createDto)
         {
-            _logger.LogInformation("Creating productReview. Title: {Title}.", createDto.Title);
+            _logger.LogInformation("Creating new productReview. Title: {Title}.", createDto.Title);
 
             ProductReview review = _mapper.Map<ProductReview>(createDto);
             review.Id = default;
@@ -110,6 +110,34 @@ namespace ProductService.Application.Services
         }
 
 
+
+
+        public async Task<ProductReviewDto?> DeleteOwnProductReviewAsync(Guid reviewId, Guid userId)
+        {
+            _logger.LogInformation("Deleting own productReview. ProductReviewId: {reviewId}, UserId: {UserId}.", reviewId, userId);
+
+            ProductReview? review = await _productReviewRepository.FindByIdAsync(reviewId);
+            if (review is null)
+            {
+                _logger.LogWarning("Cannot delete. ProductReview not found. ProductReviewId: {ReviewId}, UserId: {UserId}.", reviewId, userId);
+                return null;
+            }
+
+
+            if (review.UserId != userId)
+            {
+                _logger.LogWarning("Cannot delete. User is not owner  ProductReviewId: {ReviewId}, UserId: {UserId}.", reviewId, userId);
+                return null;
+            }
+
+
+            ProductReviewDto deletedReview = _mapper.Map<ProductReviewDto>(review);
+
+            await _productReviewRepository.DeleteAsync(reviewId);
+            _logger.LogInformation("ProductReview deleted. ProductReviewId: {ReviewId}.", reviewId);
+
+            return deletedReview;
+        }
 
 
 

@@ -13,7 +13,7 @@ namespace OrderService.Api.DependencyInjection
                 {
                     Version = "v1",
                     Title = "Order Service API",
-                    Description = "Web API for Product management in E-commerce app.",
+                    Description = "Web API for Order management in E-commerce app.",
                     Contact = new OpenApiContact
                     {
                         Name = "Jakub Kopecký",

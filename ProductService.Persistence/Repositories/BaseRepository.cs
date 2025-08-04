@@ -23,7 +23,6 @@ namespace ProductService.Persistence.Repositories
 
 
 
-
         public async Task<TEntity> InsertAsync(TEntity entity)
         {
             await _dbSet.AddAsync(entity);  

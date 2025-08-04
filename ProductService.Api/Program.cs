@@ -1,6 +1,7 @@
-using ProductService.Persistence;
-using ProductService.Application;
+using System.Text.Json.Serialization;
 using ProductService.Api.DependencyInjection;
+using ProductService.Application;
+using ProductService.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,8 +16,9 @@ builder.Services.AddApplicationServices();
 // Autentization
 builder.Services.AddAuthenticationServiceCollection(builder.Configuration);
 
-// Controllers
-builder.Services.AddControllers();
+// Controllers && JSON Setting
+builder.Services.AddControllers().AddJsonOptions(options =>
+options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 // Swagger
 builder.Services.AddSwaggerWithJwt();

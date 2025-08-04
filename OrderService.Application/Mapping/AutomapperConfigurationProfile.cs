@@ -14,13 +14,17 @@ namespace OrderService.Application.Mapping
     {
         public AutomapperConfigurationProfile() 
         {
-
+            CreateMap<ExternalCreateOrderDto,Order>();
             CreateMap<CreateOrderDto, Order>();
             CreateMap<Order,OrderDto>();
+            CreateMap<Order, OrderExtendedDto>();
 
 
+            CreateMap<ExternalCreateOrderItemDto, OrderItem>();
             CreateMap<CreateOrderItemDto, OrderItem>();
             CreateMap<OrderItem,OrderItemDto>();
+            CreateMap<OrderItem,OrderItemForExtendedDto>();
+
         
         
         

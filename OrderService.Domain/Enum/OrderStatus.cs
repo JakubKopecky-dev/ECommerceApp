@@ -8,8 +8,7 @@ namespace OrderService.Domain.Enum
 {
     public enum OrderStatus
     {
-        Draft,      // The order is being created, not yet submitted
-        Created,    // The order was submitted by the customer
+        Created,    // The order was created by the customer
         Paid,       // The order has been paid by the customer
         Accepted,   // The order was accepted/confirmed by the merchant
         Rejected,   // The order was rejected/cancelled by the merchant (e.g., out of stock)

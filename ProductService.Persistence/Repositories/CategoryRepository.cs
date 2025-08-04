@@ -12,9 +12,8 @@ namespace ProductService.Persistence.Repositories
     public class CategoryRepository(ProductDbContext dbContext) : BaseRepository<Category>(dbContext), ICategoryRepository
     {
         public async Task<Category?> FindCategoryByIdWithIncludeProductsAsync(Guid categoryId) => await _dbSet
-                                                                                                    .Where(c => c.Id == categoryId)
                                                                                                     .Include(c => c.Products)
-                                                                                                    .FirstOrDefaultAsync();
+                                                                                                    .FirstOrDefaultAsync(c => c.Id == categoryId);
 
 
 

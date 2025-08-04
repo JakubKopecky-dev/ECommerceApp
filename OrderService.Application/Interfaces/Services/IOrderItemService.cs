@@ -12,7 +12,7 @@ namespace OrderService.Application.Interfaces.Services
         Task<OrderItemDto?> ChangeOrderItemQuantityAsync(Guid orderItemId, ChangeOrderItemQuantityDto changeDto);
         Task<OrderItemDto> CreateOrderItemAsync(CreateOrderItemDto createDto);
         Task<OrderItemDto?> DeleteOrderItemAsync(Guid orderItemId);
-        Task<IReadOnlyList<OrderItemDto>> GetAllOrderItemsAsync();
+        Task<IReadOnlyList<OrderItemDto>> GetAllOrderItemsByOrderIdAsync(Guid orderId);
         Task<OrderItemDto?> GetOrderItemAsync(Guid orderItemId);
     }
 }

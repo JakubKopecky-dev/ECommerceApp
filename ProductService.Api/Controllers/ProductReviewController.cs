@@ -1,8 +1,11 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using ProductService.Application.DTOs.ProductReview;
 using ProductService.Application.Interfaces.Services;
 using ProductService.Domain.Entity;
+using ProductService.Domain.Enum;
 
 namespace ProductService.Api.Controllers
 {
@@ -28,6 +31,7 @@ namespace ProductService.Api.Controllers
 
 
 
+        [Authorize(Roles = UserRoles.User)]
         [HttpPost]
         public async Task<IActionResult> CreateProductReview([FromBody] CreateProductReviewDto createDto)
         {
@@ -38,6 +42,7 @@ namespace ProductService.Api.Controllers
 
 
 
+        [Authorize(Roles = UserRoles.Admin)]
         [HttpPut("{reviewId}")]
         public async Task<IActionResult> UpdateProductReview(Guid reviewId, [FromBody] UpdateProductReviewDto updateDto)
         {
@@ -49,6 +54,7 @@ namespace ProductService.Api.Controllers
 
 
 
+        [Authorize(Roles = UserRoles.Admin)]
         [HttpDelete("{reviewId}")]
         public async Task<IActionResult> DeleteProductReview(Guid reviewId)
         {
@@ -56,6 +62,23 @@ namespace ProductService.Api.Controllers
 
             return review is not null ? Ok(review) : NotFound();
         }
+
+
+
+        [Authorize(Roles = UserRoles.User)]
+        [HttpDelete("my/{reviewId}")]
+        public async Task<IActionResult> DeleteOwnProductReview(Guid reviewId)
+        {
+            string? userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(userIdString, out Guid userId))
+                return Unauthorized();
+
+            ProductReviewDto? review = await _productReviewService.DeleteOwnProductReviewAsync(reviewId, userId);
+
+            return review is not null ? Ok(review) : NotFound();
+        }
+
+
 
     }
 }

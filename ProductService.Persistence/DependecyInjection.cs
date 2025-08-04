@@ -23,7 +23,7 @@ namespace ProductService.Persistence
 
 
 
-            // Register Repostitories
+            // Register repository services for DI
             services.AddScoped<IBrandRepository, BrandRepository>();
             services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<IProductRepository, ProductRepository>();

@@ -18,6 +18,8 @@ namespace OrderService.Domain.Entity
 
         public string? Note { get; set; }
 
+        public Guid? DeliveryId { get; set; }
+
         public ICollection<OrderItem> Items { get; set; } = [];
     }
 }

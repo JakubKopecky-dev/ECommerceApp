@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using ProductService.Application.DTOs.Category;
 using ProductService.Application.Interfaces.Services;
+using ProductService.Domain.Enum;
 
 namespace ProductService.Api.Controllers
 {
@@ -27,6 +29,7 @@ namespace ProductService.Api.Controllers
 
 
 
+        [Authorize(Roles = UserRoles.Admin)]
         [HttpPost]
         public async Task<IActionResult> CreateCategory([FromBody] CreateUpdateCategoryDto createDto)
         {
@@ -37,6 +40,7 @@ namespace ProductService.Api.Controllers
 
 
 
+        [Authorize(Roles = UserRoles.Admin)]
         [HttpPut("{categoryId}")]
         public async Task<IActionResult> UpadteCategory(Guid categoryId, [FromBody] CreateUpdateCategoryDto updateDto)
         {
@@ -47,6 +51,7 @@ namespace ProductService.Api.Controllers
 
 
 
+        [Authorize(Roles = UserRoles.Admin)]
         [HttpDelete("{categoryId}")]
         public async Task<IActionResult> DeleteCategory(Guid categoryId)
         {

@@ -12,16 +12,14 @@ namespace ProductService.Persistence.Repositories
     public class ProductRepository(ProductDbContext dbContext) : BaseRepository<Product>(dbContext), IProductRepository
     {
         public async Task<Product?> FindProductByIdIncludeCategoriesAsync(Guid productId) => await _dbSet
-                                                                                                .Where(c => c.Id == productId)
                                                                                                 .Include(c => c.Categories)
-                                                                                                .FirstOrDefaultAsync();
+                                                                                                .FirstOrDefaultAsync(c => c.Id == productId);
 
 
         public async Task<Product?> FindProductByIdIncludeCategoriesAndReviewsAsync(Guid productId) => await _dbSet
-                                                                                                .Where(c => c.Id == productId)
                                                                                                 .Include(c => c.Categories)
                                                                                                 .Include (c => c.Reviews)
-                                                                                                .FirstOrDefaultAsync();
+                                                                                                .FirstOrDefaultAsync(c => c.Id == productId);
 
     }
 }

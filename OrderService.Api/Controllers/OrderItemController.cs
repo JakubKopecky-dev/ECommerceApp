@@ -1,19 +1,22 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using OrderService.Application.DTOs.OrderItem;
 using OrderService.Application.Interfaces.Services;
+using OrderService.Domain.Enum;
 
 namespace OrderService.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize(Roles = UserRoles.User)]
     public class OrderItemController(IOrderItemService orderItemService) : ControllerBase
     {
         private readonly IOrderItemService _orderItemService = orderItemService;
 
 
 
-        [HttpGet]
-        public async Task<IReadOnlyList<OrderItemDto>> GetAllOrderItems() => await _orderItemService.GetAllOrderItemsAsync();
+        [HttpGet("by-order/{orderId}")]
+        public async Task<IReadOnlyList<OrderItemDto>> GetAllOrderItems(Guid orderId) => await _orderItemService.GetAllOrderItemsByOrderIdAsync(orderId);
 
 
 
@@ -27,6 +30,7 @@ namespace OrderService.Api.Controllers
 
 
 
+        [Authorize(Roles = UserRoles.Admin)]
         [HttpPost]
         public async Task<IActionResult> CreateOrderItem([FromBody] CreateOrderItemDto createDto)
         {
@@ -47,6 +51,7 @@ namespace OrderService.Api.Controllers
 
 
 
+        [Authorize(Roles = UserRoles.Admin)]
         [HttpDelete("{orderItemId}")]
         public async Task<IActionResult> DeleteOrderItem(Guid orderItemId)
         {

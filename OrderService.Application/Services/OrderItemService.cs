@@ -20,12 +20,12 @@ namespace OrderService.Application.Services
 
 
 
-        public async Task<IReadOnlyList<OrderItemDto>> GetAllOrderItemsAsync()
+        public async Task<IReadOnlyList<OrderItemDto>> GetAllOrderItemsByOrderIdAsync(Guid orderId)
         {
-            _logger.LogInformation("Retrieving all orderItems.");
+            _logger.LogInformation("Retrieving all orderItems by orderId. OrderId: {OrderId}.",orderId);
 
-            IReadOnlyList<OrderItem> orderItems = await _orderItemRepository.GetAllAsync();
-            _logger.LogInformation("Retrieved all orderItems. Count: {Couunt}.", orderItems.Count);
+            IReadOnlyList<OrderItem> orderItems = await _orderItemRepository.GetAllOrderItemsByOrderId(orderId);
+            _logger.LogInformation("Retrieved all orderItems. Count: {Couunt}, OrderId: {OrderId}.", orderItems.Count,orderId);
 
             return _mapper.Map<IReadOnlyList<OrderItemDto>>(orderItems);
         }
@@ -51,7 +51,7 @@ namespace OrderService.Application.Services
 
         public async Task<OrderItemDto> CreateOrderItemAsync(CreateOrderItemDto createDto)
         {
-            _logger.LogInformation("Creating orderItem. ProductId: {ProductId}, OrderId: {OrderId}.", createDto.ProductId, createDto.OrderId);
+            _logger.LogInformation("Creating new orderItem. ProductId: {ProductId}, OrderId: {OrderId}.", createDto.ProductId, createDto.OrderId);
 
             OrderItem orderItem = _mapper.Map<OrderItem>(createDto);
             orderItem.Id = default;

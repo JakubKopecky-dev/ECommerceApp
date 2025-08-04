@@ -21,8 +21,6 @@ namespace OrderService.Application
 
 
 
-
-
             // Register AutoMapper
             services.AddAutoMapper(cfg => { }, typeof(AutomapperConfigurationProfile));
 

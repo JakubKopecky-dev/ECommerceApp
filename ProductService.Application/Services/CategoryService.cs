@@ -53,7 +53,7 @@ namespace ProductService.Application.Services
 
         public async Task<CategoryDto> CreateCategoryAsync(CreateUpdateCategoryDto createDto)
         {
-            _logger.LogInformation("Creating category. Title: {Title}.", createDto.Title);
+            _logger.LogInformation("Creating new category. Title: {Title}.", createDto.Title);
 
             Category category = _mapper.Map<Category>(createDto);
             category.Id = default;

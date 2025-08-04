@@ -55,7 +55,7 @@ namespace ProductService.Application.Services
 
         public async Task<BrandDto> CreateBrandAsync(CreateUpdateBrandDto createDto)
         {
-            _logger.LogInformation("Creating brand. Title: {Title}.", createDto.Title);
+            _logger.LogInformation("Creating new brand. Title: {Title}.", createDto.Title);
 
             Brand brand = _mapper.Map<Brand>(createDto);
             brand.Id = default;

@@ -1,37 +1,71 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Security.Claims;
+using MassTransit;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using OrderService.Application.DTOs.Order;
 using OrderService.Application.Interfaces.Services;
 using OrderService.Domain.Entity;
+using OrderService.Domain.Enum;
+using Shared.Contracts.Events;
 
 namespace OrderService.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class OrderController(IOrderService orderService) : ControllerBase
+    [Authorize(Roles = UserRoles.User)]
+    public class OrderController(IOrderService orderService, IPublishEndpoint publishEndpoint) : ControllerBase
     {
         private readonly IOrderService _orderService = orderService;
+        private readonly IPublishEndpoint _publishEndpoint = publishEndpoint;
 
 
 
+        [Authorize(Roles = UserRoles.Admin)]
         [HttpGet]
         public async Task<IReadOnlyList<OrderDto>> GetAllOrders() => await _orderService.GetAllOrdersAsync();
+
+
+
+        [HttpGet("my")]
+        public async Task<IActionResult> GetAllOrdersByUserId()
+        {
+            string? userIdStrig = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(userIdStrig, out Guid userId))
+                return Unauthorized();
+
+            IReadOnlyList<OrderDto> orders = await _orderService.GetAllOrdersByUserIdAsync(userId);
+
+            return Ok(orders);
+        }
 
 
 
         [HttpGet("{orderId}")]
         public async Task<IActionResult> GetOrder(Guid orderId)
         {
-            OrderDto? order = await _orderService.GetOrderAsync(orderId);
+            OrderExtendedDto? order = await _orderService.GetOrderAsync(orderId);
 
             return order is not null ? Ok(order) : NotFound();
         }
 
 
 
+        [Authorize(Roles = UserRoles.Admin)]
         [HttpPost]
         public async Task<IActionResult> CreateOrder([FromBody] CreateOrderDto createDto)
         {
-            OrderDto? order = await _orderService.CreateOrderAsync(createDto);
+            OrderDto order = await _orderService.CreateOrderAsync(createDto);
+
+            OrderCreatedEvent orderCreatedEvent = new()
+            {
+                OrderId = order.Id,
+                UserId = order.UserId,
+                TotalPrice = order.TotalPrice,
+                CreatedAt = DateTime.UtcNow,
+                Note = order.Note ?? ""
+            };
+
+            await _publishEndpoint.Publish(orderCreatedEvent);
 
             return CreatedAtAction(nameof(CreateOrder), new { orderId = order.Id }, order);
         }
@@ -48,6 +82,7 @@ namespace OrderService.Api.Controllers
 
 
 
+        [Authorize(Roles = UserRoles.Admin)]
         [HttpDelete("{orderId}")]
         public async Task<IActionResult> DeleteOrder(Guid orderId)
         {
@@ -63,8 +98,45 @@ namespace OrderService.Api.Controllers
         {
             OrderDto? order = await _orderService.ChangeOrderStatusAsync(orderId, changeStatus);
 
+            if (order is not null)
+            {
+                OrderStatusChangedEvent orderStatusChangedEvent = new()
+                {
+                    OrderId = orderId,
+                    UserId = order.UserId,
+                    NewStatus = (Shared.Contracts.Enums.OrderStatus)(int)order.Status,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                await _publishEndpoint.Publish(orderStatusChangedEvent);
+            }
+            
+
+
             return order is not null ? Ok(order) : NotFound();
         }
+
+
+
+        [HttpPost("external")]
+        public async Task<IActionResult> CreateOrderFromCart([FromBody] ExternalCreateOrderDto createDto)
+        {
+            OrderDto order = await _orderService.CreateOrderFromCartAsync(createDto);
+
+            var orderCreatedEvent = new OrderCreatedEvent()
+            {
+                OrderId = order.Id,
+                UserId = order.UserId,
+                TotalPrice = order.TotalPrice,
+                CreatedAt = DateTime.UtcNow,
+                Note = order.Note ?? ""
+            };
+
+            await _publishEndpoint.Publish(orderCreatedEvent);
+
+            return CreatedAtAction(nameof(CreateOrder), new { orderId = order.Id }, order);
+        }
+
 
 
 

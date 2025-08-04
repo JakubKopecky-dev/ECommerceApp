@@ -1,6 +1,8 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using ProductService.Application.DTOs.Brand;
 using ProductService.Application.Interfaces.Services;
+using ProductService.Domain.Enum;
 
 namespace ProductService.Api.Controllers
 {
@@ -28,6 +30,7 @@ namespace ProductService.Api.Controllers
 
 
 
+        [Authorize(Roles = UserRoles.Admin)]
         [HttpPost]
         public async Task<IActionResult> CreateBrand([FromBody] CreateUpdateBrandDto createDto)
         {
@@ -38,6 +41,7 @@ namespace ProductService.Api.Controllers
 
 
 
+        [Authorize(Roles = UserRoles.Admin)]
         [HttpPut("{brandId}")]
         public async Task<IActionResult> UpdateBrand(Guid brandId,[FromBody] CreateUpdateBrandDto updateDto)
         {
@@ -48,6 +52,7 @@ namespace ProductService.Api.Controllers
 
 
 
+        [Authorize(Roles = UserRoles.Admin)]
         [HttpDelete("{brandId}")]
         public async Task<IActionResult> DeleteBrand(Guid brandId)
         {

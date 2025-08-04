@@ -14,7 +14,6 @@ namespace OrderService.Persistence
     public class OrderDbContext(DbContextOptions<OrderDbContext> options, IHostEnvironment env) : DbContext(options)
     {
         private readonly IHostEnvironment _env = env;
-
         public DbSet<AuditEventLog> AuditEventLogs { get; set; }
 
         public DbSet<OrderItem> OrderItems { get; set; }

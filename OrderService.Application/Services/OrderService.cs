@@ -12,6 +12,7 @@ using OrderService.Domain.Entity;
 using OrderService.Domain.Enum;
 using static System.Net.Mime.MediaTypeNames;
 
+
 namespace OrderService.Application.Services
 {
     public class OrderService(IOrderRepository orderRepository, IOrderItemRepository orderItemRepository, IMapper mapper, ILogger<OrderService> logger) : IOrderService
@@ -27,7 +28,6 @@ namespace OrderService.Application.Services
         {
             return (current, next) switch
             {
-                (OrderStatus.Draft, OrderStatus.Created) => true,
                 (OrderStatus.Created, OrderStatus.Paid) => true,
                 (OrderStatus.Paid, OrderStatus.Accepted) => true,
                 (OrderStatus.Accepted, OrderStatus.Shipped) => true,
@@ -38,6 +38,17 @@ namespace OrderService.Application.Services
             };
         }
 
+
+
+        public async Task<IReadOnlyList<OrderDto>> GetAllOrdersByUserIdAsync(Guid userId)
+        {
+            _logger.LogInformation("Retrieving all orders by userId. UserId: {UserId}.", userId);
+
+            IReadOnlyList<Order> orders = await _orderRepository.GetAllOrderByUserIdAsync(userId);
+            _logger.LogInformation("Retrievid all orders. Count: {Count}, UserId: {UserId}.", orders.Count, userId);
+
+            return _mapper.Map<List<OrderDto>>(orders);
+        }
 
 
 
@@ -53,7 +64,7 @@ namespace OrderService.Application.Services
 
 
 
-        public async Task<OrderDto?> GetOrderAsync(Guid orderId)
+        public async Task<OrderExtendedDto?> GetOrderAsync(Guid orderId)
         {
             _logger.LogInformation("Retrieving order. OrderId: {OrderId}.", orderId);
 
@@ -66,18 +77,19 @@ namespace OrderService.Application.Services
 
             _logger.LogInformation("Order found. OrderId: {OrderId}.", orderId);
 
-            return _mapper.Map<OrderDto>(order);
+            return _mapper.Map<OrderExtendedDto>(order);
         }
 
 
 
         public async Task<OrderDto> CreateOrderAsync(CreateOrderDto createDto)
         {
-            _logger.LogInformation("Creating order. UserId: {UserId}.", createDto.UserId);
+            _logger.LogInformation("Creating new order. UserId: {UserId}.", createDto.UserId);
 
             Order order = _mapper.Map<Order>(createDto);
             order.Id = default;
             order.CreatedAt = DateTime.UtcNow;
+            order.Status = OrderStatus.Created;
 
             Order createdOrder = await _orderRepository.InsertAsync(order);
             _logger.LogInformation("Order created. OrderId: {OrderId}.", createdOrder.Id);
@@ -159,6 +171,9 @@ namespace OrderService.Application.Services
                 return null;
             }
 
+            order.Status = statusDto.Status;
+            order.UpdatedAt = DateTime.UtcNow;
+
             Order updatedOrder = await _orderRepository.UpdateAsync(order);
             _logger.LogInformation("OrderStatus changed. OrderId: {OrderId}.", orderId);
 
@@ -166,6 +181,21 @@ namespace OrderService.Application.Services
         }
 
 
+
+        public async Task<OrderDto> CreateOrderFromCartAsync(ExternalCreateOrderDto createDto)
+        {
+            _logger.LogInformation("Creating new order from cart. UserId: {UserId}.", createDto.UserId);
+
+            Order order = _mapper.Map<Order>(createDto);
+            order.Id = default;
+            order.CreatedAt = DateTime.UtcNow;
+            order.Status = OrderStatus.Created;
+
+            Order createdOrder = await _orderRepository.InsertAsync(order);
+            _logger.LogInformation("Order from cart created. OrderId: {OrderId}.", createdOrder.Id);
+
+            return _mapper.Map<OrderDto>(createdOrder);
+        }
 
 
 

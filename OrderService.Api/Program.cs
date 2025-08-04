@@ -14,8 +14,11 @@ builder.Services.AddPersistenceServices(builder.Configuration);
 // Application (Services, AutoMapper)
 builder.Services.AddApplicationServices();
 
-// Autentization
+// Authentication
 builder.Services.AddAuthenticationServiceCollection(builder.Configuration);
+
+// MassTransit + RebbitMQ
+builder.Services.AddMassTransitService();
 
 // Controllers & JSON setting
 builder.Services.AddControllers().AddJsonOptions(options =>
@@ -36,7 +39,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("ProductService/swagger.json", "ProductService - v1");
+        options.SwaggerEndpoint("OrderService/swagger.json", "OrderService - v1");
     });
 }
 

@@ -1,0 +1,21 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace DeliveryService.Domain.Common
+{
+    public class AuditEventLog
+    {
+        public uint Id { get; set; }
+
+        public string EntityName { get; set; } = "";
+
+        public DateTime InsertedDate { get; set; }
+
+        public string EventType { get; set; } = "";
+
+        public string Data { get; set; } = "";
+    }
+}

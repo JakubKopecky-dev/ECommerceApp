@@ -59,6 +59,9 @@ namespace OrderService.Persistence.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<Guid?>("DeliveryId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Note")
                         .HasColumnType("nvarchar(max)");
 

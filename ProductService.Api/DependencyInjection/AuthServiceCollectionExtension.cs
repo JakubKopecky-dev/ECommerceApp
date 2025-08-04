@@ -38,17 +38,23 @@ namespace ProductService.Api.DependencyInjection
                 {
                     OnAuthenticationFailed = context =>
                     {
-                        Console.WriteLine($"[AUTH ERROR] {context.Exception.Message}");
+                        var logger = context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>()
+                            .CreateLogger("JwtBearer");
+                        logger.LogError(context.Exception, "[AUTH ERROR] {Message}", context.Exception.Message);
                         return Task.CompletedTask;
                     },
                     OnTokenValidated = context =>
                     {
-                        Console.WriteLine("[AUTH SUCCESS] Token is valid");
+                        var logger = context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>()
+                            .CreateLogger("JwtBearer");
+                        logger.LogInformation("[AUTH SUCCESS] Token is valid");
                         return Task.CompletedTask;
                     },
                     OnChallenge = context =>
                     {
-                        Console.WriteLine($"[AUTH CHALLENGE] {context.Error} - {context.ErrorDescription}");
+                        var logger = context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>()
+                            .CreateLogger("JwtBearer");
+                        logger.LogWarning("[AUTH CHALLENGE] {Error} - {Description}", context.Error, context.ErrorDescription);
                         return Task.CompletedTask;
                     }
                 };
