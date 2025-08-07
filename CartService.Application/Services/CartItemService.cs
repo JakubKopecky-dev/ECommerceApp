@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using AutoMapper;
+﻿using AutoMapper;
 using CartService.Application.DTOs.CartItem;
 using CartService.Application.Interfaces.Repositories;
 using CartService.Application.Interfaces.Services;
@@ -44,7 +39,7 @@ namespace CartService.Application.Services
             _logger.LogInformation("Creating new cartItem. CartId: {CartId}, ProductId: {ProductId}.", createDto.CartId, createDto.ProductId);
 
             CartItem cartItem = _mapper.Map<CartItem>(createDto);
-            cartItem.Id = default;
+            cartItem.Id = Guid.Empty;
             cartItem.CreatedAt = DateTime.UtcNow;
 
             CartItem createdCartItem = await _cartItemRepository.InsertAsync(cartItem);

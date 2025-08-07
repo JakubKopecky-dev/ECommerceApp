@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace CartService.Application.Interfaces.Repositories
+﻿namespace CartService.Application.Interfaces.Repositories
 {
     public interface IBaseRepository<TEntity> where TEntity : class
     {

@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace Shared.Contracts.Events
 {
-    public class DeliveryStatusChangedEvent
+    public class DeliveryDeliveredEvent
     {
+        public Guid OrderId { get; set; }
     }
 }

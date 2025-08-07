@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using AutoMapper;
+﻿using AutoMapper;
 using DeliveryService.Application.DTOs.Courier;
-using DeliveryService.Application.DTOs.Delivery;
 using DeliveryService.Application.Interfaces.Repositories;
 using DeliveryService.Application.Interfaces.Services;
 using DeliveryService.Domain.Entity;
@@ -56,7 +50,7 @@ namespace DeliveryService.Application.Services
             _logger.LogInformation("Creating new courier. Name: {Name}.", createDto.Name);
 
             Courier courier = _mapper.Map<Courier>(createDto);
-            courier.Id = default;
+            courier.Id = Guid.Empty;
             courier.CreatedAt = DateTime.UtcNow;
 
             Courier createdCourier = await _courierRepository.InsertAsync(courier);

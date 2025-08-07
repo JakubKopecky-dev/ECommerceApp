@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using OrderService.Application.DTOs.OrderItem;
+﻿using OrderService.Application.DTOs.OrderItem;
 
 namespace OrderService.Application.DTOs.Order
 {

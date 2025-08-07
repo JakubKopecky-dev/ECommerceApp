@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using DeliveryService.Application.Interfaces.Services;
+﻿using DeliveryService.Application.Interfaces.Services;
 using DeliveryService.Application.Mapping;
 using DeliveryService.Application.Services;
 using Microsoft.Extensions.DependencyInjection;

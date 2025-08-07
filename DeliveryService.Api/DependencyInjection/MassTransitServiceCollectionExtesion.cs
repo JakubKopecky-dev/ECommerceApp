@@ -1,8 +1,8 @@
 ﻿using MassTransit;
 
-namespace OrderService.Api.DependencyInjection
+namespace DeliveryService.Api.DependencyInjection
 {
-    public static class MassTransitServiceCollection
+    public static class MassTransitServiceCollectionExtesion
     {
         public static IServiceCollection AddMassTransitService(this IServiceCollection services)
         {

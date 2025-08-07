@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using CartService.Domain.Entity;
+﻿using CartService.Domain.Entity;
 
 namespace CartService.Application.Interfaces.Repositories
 {

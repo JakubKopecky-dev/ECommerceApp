@@ -2,7 +2,9 @@
 using System.Text.Json.Serialization;
 using OrderService.Api.DependencyInjection;
 using OrderService.Application;
+using OrderService.Application.Interfaces.Services;
 using OrderService.Persistence;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +18,15 @@ builder.Services.AddApplicationServices();
 
 // Authentication
 builder.Services.AddAuthenticationServiceCollection(builder.Configuration);
+
+// HTTP Context accessor
+builder.Services.AddHttpContextAccessor();
+
+// HTTP client + Register CartService
+builder.Services.AddHttpClient("DeliveryService", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["DeliveryService:BaseUrl"]!);
+});
 
 // MassTransit + RebbitMQ
 builder.Services.AddMassTransitService();

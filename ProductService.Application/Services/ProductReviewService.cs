@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using AutoMapper;
+﻿using AutoMapper;
 using Microsoft.Extensions.Logging;
 using ProductService.Application.DTOs.ProductReview;
 using ProductService.Application.Interfaces.Repositories;
@@ -55,7 +50,7 @@ namespace ProductService.Application.Services
             _logger.LogInformation("Creating new productReview. Title: {Title}.", createDto.Title);
 
             ProductReview review = _mapper.Map<ProductReview>(createDto);
-            review.Id = default;
+            review.Id = Guid.Empty;
             review.CreatedAt = DateTime.UtcNow;
 
             ProductReview createdReview = await _productReviewRepository.InsertAsync(review);

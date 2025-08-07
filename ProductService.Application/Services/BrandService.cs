@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using AutoMapper;
+﻿using AutoMapper;
 using Microsoft.Extensions.Logging;
 using ProductService.Application.DTOs.Brand;
 using ProductService.Application.Interfaces.Repositories;
@@ -58,7 +53,7 @@ namespace ProductService.Application.Services
             _logger.LogInformation("Creating new brand. Title: {Title}.", createDto.Title);
 
             Brand brand = _mapper.Map<Brand>(createDto);
-            brand.Id = default;
+            brand.Id = Guid.Empty;
             brand.CreatedAt = DateTime.UtcNow;
 
             Brand addedBrand = await _brandRepository.InsertAsync(brand);

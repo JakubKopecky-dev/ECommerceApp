@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using OrderService.Application.Interfaces.Services;
 using OrderService.Application.Mapping;
 using OrderService.Application.Services;
@@ -16,9 +11,8 @@ namespace OrderService.Application
         public static IServiceCollection AddApplicationServices(this IServiceCollection services)
         {
             // Register Services
-            services.AddScoped<IOrderService, OrderServiceService>();
             services.AddScoped<IOrderItemService, OrderItemService>();
-
+            services.AddScoped<IOrderService,OrderServiceService>();
 
 
             // Register AutoMapper

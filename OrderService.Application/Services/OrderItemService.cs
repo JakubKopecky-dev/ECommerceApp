@@ -1,14 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using AutoMapper;
+﻿using AutoMapper;
+using MassTransit;
+using MassTransit.Transports;
 using Microsoft.Extensions.Logging;
 using OrderService.Application.DTOs.OrderItem;
 using OrderService.Application.Interfaces.Repositories;
 using OrderService.Application.Interfaces.Services;
 using OrderService.Domain.Entity;
+using Shared.Contracts.Events;
 
 namespace OrderService.Application.Services
 {
@@ -25,7 +23,7 @@ namespace OrderService.Application.Services
             _logger.LogInformation("Retrieving all orderItems by orderId. OrderId: {OrderId}.",orderId);
 
             IReadOnlyList<OrderItem> orderItems = await _orderItemRepository.GetAllOrderItemsByOrderId(orderId);
-            _logger.LogInformation("Retrieved all orderItems. Count: {Couunt}, OrderId: {OrderId}.", orderItems.Count,orderId);
+            _logger.LogInformation("Retrieved all orderItems. Count: {Count}, OrderId: {OrderId}.", orderItems.Count,orderId);
 
             return _mapper.Map<IReadOnlyList<OrderItemDto>>(orderItems);
         }
@@ -54,7 +52,7 @@ namespace OrderService.Application.Services
             _logger.LogInformation("Creating new orderItem. ProductId: {ProductId}, OrderId: {OrderId}.", createDto.ProductId, createDto.OrderId);
 
             OrderItem orderItem = _mapper.Map<OrderItem>(createDto);
-            orderItem.Id = default;
+            orderItem.Id = Guid.Empty;
             orderItem.CreatedAt = DateTime.UtcNow;
 
             OrderItem createdOrderItem = await _orderItemRepository.InsertAsync(orderItem);
@@ -80,7 +78,7 @@ namespace OrderService.Application.Services
             orderItem.UpdatedAt = DateTime.UtcNow;
 
             OrderItem updatedOrderItem = await _orderItemRepository.UpdateAsync(orderItem);
-            _logger.LogInformation("OrderItem quaintity changed. OrderItemId: {OrderItemId}.", orderItemId);
+            _logger.LogInformation("OrderItem quantity changed. OrderItemId: {OrderItemId}.", orderItemId);
 
             return _mapper.Map<OrderItemDto>(updatedOrderItem);
         }

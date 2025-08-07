@@ -1,26 +1,34 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using AutoMapper;
+﻿using AutoMapper;
+using MassTransit;
+using MassTransit.Transports;
 using Microsoft.Extensions.Logging;
 using OrderService.Application.DTOs.Order;
 using OrderService.Application.Interfaces.Repositories;
 using OrderService.Application.Interfaces.Services;
 using OrderService.Domain.Entity;
 using OrderService.Domain.Enum;
-using static System.Net.Mime.MediaTypeNames;
+using Shared.Contracts.Events;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authentication;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using OrderService.Application.DTOs.External;
+
+
+
 
 
 namespace OrderService.Application.Services
 {
-    public class OrderService(IOrderRepository orderRepository, IOrderItemRepository orderItemRepository, IMapper mapper, ILogger<OrderService> logger) : IOrderService
+    public class OrderService(IOrderRepository orderRepository, IOrderItemRepository orderItemRepository, IMapper mapper, ILogger<OrderService> logger, IPublishEndpoint publishEndpoint, IHttpClientFactory httpClientFactory, IHttpContextAccessor httpContextAccessor) : IOrderService
     {
         private readonly IOrderRepository _orderRepository = orderRepository;
         private readonly IOrderItemRepository _orderItemRepository = orderItemRepository;
         private readonly IMapper _mapper = mapper;
         private readonly ILogger<OrderService> _logger = logger;
+        private readonly IPublishEndpoint _publishEndpoint = publishEndpoint;
+        private readonly IHttpClientFactory _httpClientFactory  = httpClientFactory;
+        private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
 
 
 
@@ -45,7 +53,7 @@ namespace OrderService.Application.Services
             _logger.LogInformation("Retrieving all orders by userId. UserId: {UserId}.", userId);
 
             IReadOnlyList<Order> orders = await _orderRepository.GetAllOrderByUserIdAsync(userId);
-            _logger.LogInformation("Retrievid all orders. Count: {Count}, UserId: {UserId}.", orders.Count, userId);
+            _logger.LogInformation("Retrieved all orders. Count: {Count}, UserId: {UserId}.", orders.Count, userId);
 
             return _mapper.Map<List<OrderDto>>(orders);
         }
@@ -57,7 +65,7 @@ namespace OrderService.Application.Services
             _logger.LogInformation("Retrieving all orders.");
 
             IReadOnlyList<Order> orders = await _orderRepository.GetAllAsync();
-            _logger.LogInformation("Retrievid all orders. Count: {Count}.", orders.Count);
+            _logger.LogInformation("Retrieved all orders. Count: {Count}.", orders.Count);
 
             return _mapper.Map<List<OrderDto>>(orders);
         }
@@ -87,12 +95,23 @@ namespace OrderService.Application.Services
             _logger.LogInformation("Creating new order. UserId: {UserId}.", createDto.UserId);
 
             Order order = _mapper.Map<Order>(createDto);
-            order.Id = default;
+            order.Id = Guid.Empty;
             order.CreatedAt = DateTime.UtcNow;
             order.Status = OrderStatus.Created;
 
             Order createdOrder = await _orderRepository.InsertAsync(order);
             _logger.LogInformation("Order created. OrderId: {OrderId}.", createdOrder.Id);
+
+            OrderCreatedEvent orderCreatedEvent = new()
+            {
+                OrderId = createdOrder.Id,
+                UserId = createdOrder.UserId,
+                TotalPrice = createdOrder.TotalPrice,
+                CreatedAt = DateTime.UtcNow,
+                Note = order.Note ?? ""
+            };
+
+            await _publishEndpoint.Publish(orderCreatedEvent);
 
             return _mapper.Map<OrderDto>(createdOrder);
         }
@@ -117,7 +136,6 @@ namespace OrderService.Application.Services
             _logger.LogInformation("Order updated. OrderId: {OrderId}.", orderId);
 
             return _mapper.Map<OrderDto>(updatedOrder);
-
         }
 
 
@@ -164,18 +182,65 @@ namespace OrderService.Application.Services
             }
 
             OrderStatus currentStatus = order.Status;
-            
+
             if (!IsStatusChangeValid(currentStatus, statusDto.Status))
             {
                 _logger.LogWarning("Cannot change orderStatus. Bad validation. OrderId: {OrderId}.", orderId);
                 return null;
             }
 
+
+            if (statusDto.Status == OrderStatus.Completed)
+            {
+                var httpClient = _httpClientFactory.CreateClient("DeliveryService");
+                var token = await _httpContextAccessor.HttpContext.GetTokenAsync("access_token");
+                if (!string.IsNullOrWhiteSpace(token))
+                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                DeliveryExternalDto? delivery;
+
+                try
+                {
+                    delivery = await httpClient.GetFromJsonAsync<DeliveryExternalDto>($"api/Delivery/{order.Id}");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to get delivery info for orderId {OrderId}", order.Id);
+                    return null;
+                }
+
+
+                if (delivery is null)
+                {
+                    _logger.LogWarning("Cannot change orderStatus to Complete. Delivery not found. OrderId: {OrderId}.", orderId);
+                    return null;
+                }
+
+
+                if (delivery.Status != DeliveryStatus.Delivered)
+                {
+                    _logger.LogWarning("Cannot change orderStatus to Complete. DeliveryStatus is not delivered. OrderId: {OrderId}.", orderId);
+                    return null;
+                }
+            }
+
+
             order.Status = statusDto.Status;
             order.UpdatedAt = DateTime.UtcNow;
 
             Order updatedOrder = await _orderRepository.UpdateAsync(order);
             _logger.LogInformation("OrderStatus changed. OrderId: {OrderId}.", orderId);
+
+
+            OrderStatusChangedEvent orderStatusChangedEvent = new()
+            {
+                OrderId = orderId,
+                UserId = order.UserId,
+                NewStatus = (Shared.Contracts.Enums.OrderStatus)(int)order.Status,
+                UpdatedAt = DateTime.UtcNow
+            };
+
+            await _publishEndpoint.Publish(orderStatusChangedEvent);
 
             return _mapper.Map<OrderDto>(updatedOrder);
         }
@@ -187,7 +252,7 @@ namespace OrderService.Application.Services
             _logger.LogInformation("Creating new order from cart. UserId: {UserId}.", createDto.UserId);
 
             Order order = _mapper.Map<Order>(createDto);
-            order.Id = default;
+            order.Id = Guid.Empty;
             order.CreatedAt = DateTime.UtcNow;
             order.Status = OrderStatus.Created;
 
@@ -195,6 +260,28 @@ namespace OrderService.Application.Services
             _logger.LogInformation("Order from cart created. OrderId: {OrderId}.", createdOrder.Id);
 
             return _mapper.Map<OrderDto>(createdOrder);
+        }
+
+
+
+        public async Task<OrderDto?> SetOrderStatusCompletedFromDelivery(Guid orderId)
+        {
+            _logger.LogInformation("Setting orderStatus to completed from DeliveryDeliveredEvent. OrderId: {OrderId}.", orderId);
+
+            Order? order = await _orderRepository.FindByIdAsync(orderId);
+            if (order is null)
+            {
+                _logger.LogWarning("Cannot set orderStatus to completed. Order not found. OrderId: {OrderId}.", orderId);
+                return null;
+            }
+
+            order.Status = OrderStatus.Completed;
+            order.UpdatedAt = DateTime.UtcNow;
+
+            Order updatedOrder = await _orderRepository.UpdateAsync(order);
+            _logger.LogInformation("OrderStatus set to completed. OrderId: {OrderId}.", orderId);
+
+            return _mapper.Map<OrderDto>(updatedOrder);
         }
 
 

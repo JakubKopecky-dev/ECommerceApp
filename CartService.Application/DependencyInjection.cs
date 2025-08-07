@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using CartService.Application.Interfaces.Services;
+﻿using CartService.Application.Interfaces.Services;
 using CartService.Application.Mapping;
 using CartService.Application.Services;
 using Microsoft.Extensions.DependencyInjection;
+using CartServiceService = CartService.Application.Services.CartService;
+
 
 namespace CartService.Application
 {
@@ -16,7 +13,7 @@ namespace CartService.Application
         {
             // Register Services
             services.AddScoped<ICartItemService, CartItemService>();
-
+            services.AddScoped<ICartService, CartServiceService>();
 
 
             // Register AutoMapper

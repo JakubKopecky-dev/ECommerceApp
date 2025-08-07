@@ -1,10 +1,8 @@
 ﻿using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using ProductService.Application.DTOs.ProductReview;
 using ProductService.Application.Interfaces.Services;
-using ProductService.Domain.Entity;
 using ProductService.Domain.Enum;
 
 namespace ProductService.Api.Controllers

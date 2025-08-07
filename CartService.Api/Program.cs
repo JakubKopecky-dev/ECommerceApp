@@ -3,13 +3,12 @@ using CartService.Api.DependencyInjection;
 using CartService.Application;
 using CartService.Application.Interfaces.Services;
 using CartService.Persistence;
-using CartServiceService = CartService.Application.Services.CartService;
 
 var builder = WebApplication.CreateBuilder(args);
 
 #region Register services (Dependecy Injection)
 
-// Persitence (DbContext, Repository)
+// Persistence (DbContext, Repository)
 builder.Services.AddPersistenceServices(builder.Configuration);
 
 // Application (Services, AutoMapper)
@@ -21,11 +20,10 @@ builder.Services.AddAuthenticationServiceCollection(builder.Configuration);
 // HTTP Context accessor
 builder.Services.AddHttpContextAccessor();
 
-// HTTP client + Registre CartService
-var orderServiceUrl = builder.Configuration["OrderService:BaseUrl"];
-builder.Services.AddHttpClient<ICartService, CartServiceService>(client =>
+// HTTP client + Register CartService
+builder.Services.AddHttpClient("OrderService", client =>
 {
-    client.BaseAddress = new Uri(orderServiceUrl!);
+    client.BaseAddress = new Uri(builder.Configuration["OrderService:BaseUrl"]!);
 });
 
 // Controllers
@@ -43,7 +41,7 @@ var app = builder.Build();
 
 #region Middleware pipeline
 
-// Swagger in DEV solution
+// Swagger in a DEV solution
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -57,7 +55,7 @@ if (app.Environment.IsDevelopment())
 // HTTPS Redirect
 app.UseHttpsRedirection();
 
-// Authentitaction and Authorization
+// Authentication and Authorization
 app.UseAuthentication();
 app.UseAuthorization();
 

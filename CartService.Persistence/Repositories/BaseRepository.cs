@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using CartService.Application.Interfaces.Repositories;
+﻿using CartService.Application.Interfaces.Repositories;
 using Microsoft.EntityFrameworkCore;
 
 namespace CartService.Persistence.Repositories

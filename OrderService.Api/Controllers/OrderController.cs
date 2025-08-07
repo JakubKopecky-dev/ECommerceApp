@@ -4,7 +4,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OrderService.Application.DTOs.Order;
 using OrderService.Application.Interfaces.Services;
-using OrderService.Domain.Entity;
 using OrderService.Domain.Enum;
 using Shared.Contracts.Events;
 
@@ -13,10 +12,9 @@ namespace OrderService.Api.Controllers
     [ApiController]
     [Route("api/[controller]")]
     [Authorize(Roles = UserRoles.User)]
-    public class OrderController(IOrderService orderService, IPublishEndpoint publishEndpoint) : ControllerBase
+    public class OrderController(IOrderService orderService) : ControllerBase
     {
         private readonly IOrderService _orderService = orderService;
-        private readonly IPublishEndpoint _publishEndpoint = publishEndpoint;
 
 
 
@@ -56,17 +54,6 @@ namespace OrderService.Api.Controllers
         {
             OrderDto order = await _orderService.CreateOrderAsync(createDto);
 
-            OrderCreatedEvent orderCreatedEvent = new()
-            {
-                OrderId = order.Id,
-                UserId = order.UserId,
-                TotalPrice = order.TotalPrice,
-                CreatedAt = DateTime.UtcNow,
-                Note = order.Note ?? ""
-            };
-
-            await _publishEndpoint.Publish(orderCreatedEvent);
-
             return CreatedAtAction(nameof(CreateOrder), new { orderId = order.Id }, order);
         }
 
@@ -98,21 +85,6 @@ namespace OrderService.Api.Controllers
         {
             OrderDto? order = await _orderService.ChangeOrderStatusAsync(orderId, changeStatus);
 
-            if (order is not null)
-            {
-                OrderStatusChangedEvent orderStatusChangedEvent = new()
-                {
-                    OrderId = orderId,
-                    UserId = order.UserId,
-                    NewStatus = (Shared.Contracts.Enums.OrderStatus)(int)order.Status,
-                    UpdatedAt = DateTime.UtcNow
-                };
-
-                await _publishEndpoint.Publish(orderStatusChangedEvent);
-            }
-            
-
-
             return order is not null ? Ok(order) : NotFound();
         }
 
@@ -122,17 +94,6 @@ namespace OrderService.Api.Controllers
         public async Task<IActionResult> CreateOrderFromCart([FromBody] ExternalCreateOrderDto createDto)
         {
             OrderDto order = await _orderService.CreateOrderFromCartAsync(createDto);
-
-            var orderCreatedEvent = new OrderCreatedEvent()
-            {
-                OrderId = order.Id,
-                UserId = order.UserId,
-                TotalPrice = order.TotalPrice,
-                CreatedAt = DateTime.UtcNow,
-                Note = order.Note ?? ""
-            };
-
-            await _publishEndpoint.Publish(orderCreatedEvent);
 
             return CreatedAtAction(nameof(CreateOrder), new { orderId = order.Id }, order);
         }

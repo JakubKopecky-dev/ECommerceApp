@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using AutoMapper;
+﻿using AutoMapper;
 using Microsoft.Extensions.Logging;
 using ProductService.Application.DTOs.Category;
 using ProductService.Application.Interfaces.Repositories;
@@ -56,7 +51,7 @@ namespace ProductService.Application.Services
             _logger.LogInformation("Creating new category. Title: {Title}.", createDto.Title);
 
             Category category = _mapper.Map<Category>(createDto);
-            category.Id = default;
+            category.Id = Guid.Empty;
             category.CreatedAt = DateTime.UtcNow;
 
             Category addedCategory = await _categoryRepository.InsertAsync(category);

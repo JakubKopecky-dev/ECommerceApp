@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Text;
-using System.Threading.Tasks;
 using AutoMapper;
 using CartService.Application.DTOs.Cart;
 using CartService.Application.Interfaces.Repositories;
@@ -14,18 +10,16 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Authentication;
 
 
-
 namespace CartService.Application.Services
 {
-    public class CartService(ICartRepository cartRepository, ICartItemRepository cartItemRepository, IMapper mapper, ILogger<CartService> logger, HttpClient httpClient,IHttpContextAccessor httpContextAccessor) : ICartService
+    public class CartService(ICartRepository cartRepository, ICartItemRepository cartItemRepository, IMapper mapper, ILogger<CartService> logger,IHttpClientFactory httpClientFactory , IHttpContextAccessor httpContextAccessor) : ICartService
     {
         private readonly ICartRepository _cartRepository = cartRepository;
         private readonly ICartItemRepository _cartItemRepository = cartItemRepository;
         private readonly IMapper _mapper = mapper;
         private readonly ILogger<CartService> _logger = logger;
-        private readonly HttpClient _httpClient = httpClient;
+        private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
         private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
-
 
 
         public async Task<CartExtendedDto> GetOrCreateCartAsync(Guid userId)
@@ -37,7 +31,7 @@ namespace CartService.Application.Services
             {
                 _logger.LogInformation("Cart not found. Creating new cart for user. UserId: {UserId}.", userId);
 
-                Cart newCart = new() { Id = default, UserId = userId };
+                Cart newCart = new() { Id = Guid.Empty, UserId = userId };
                 Cart createdCart = await _cartRepository.InsertAsync(newCart);
                 _logger.LogInformation("New cart created. CartId: {CartId}.", createdCart.Id);
 
@@ -48,7 +42,6 @@ namespace CartService.Application.Services
 
             return _mapper.Map<CartExtendedDto>(cart);
         }
-
 
 
         public async Task<CartDto?> DeleteCartAsync(Guid userId)
@@ -80,7 +73,6 @@ namespace CartService.Application.Services
         }
 
 
-
         public async Task<bool> CheckoutCartAsync(Guid userId)
         {
             _logger.LogInformation("Checking out cart. UserId: {UserId}.", userId);
@@ -94,14 +86,15 @@ namespace CartService.Application.Services
 
             CheckoutCartDto checkoutCartDto = _mapper.Map<CheckoutCartDto>(cart);
 
+            var httpclient = _httpClientFactory.CreateClient("OrderService");
             var token = await _httpContextAccessor.HttpContext.GetTokenAsync("access_token");
             if (!string.IsNullOrWhiteSpace(token))
-                _httpClient.DefaultRequestHeaders.Authorization = new("Bearer", token);
+                httpclient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
 
             try
-            { 
-                var response = await _httpClient.PostAsJsonAsync("api/Order/external", checkoutCartDto);
+            {
+                var response = await httpclient.PostAsJsonAsync("api/Order/external", checkoutCartDto);
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -121,10 +114,5 @@ namespace CartService.Application.Services
 
             return true;
         }
-
-
-
-
-
     }
 }

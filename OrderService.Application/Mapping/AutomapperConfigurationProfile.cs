@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using AutoMapper;
+﻿using AutoMapper;
 using OrderService.Application.DTOs.Order;
 using OrderService.Application.DTOs.OrderItem;
 using OrderService.Domain.Entity;

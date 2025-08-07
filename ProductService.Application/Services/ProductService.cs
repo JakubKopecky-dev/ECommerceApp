@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using AutoMapper;
+﻿using AutoMapper;
 using Microsoft.Extensions.Logging;
 using ProductService.Application.DTOs.Product;
 using ProductService.Application.Interfaces.Repositories;
@@ -56,7 +51,7 @@ namespace ProductService.Application.Services
             _logger.LogInformation("Creating new product. Title: {Title}.", createDto.Title);
 
             Product product = _mapper.Map<Product>(createDto);
-            product.Id = default;
+            product.Id = Guid.Empty;
             product.CreatedAt = DateTime.UtcNow;
 
             Product createdProduct = await _productRepository.InsertAsync(product);

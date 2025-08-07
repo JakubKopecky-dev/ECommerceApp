@@ -1,23 +1,28 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Net.Http.Headers;
+using System.Net.Http.Json;
 using AutoMapper;
 using DeliveryService.Application.DTOs.Delivery;
+using DeliveryService.Application.DTOs.External;
 using DeliveryService.Application.Interfaces.Repositories;
 using DeliveryService.Application.Interfaces.Services;
 using DeliveryService.Domain.Entity;
 using DeliveryService.Domain.Enum;
+using MassTransit;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using Shared.Contracts.Events;
 
 namespace DeliveryService.Application.Services
 {
-    public class DeliveryService(IDeliveryRepository deliveryRepository, IMapper mapper, ILogger<DeliveryService> logger) : IDeliveryService
+    public class DeliveryService(IDeliveryRepository deliveryRepository, IMapper mapper, ILogger<DeliveryService> logger, IPublishEndpoint publishEndpoint, IHttpClientFactory httpClientFactory, IHttpContextAccessor httpContextAccessor) : IDeliveryService
     {
         private readonly IDeliveryRepository _deliveryRepository = deliveryRepository;
         private readonly IMapper _mapper = mapper;
         private readonly ILogger<DeliveryService> _logger = logger;
+        private readonly IPublishEndpoint _publishEndpoint = publishEndpoint;
+        private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
+        private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
 
 
 
@@ -58,7 +63,7 @@ namespace DeliveryService.Application.Services
             _logger.LogInformation("Creating new delivery. OrderId: {OrderId}.", createDto.OrderId);
 
             Delivery delivery = _mapper.Map<Delivery>(createDto);
-            delivery.Id = default;
+            delivery.Id = Guid.Empty;
             delivery.CreatedAt = DateTime.UtcNow;
             delivery.Status = DeliveryStatus.Pending;
 
@@ -136,11 +141,54 @@ namespace DeliveryService.Application.Services
             delivery.Status = changeDto.Status;
             delivery.UpdatedAt = DateTime.UtcNow;
 
-            if(changeDto.Status == DeliveryStatus.Delivered)
+            if (changeDto.Status == DeliveryStatus.Delivered)
                 delivery.DeliveredAt = DateTime.UtcNow;
 
             Delivery updatedDelivery = await _deliveryRepository.UpdateAsync(delivery);
             _logger.LogInformation("DeliveryStatus changed. DeliveryId: {DeliveryId}.", deliveryId);
+
+
+            // changing status on order to completed
+            if (updatedDelivery.Status == DeliveryStatus.Delivered)
+            {
+                DeliveryDeliveredEvent deliveryDeliveredEvent = new() { OrderId = updatedDelivery.OrderId };
+                await _publishEndpoint.Publish(deliveryDeliveredEvent);
+            }
+
+
+            // notification user delivery canceled
+            if (updatedDelivery.Status == DeliveryStatus.Canceled)
+            {
+                var httpClient = _httpClientFactory.CreateClient("OrderService");
+                var token = await _httpContextAccessor.HttpContext.GetTokenAsync("access_token");
+                if (!string.IsNullOrWhiteSpace(token))
+                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                OrderExternalDto? order;
+
+                try
+                {
+                    order = await httpClient.GetFromJsonAsync<OrderExternalDto>($"api/Order/{delivery.OrderId}");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Failed to get order. OrderId: {OrderId}, DeliveryId: {DeliveryId}.", delivery.OrderId, delivery.Id);
+                    return null;
+                }
+
+
+                if (order is null)
+                {
+                    _logger.LogWarning("Cannot sent notification. Order not found. OrderId: {OrderId}.", delivery.OrderId);
+                    return null;
+                }
+
+
+                Guid userId = order.UserId;
+
+                DeliveryCanceledEvent deliveryCanceledEvent = new() { UserId = userId, OrderId = delivery.OrderId };
+                await _publishEndpoint.Publish(deliveryCanceledEvent);
+            }
 
             return _mapper.Map<DeliveryDto>(updatedDelivery);
         }

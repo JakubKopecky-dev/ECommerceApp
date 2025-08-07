@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using DeliveryService.Application.DTOs.Courier;
+﻿using DeliveryService.Application.DTOs.Courier;
 using DeliveryService.Domain.Enum;
 
 namespace DeliveryService.Application.DTOs.Delivery

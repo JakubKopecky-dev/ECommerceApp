@@ -16,6 +16,18 @@ builder.Services.AddApplicationServices();
 //Authentization
 builder.Services.AddAuthenticationServiceCollection(builder.Configuration);
 
+// HTTP Context accessor
+builder.Services.AddHttpContextAccessor();
+
+// HTTP client + Register CartService
+builder.Services.AddHttpClient("OrderService", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["OrderService:BaseUrl"]!);
+});
+
+// MassTransit + RebbitMQ
+builder.Services.AddMassTransitService();
+
 // Controllers && JSON Setting
 builder.Services.AddControllers().AddJsonOptions(options =>
 options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
