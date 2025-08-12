@@ -36,6 +36,7 @@ namespace UserService.Api.Controller
 
 
         [Authorize(Roles = UserRoles.User)]
+        [HttpGet("me")]
         public async Task<IActionResult> Me()
         {
             UserDto? user = await _authService.GetCurrentUserAsync(User);

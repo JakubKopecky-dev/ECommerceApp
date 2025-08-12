@@ -22,13 +22,28 @@ namespace ProductService.Persistence.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("CategoryProduct", b =>
+                {
+                    b.Property<Guid>("CategoriesId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ProductsId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("CategoriesId", "ProductsId");
+
+                    b.HasIndex("ProductsId");
+
+                    b.ToTable("CategoryProduct");
+                });
+
             modelBuilder.Entity("ProductService.Domain.Common.AuditEventLog", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("bigint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<string>("Data")
                         .IsRequired()
@@ -111,9 +126,6 @@ namespace ProductService.Persistence.Migrations
                     b.Property<Guid>("BrandId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("CategoryId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -148,8 +160,6 @@ namespace ProductService.Persistence.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("BrandId");
-
-                    b.HasIndex("CategoryId");
 
                     b.ToTable("Products");
                 });
@@ -194,6 +204,21 @@ namespace ProductService.Persistence.Migrations
                     b.ToTable("ProductReviews");
                 });
 
+            modelBuilder.Entity("CategoryProduct", b =>
+                {
+                    b.HasOne("ProductService.Domain.Entity.Category", null)
+                        .WithMany()
+                        .HasForeignKey("CategoriesId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("ProductService.Domain.Entity.Product", null)
+                        .WithMany()
+                        .HasForeignKey("ProductsId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("ProductService.Domain.Entity.Product", b =>
                 {
                     b.HasOne("ProductService.Domain.Entity.Brand", "Brand")
@@ -202,17 +227,13 @@ namespace ProductService.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("ProductService.Domain.Entity.Category", null)
-                        .WithMany("Products")
-                        .HasForeignKey("CategoryId");
-
                     b.Navigation("Brand");
                 });
 
             modelBuilder.Entity("ProductService.Domain.Entity.ProductReview", b =>
                 {
                     b.HasOne("ProductService.Domain.Entity.Product", "Product")
-                        .WithMany()
+                        .WithMany("Reviews")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -225,9 +246,9 @@ namespace ProductService.Persistence.Migrations
                     b.Navigation("Products");
                 });
 
-            modelBuilder.Entity("ProductService.Domain.Entity.Category", b =>
+            modelBuilder.Entity("ProductService.Domain.Entity.Product", b =>
                 {
-                    b.Navigation("Products");
+                    b.Navigation("Reviews");
                 });
 #pragma warning restore 612, 618
         }

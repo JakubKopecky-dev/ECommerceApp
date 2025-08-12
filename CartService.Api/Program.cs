@@ -1,5 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 using CartService.Api.DependencyInjection;
+using CartService.Api.Middleware;
 using CartService.Application;
 using CartService.Application.Interfaces.Services;
 using CartService.Persistence;
@@ -20,11 +21,18 @@ builder.Services.AddAuthenticationServiceCollection(builder.Configuration);
 // HTTP Context accessor
 builder.Services.AddHttpContextAccessor();
 
-// HTTP client + Register CartService
+// HTTP client for OrderService
 builder.Services.AddHttpClient("OrderService", client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["OrderService:BaseUrl"]!);
 });
+
+// HTTP client for ProductService
+builder.Services.AddHttpClient("ProductService", client =>
+{
+    client.BaseAddress = new Uri(builder.Configuration["ProductService:BaseUrl"]!);
+});
+
 
 // Controllers
 builder.Services.AddControllers().AddJsonOptions(options =>
@@ -51,6 +59,11 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+// Global error handling
+app.UseGlobalExceptionHandling();
+
+// Client cancellation logging
+app.UseClientCancellationLogging();
 
 // HTTPS Redirect
 app.UseHttpsRedirection();

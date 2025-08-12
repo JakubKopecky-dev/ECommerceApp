@@ -1,7 +1,8 @@
-using DeliveryService.Persistence;
-using DeliveryService.Application;
-using DeliveryService.Api.DependencyInjection;
 using System.Text.Json.Serialization;
+using DeliveryService.Api.DependencyInjection;
+using DeliveryService.Api.Middleware;
+using DeliveryService.Application;
+using DeliveryService.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,7 +20,7 @@ builder.Services.AddAuthenticationServiceCollection(builder.Configuration);
 // HTTP Context accessor
 builder.Services.AddHttpContextAccessor();
 
-// HTTP client + Register CartService
+// HTTP client for OrderService
 builder.Services.AddHttpClient("OrderService", client =>
 {
     client.BaseAddress = new Uri(builder.Configuration["OrderService:BaseUrl"]!);
@@ -52,9 +53,14 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+// Global error handling
+app.UseGlobalExceptionHandling();
+
+// Client cancellation logging
+app.UseClientCancellationLogging();
+
 // HTTPS Redirect
 app.UseHttpsRedirection();
-
 
 // Authentitaction and Authorization
 app.UseAuthentication();

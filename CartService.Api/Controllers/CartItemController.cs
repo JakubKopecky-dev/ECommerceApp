@@ -23,9 +23,11 @@ namespace CartService.Api.Controllers
 
 
         [HttpPost]
-        public async Task<IActionResult> CreateCartItemAsync([FromBody] CreateCartItemDto createDto)
+        public async Task<IActionResult> CreateCartItemAsync([FromBody] CreateCartItemDto createDto, CancellationToken ct)
         {
-            CartItemDto cartItem = await _cartItemService.CreateCartItemAsync(createDto);
+            CartItemDto? cartItem = await _cartItemService.CreateCartItemOrChangeQuantityAsync(createDto, ct);
+            if (cartItem is null)
+                return BadRequest();
 
             return CreatedAtAction(nameof(GetCartItem), new { cartItemId = cartItem.Id }, cartItem);
         }
@@ -33,9 +35,9 @@ namespace CartService.Api.Controllers
 
 
         [HttpPatch("{cartItemId}/quantity")]
-        public async Task<IActionResult> ChangeCartItemQuantity(Guid cartItemId, [FromBody] ChangeQuantityCartItemDto changeDto)
+        public async Task<IActionResult> ChangeCartItemQuantity(Guid cartItemId, [FromBody] ChangeQuantityCartItemDto changeDto, CancellationToken ct)
         {
-            CartItemDto? cartItem = await _cartItemService.ChangeCartItemQuantityAsync(cartItemId, changeDto);
+            CartItemDto? cartItem = await _cartItemService.ChangeCartItemQuantityAsync(cartItemId, changeDto,ct);
 
             return cartItem is not null ? Ok(cartItem) : NotFound();
         }

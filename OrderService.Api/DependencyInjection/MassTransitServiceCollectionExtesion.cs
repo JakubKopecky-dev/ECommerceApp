@@ -1,4 +1,5 @@
 ﻿using MassTransit;
+using OrderService.Api.Consumers;
 
 namespace OrderService.Api.DependencyInjection
 {
@@ -8,6 +9,10 @@ namespace OrderService.Api.DependencyInjection
         {
             services.AddMassTransit(x =>
             {
+                x.SetKebabCaseEndpointNameFormatter();
+
+                x.AddConsumer<DeliveryDeliveredConsumer>();
+
                 x.UsingRabbitMq((context, cfg) =>
                 {
                     cfg.Host("localhost", "/", h =>
@@ -16,6 +21,8 @@ namespace OrderService.Api.DependencyInjection
                         h.Password("guest");
 
                     });
+
+                    cfg.ConfigureEndpoints(context);
 
                 });
             });

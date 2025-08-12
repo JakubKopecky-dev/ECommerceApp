@@ -18,6 +18,8 @@ namespace NotificationService.Api.Consumers
 
         public async Task Consume(ConsumeContext<OrderCreatedEvent> context)
         {
+            var ct = context.CancellationToken;
+
             OrderCreatedEvent message = context.Message;
 
             _logger.LogInformation("Received OrderCreatedEvent. OrderId: {OrderId}, UserId: {UserId}.", message.OrderId, message.UserId);
@@ -33,7 +35,7 @@ namespace NotificationService.Api.Consumers
             };
 
 
-            NotificationDto notification = await _notificationService.CreateNotificationAsync(createNotification);
+            NotificationDto notification = await _notificationService.CreateNotificationAsync(createNotification, ct);
 
             await _hubContext.Clients.User(message.UserId.ToString())
                 .SendAsync("ReceiveNotification", new
@@ -42,7 +44,7 @@ namespace NotificationService.Api.Consumers
                     notification.Title,
                     notification.Message,
                     notification.CreatedAt,
-                });
+                }, ct);
 
             _logger.LogInformation("Notification created and sent via SignalR. NotificationId: {NotificationId}", notification.Id);
         }

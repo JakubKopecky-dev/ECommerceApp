@@ -15,11 +15,13 @@ namespace ProductService.Application.DTOs.Product
         public bool IsActive { get; set; }
 
         public decimal Price { get; set; }
-
-        // [Url]
+        
+        [Url]
         public string ImageUrl { get; set; } = "";
 
         public Guid BrandId { get; set; }
+
+        public List<string> Categories { get; set; } = [];
 
 
     }

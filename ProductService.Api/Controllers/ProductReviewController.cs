@@ -15,14 +15,14 @@ namespace ProductService.Api.Controllers
 
 
         [HttpGet]
-        public async Task<IReadOnlyList<ProductReviewDto>> GetAllProductReviews() => await _productReviewService.GetAllProductReviewsAsync();
+        public async Task<IReadOnlyList<ProductReviewDto>> GetAllProductReviews(CancellationToken ct) => await _productReviewService.GetAllProductReviewsAsync(ct);
 
 
 
         [HttpGet("{reviewId}")]
-        public async Task<IActionResult> GetProductReview(Guid reviewId)
+        public async Task<IActionResult> GetProductReview(Guid reviewId, CancellationToken ct)
         {
-            ProductReviewDto? review = await _productReviewService.GetProductReviewAsync(reviewId);
+            ProductReviewDto? review = await _productReviewService.GetProductReviewAsync(reviewId, ct);
 
             return review is not null ? Ok(review) : NotFound();
         }
@@ -31,9 +31,9 @@ namespace ProductService.Api.Controllers
 
         [Authorize(Roles = UserRoles.User)]
         [HttpPost]
-        public async Task<IActionResult> CreateProductReview([FromBody] CreateProductReviewDto createDto)
+        public async Task<IActionResult> CreateProductReview([FromBody] CreateProductReviewDto createDto, CancellationToken ct)
         {
-            ProductReviewDto review = await _productReviewService.CreateProductReviewAsync(createDto);
+            ProductReviewDto review = await _productReviewService.CreateProductReviewAsync(createDto, ct);
 
             return CreatedAtAction(nameof(GetProductReview), new { reviewId = review.Id }, review);
         }
@@ -42,9 +42,9 @@ namespace ProductService.Api.Controllers
 
         [Authorize(Roles = UserRoles.Admin)]
         [HttpPut("{reviewId}")]
-        public async Task<IActionResult> UpdateProductReview(Guid reviewId, [FromBody] UpdateProductReviewDto updateDto)
+        public async Task<IActionResult> UpdateProductReview(Guid reviewId, [FromBody] UpdateProductReviewDto updateDto, CancellationToken ct)
         {
-            ProductReviewDto? review = await _productReviewService.UpdateProductReviewAsync(reviewId,updateDto);
+            ProductReviewDto? review = await _productReviewService.UpdateProductReviewAsync(reviewId, updateDto, ct);
 
             return review is not null ? Ok(review) : NotFound();
 
@@ -54,9 +54,9 @@ namespace ProductService.Api.Controllers
 
         [Authorize(Roles = UserRoles.Admin)]
         [HttpDelete("{reviewId}")]
-        public async Task<IActionResult> DeleteProductReview(Guid reviewId)
+        public async Task<IActionResult> DeleteProductReview(Guid reviewId, CancellationToken ct)
         {
-            ProductReviewDto? review = await _productReviewService.DeleteProductReviewAsync(reviewId);
+            ProductReviewDto? review = await _productReviewService.DeleteProductReviewAsync(reviewId, ct);
 
             return review is not null ? Ok(review) : NotFound();
         }
@@ -65,13 +65,13 @@ namespace ProductService.Api.Controllers
 
         [Authorize(Roles = UserRoles.User)]
         [HttpDelete("my/{reviewId}")]
-        public async Task<IActionResult> DeleteOwnProductReview(Guid reviewId)
+        public async Task<IActionResult> DeleteOwnProductReview(Guid reviewId, CancellationToken ct)
         {
             string? userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!Guid.TryParse(userIdString, out Guid userId))
                 return Unauthorized();
 
-            ProductReviewDto? review = await _productReviewService.DeleteOwnProductReviewAsync(reviewId, userId);
+            ProductReviewDto? review = await _productReviewService.DeleteOwnProductReviewAsync(reviewId, userId, ct);
 
             return review is not null ? Ok(review) : NotFound();
         }

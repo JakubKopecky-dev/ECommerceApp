@@ -11,42 +11,45 @@ namespace NotificationService.Persistence.Repository
 
 
 
-        public async Task<TEntity?> FindByIdAsync(Guid id) => await _dbSet.FindAsync(id);
+        public async Task<TEntity?> FindByIdAsync(Guid id, CancellationToken ct = default) => await _dbSet.FindAsync([id], ct);
 
 
 
-        public async Task<IReadOnlyList<TEntity>> GetAllAsync() => await _dbSet.ToListAsync();
+        public async Task<IReadOnlyList<TEntity>> GetAllAsync(CancellationToken ct = default) => await _dbSet.ToListAsync(ct);
 
 
 
-        public async Task<TEntity> InsertAsync(TEntity entity)
+        public async Task<TEntity> InsertAsync(TEntity entity, CancellationToken ct = default)
         {
-            await _dbSet.AddAsync(entity);
-            await _dbContext.SaveChangesAsync();
+            await _dbSet.AddAsync(entity, ct);
+            await _dbContext.SaveChangesAsync(ct);
 
             return entity;
         }
 
 
 
-        public async Task<TEntity> UpdateAsync(TEntity entity)
+        public async Task<TEntity> UpdateAsync(TEntity entity, CancellationToken ct = default)
         {
             _dbSet.Update(entity);
-            await _dbContext.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync(ct);
 
             return entity;
         }
 
 
 
-        public async Task DeleteAsync(Guid id)
+        public async Task DeleteAsync(Guid id, CancellationToken ct = default)
         {
-            TEntity? entity = await _dbSet.FindAsync(id);
+            TEntity? entity = await _dbSet.FindAsync([id], ct);
             if (entity is null)
                 return;
 
             _dbSet.Remove(entity);
-            await _dbContext.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync(ct);
         }
+
+
+
     }
 }

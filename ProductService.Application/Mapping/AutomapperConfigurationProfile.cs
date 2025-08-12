@@ -20,11 +20,19 @@ namespace ProductService.Application.Mapping
             CreateMap<Category, CategoryDto>();
 
 
-            CreateMap<CreateProductDto, Product>();
+            CreateMap<CreateProductDto, Product>()
+                .ForMember(dest => dest.Categories, opt => opt.Ignore());
+                
+            
+            
             CreateMap<UpdateProductDto, Product>()
                 .ForMember(dest => dest.Categories, opt => opt.Ignore());
 
             CreateMap<Product, ProductDto>();
+            CreateMap<Product, ProductExtendedDto>()
+                .ForMember(dest => dest.Categories,
+                    opt => opt.MapFrom(src => src.Categories.Select(c => c.Title).ToList())
+                );
 
 
             CreateMap<CreateProductReviewDto, ProductReview>();

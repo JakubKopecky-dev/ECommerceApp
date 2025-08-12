@@ -4,10 +4,10 @@ namespace ProductService.Application.Interfaces.Services
 {
     public interface IBrandService
     {
-        Task<BrandDto> CreateBrandAsync(CreateUpdateBrandDto createDto);
-        Task<BrandDto?> DeleteBrandAsync(Guid brandId);
-        Task<IReadOnlyList<BrandDto>> GetAllBrandsAsync();
-        Task<BrandDto?> GetBrandByIdAsync(Guid brandId);
-        Task<BrandDto?> UpdateBrandAsync(Guid brandId, CreateUpdateBrandDto updateDto);
+        Task<BrandDto> CreateBrandAsync(CreateUpdateBrandDto createDto, CancellationToken ct = default);
+        Task<BrandDto?> DeleteBrandAsync(Guid brandId, CancellationToken ct = default);
+        Task<IReadOnlyList<BrandDto>> GetAllBrandsAsync(CancellationToken ct = default);
+        Task<BrandDto?> GetBrandByIdAsync(Guid brandId, CancellationToken ct = default);
+        Task<BrandDto?> UpdateBrandAsync(Guid brandId, CreateUpdateBrandDto updateDto, CancellationToken ct = default);
     }
 }

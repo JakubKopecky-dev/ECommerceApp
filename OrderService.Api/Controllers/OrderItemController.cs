@@ -16,14 +16,14 @@ namespace OrderService.Api.Controllers
 
 
         [HttpGet("by-order/{orderId}")]
-        public async Task<IReadOnlyList<OrderItemDto>> GetAllOrderItems(Guid orderId) => await _orderItemService.GetAllOrderItemsByOrderIdAsync(orderId);
+        public async Task<IReadOnlyList<OrderItemDto>> GetAllOrderItems(Guid orderId, CancellationToken ct) => await _orderItemService.GetAllOrderItemsByOrderIdAsync(orderId, ct);
 
 
 
         [HttpGet("{orderItemId}")]
-        public async Task<IActionResult> GetOrderItem(Guid orderItemId)
+        public async Task<IActionResult> GetOrderItem(Guid orderItemId, CancellationToken ct)
         {
-            OrderItemDto? orderItem = await _orderItemService.GetOrderItemAsync(orderItemId);
+            OrderItemDto? orderItem = await _orderItemService.GetOrderItemAsync(orderItemId, ct);
 
             return orderItem is not null ? Ok(orderItem) : NotFound();
         }
@@ -32,9 +32,9 @@ namespace OrderService.Api.Controllers
 
         [Authorize(Roles = UserRoles.Admin)]
         [HttpPost]
-        public async Task<IActionResult> CreateOrderItem([FromBody] CreateOrderItemDto createDto)
+        public async Task<IActionResult> CreateOrderItem([FromBody] CreateOrderItemDto createDto, CancellationToken ct)
         {
-            OrderItemDto orderItem = await _orderItemService.CreateOrderItemAsync(createDto);
+            OrderItemDto orderItem = await _orderItemService.CreateOrderItemAsync(createDto, ct);
 
             return CreatedAtAction(nameof(GetOrderItem), new { orderItemId = orderItem.Id }, orderItem);
         }
@@ -42,9 +42,9 @@ namespace OrderService.Api.Controllers
 
 
         [HttpPatch("{orderItemId}")]
-        public async Task<IActionResult> ChangeOrderItemQuantity(Guid orderItemId, [FromBody] ChangeOrderItemQuantityDto changeDto)
+        public async Task<IActionResult> ChangeOrderItemQuantity(Guid orderItemId, [FromBody] ChangeOrderItemQuantityDto changeDto, CancellationToken ct)
         {
-            OrderItemDto? orderItem = await _orderItemService.ChangeOrderItemQuantityAsync(orderItemId, changeDto);
+            OrderItemDto? orderItem = await _orderItemService.ChangeOrderItemQuantityAsync(orderItemId, changeDto, ct);
 
             return orderItem is not null ? Ok(orderItem) : NotFound();
         }
@@ -53,9 +53,9 @@ namespace OrderService.Api.Controllers
 
         [Authorize(Roles = UserRoles.Admin)]
         [HttpDelete("{orderItemId}")]
-        public async Task<IActionResult> DeleteOrderItem(Guid orderItemId)
+        public async Task<IActionResult> DeleteOrderItem(Guid orderItemId, CancellationToken ct)
         {
-            OrderItemDto? orderItem = await _orderItemService.DeleteOrderItemAsync(orderItemId);
+            OrderItemDto? orderItem = await _orderItemService.DeleteOrderItemAsync(orderItemId, ct);
 
             return orderItem is not null ? Ok(orderItem) : NotFound();
         }

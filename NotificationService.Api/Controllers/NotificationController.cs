@@ -17,13 +17,13 @@ namespace NotificationService.Api.Controllers
 
 
         [HttpGet]
-        public async Task<IActionResult> GetAllUserNotifications()
+        public async Task<IActionResult> GetAllUserNotifications(CancellationToken ct)
         {
             string? userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!Guid.TryParse(userIdString, out Guid userId))
                 return Unauthorized();
 
-            IReadOnlyList<NotificationDto> notifications = await _notificationService.GetAllNotificationByUserIdAsync(userId);
+            IReadOnlyList<NotificationDto> notifications = await _notificationService.GetAllNotificationByUserIdAsync(userId, ct);
 
             return Ok(notifications);
         }
@@ -31,9 +31,9 @@ namespace NotificationService.Api.Controllers
 
 
         [HttpGet("detail/{notificationId}")]
-        public async Task<IActionResult> GetNotification(Guid notificationId)
+        public async Task<IActionResult> GetNotification(Guid notificationId, CancellationToken ct)
         {
-            NotificationDto? notification = await _notificationService.GetNotificationAsync(notificationId);
+            NotificationDto? notification = await _notificationService.GetNotificationAsync(notificationId, ct);
 
             return notification is not null ? Ok(notification) : NotFound();
         }
@@ -42,9 +42,9 @@ namespace NotificationService.Api.Controllers
 
         [Authorize(Roles = UserRoles.Admin)]
         [HttpPost]
-        public async Task<IActionResult> CreateNotification([FromBody] CreateNofiticationDto createNofiticationDto)
+        public async Task<IActionResult> CreateNotification([FromBody] CreateNofiticationDto createNofiticationDto,CancellationToken ct)
         {
-            NotificationDto notification = await _notificationService.CreateNotificationAsync(createNofiticationDto);
+            NotificationDto notification = await _notificationService.CreateNotificationAsync(createNofiticationDto, ct);
 
             return CreatedAtAction(nameof(GetNotification),new {notificationId = notification.Id }, notification);
         }

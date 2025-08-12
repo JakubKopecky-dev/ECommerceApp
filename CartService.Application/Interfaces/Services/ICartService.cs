@@ -4,8 +4,8 @@ namespace CartService.Application.Interfaces.Services
 {
     public interface ICartService
     {
-        Task<bool> CheckoutCartAsync(Guid userId);
-        Task<CartDto?> DeleteCartAsync(Guid userId);
-        Task<CartExtendedDto> GetOrCreateCartAsync(Guid userId);
+        Task<bool> CheckoutCartByUserIdAsync(Guid userId, CancellationToken ct = default);
+        Task<CartDto?> DeleteCartByUserIdAsync(Guid userId, CancellationToken ct = default);
+        Task<CartExtendedDto> GetOrCreateCartByUserIdAsync(Guid userId, CancellationToken ct = default);
     }
 }

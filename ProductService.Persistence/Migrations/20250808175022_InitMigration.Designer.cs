@@ -12,8 +12,8 @@ using ProductService.Persistence;
 namespace ProductService.Persistence.Migrations
 {
     [DbContext(typeof(ProductDbContext))]
-    [Migration("20250719195448_AddedProductReviews")]
-    partial class AddedProductReviews
+    [Migration("20250808175022_InitMigration")]
+    partial class InitMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -27,11 +27,11 @@ namespace ProductService.Persistence.Migrations
 
             modelBuilder.Entity("ProductService.Domain.Common.AuditEventLog", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("bigint");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
                     b.Property<string>("Data")
                         .IsRequired()

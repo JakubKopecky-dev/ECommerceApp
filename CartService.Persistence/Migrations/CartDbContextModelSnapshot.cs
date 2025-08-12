@@ -116,7 +116,7 @@ namespace CartService.Persistence.Migrations
                     b.HasOne("CartService.Domain.Entity.Cart", null)
                         .WithMany("Items")
                         .HasForeignKey("CartId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 

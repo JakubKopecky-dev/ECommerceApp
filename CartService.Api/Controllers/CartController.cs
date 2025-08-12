@@ -17,13 +17,13 @@ namespace CartService.Api.Controllers
 
 
         [HttpGet]
-        public async Task<IActionResult> GetOrCreateCart()
+        public async Task<IActionResult> GetOrCreateCart(CancellationToken ct)
         {
             string? userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!Guid.TryParse(userIdString, out Guid userId))
                 return Unauthorized();
 
-            CartExtendedDto cart = await _cartService.GetOrCreateCartAsync(userId);
+            CartExtendedDto cart = await _cartService.GetOrCreateCartByUserIdAsync(userId,ct);
 
             return Ok(cart);
         }
@@ -31,13 +31,13 @@ namespace CartService.Api.Controllers
 
 
         [HttpDelete]
-        public async Task<IActionResult> DeleteCart()
+        public async Task<IActionResult> DeleteCart(CancellationToken ct)
         {
             string? userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!Guid.TryParse(userIdString, out Guid userId))
                 return Unauthorized();
 
-            CartDto? cart = await _cartService.DeleteCartAsync(userId);
+            CartDto? cart = await _cartService.DeleteCartByUserIdAsync(userId, ct);
 
             return cart is not null ? Ok(cart) : NotFound();
         }
@@ -45,13 +45,13 @@ namespace CartService.Api.Controllers
 
 
         [HttpPost("checkout")]
-        public async Task<IActionResult> CheckoutCart()
+        public async Task<IActionResult> CheckoutCart(CancellationToken ct)
         {
             string? userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!Guid.TryParse(userIdString, out Guid userId))
                 return Unauthorized();
 
-            bool result = await _cartService.CheckoutCartAsync(userId);
+            bool result = await _cartService.CheckoutCartByUserIdAsync(userId, ct);
 
             return result ? Ok() : BadRequest("Cart is empty or checkout failed.");
         }

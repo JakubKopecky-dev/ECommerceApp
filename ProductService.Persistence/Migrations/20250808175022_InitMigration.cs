@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace ProductService.Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class InitializeMigration : Migration
+    public partial class InitMigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -15,7 +15,7 @@ namespace ProductService.Persistence.Migrations
                 name: "AuditEventLogs",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
+                    Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     EntityName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     InsertedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -89,6 +89,31 @@ namespace ProductService.Persistence.Migrations
                         principalColumn: "Id");
                 });
 
+            migrationBuilder.CreateTable(
+                name: "ProductReviews",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ProductId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UserName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Rating = table.Column<long>(type: "bigint", nullable: false),
+                    Comment = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProductReviews", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ProductReviews_Products_ProductId",
+                        column: x => x.ProductId,
+                        principalTable: "Products",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_Brands_Title",
                 table: "Brands",
@@ -100,6 +125,11 @@ namespace ProductService.Persistence.Migrations
                 table: "Categories",
                 column: "Title",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProductReviews_ProductId",
+                table: "ProductReviews",
+                column: "ProductId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Products_BrandId",
@@ -117,6 +147,9 @@ namespace ProductService.Persistence.Migrations
         {
             migrationBuilder.DropTable(
                 name: "AuditEventLogs");
+
+            migrationBuilder.DropTable(
+                name: "ProductReviews");
 
             migrationBuilder.DropTable(
                 name: "Products");

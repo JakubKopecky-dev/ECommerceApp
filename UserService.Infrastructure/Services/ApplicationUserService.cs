@@ -17,11 +17,11 @@ namespace UserService.Infrastructure.Services
 
 
 
-        public async Task<IReadOnlyList<UserDto>> GetAllUsersAsync()
+        public async Task<IReadOnlyList<UserDto>> GetAllUsersAsync(CancellationToken ct = default)
         {
             _logger.LogInformation("Retrieving all users.");
 
-            IReadOnlyList<ApplicationUser> users = await _userManager.Users.ToListAsync();
+            List<ApplicationUser> users = await _userManager.Users.ToListAsync(ct);
             _logger.LogInformation("Retrieved all users. Count: {Count}.", users.Count);
 
             return _mapper.Map<List<UserDto>>(users);

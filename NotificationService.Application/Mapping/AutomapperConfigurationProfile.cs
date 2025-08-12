@@ -6,7 +6,7 @@ namespace NotificationService.Application.Mapping
 {
     public class AutomapperConfigurationProfile : Profile
     {
-        AutomapperConfigurationProfile()
+        public AutomapperConfigurationProfile()
         {
             CreateMap<Notification, NotificationDto>();
             CreateMap<CreateNofiticationDto, Notification>();

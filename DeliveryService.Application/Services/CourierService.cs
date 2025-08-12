@@ -15,11 +15,11 @@ namespace DeliveryService.Application.Services
 
 
 
-        public async Task<IReadOnlyList<CourierDto>> GetAllCouriesAsync()
+        public async Task<IReadOnlyList<CourierDto>> GetAllCouriesAsync(CancellationToken ct = default)
         {
             _logger.LogInformation("Retrieving all couriers");
 
-            IReadOnlyList<Courier> couriers = await _courierRepository.GetAllAsync();
+            IReadOnlyList<Courier> couriers = await _courierRepository.GetAllAsync(ct);
             _logger.LogInformation("Retrieved all couriers. Count: {Count}.", couriers.Count);
             
             return _mapper.Map<List<CourierDto>>(couriers);
@@ -27,11 +27,11 @@ namespace DeliveryService.Application.Services
 
 
 
-        public async Task<CourierDto?> GetCourierAsync(Guid courierId)
+        public async Task<CourierDto?> GetCourierAsync(Guid courierId, CancellationToken ct = default)
         {
             _logger.LogInformation("Retrieving courier. CourierId: {courierId}.", courierId);
 
-            Courier? courier = await _courierRepository.FindByIdAsync(courierId);
+            Courier? courier = await _courierRepository.FindByIdAsync(courierId,ct);
             if(courier is null)
             {
                 _logger.LogInformation("Courier not found. CourierId: {CourierId}.", courierId);
@@ -45,7 +45,7 @@ namespace DeliveryService.Application.Services
 
 
 
-        public async Task<CourierDto> CreateCourierAsync(CreateUpdateCourierDto createDto)
+        public async Task<CourierDto> CreateCourierAsync(CreateUpdateCourierDto createDto, CancellationToken ct = default)
         {
             _logger.LogInformation("Creating new courier. Name: {Name}.", createDto.Name);
 
@@ -53,7 +53,7 @@ namespace DeliveryService.Application.Services
             courier.Id = Guid.Empty;
             courier.CreatedAt = DateTime.UtcNow;
 
-            Courier createdCourier = await _courierRepository.InsertAsync(courier);
+            Courier createdCourier = await _courierRepository.InsertAsync(courier,ct);
             _logger.LogInformation("Courier created. CourierId: {CourierId}.", createdCourier.Id);
 
             return _mapper.Map<CourierDto>(createdCourier);
@@ -61,11 +61,11 @@ namespace DeliveryService.Application.Services
 
 
 
-        public async Task<CourierDto?> UpdateCourierAsync(Guid courierId,CreateUpdateCourierDto updateDto)
+        public async Task<CourierDto?> UpdateCourierAsync(Guid courierId,CreateUpdateCourierDto updateDto, CancellationToken ct = default)
         {
             _logger.LogInformation("Updating courier. CourierId: {CourierId}.", courierId);
 
-            Courier? courierDb = await _courierRepository.FindByIdAsync(courierId);
+            Courier? courierDb = await _courierRepository.FindByIdAsync(courierId, ct);
             if (courierDb is null)
             {
                 _logger.LogWarning("Cannot udpdate. Courier not found. CourierId: {CourierId}.", courierId);
@@ -76,7 +76,7 @@ namespace DeliveryService.Application.Services
 
             courierDb.UpdatedAt = DateTime.UtcNow;
 
-            Courier updatedCourier = await _courierRepository.UpdateAsync(courierDb);
+            Courier updatedCourier = await _courierRepository.UpdateAsync(courierDb, ct);
             _logger.LogInformation("Courier updated. CourierId: {CourierId}.", courierId);
 
             return _mapper.Map<CourierDto>(updatedCourier);
@@ -84,18 +84,18 @@ namespace DeliveryService.Application.Services
 
 
 
-        public async Task<CourierDto?> DeleteCourierAsync(Guid courierId)
+        public async Task<CourierDto?> DeleteCourierAsync(Guid courierId, CancellationToken ct = default)
         {
             _logger.LogInformation("Deleting courier. CourierId: {CourierId}.", courierId);
 
-            Courier? courierDb = await _courierRepository.FindByIdAsync(courierId);
+            Courier? courierDb = await _courierRepository.FindByIdAsync(courierId, ct);
             if (courierDb is null)
             {
                 _logger.LogWarning("Cannot delete. Courier not found. CourierId: {CourierId}.", courierId);
                 return null;
             }
 
-            Courier deletedCourier = await _courierRepository.UpdateAsync(courierDb);
+            Courier deletedCourier = await _courierRepository.UpdateAsync(courierDb, ct);
             _logger.LogInformation("Courier updated. CourierId: {CourierId}.", courierId);
 
             return _mapper.Map<CourierDto>(deletedCourier);

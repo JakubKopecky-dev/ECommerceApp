@@ -20,18 +20,18 @@ namespace OrderService.Api.Controllers
 
         [Authorize(Roles = UserRoles.Admin)]
         [HttpGet]
-        public async Task<IReadOnlyList<OrderDto>> GetAllOrders() => await _orderService.GetAllOrdersAsync();
+        public async Task<IReadOnlyList<OrderDto>> GetAllOrders(CancellationToken ct) => await _orderService.GetAllOrdersAsync(ct);
 
 
 
         [HttpGet("my")]
-        public async Task<IActionResult> GetAllOrdersByUserId()
+        public async Task<IActionResult> GetAllOrdersByUserId(CancellationToken ct)
         {
             string? userIdStrig = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!Guid.TryParse(userIdStrig, out Guid userId))
                 return Unauthorized();
 
-            IReadOnlyList<OrderDto> orders = await _orderService.GetAllOrdersByUserIdAsync(userId);
+            IReadOnlyList<OrderDto> orders = await _orderService.GetAllOrdersByUserIdAsync(userId, ct);
 
             return Ok(orders);
         }
@@ -39,9 +39,9 @@ namespace OrderService.Api.Controllers
 
 
         [HttpGet("{orderId}")]
-        public async Task<IActionResult> GetOrder(Guid orderId)
+        public async Task<IActionResult> GetOrder(Guid orderId, CancellationToken ct)
         {
-            OrderExtendedDto? order = await _orderService.GetOrderAsync(orderId);
+            OrderExtendedDto? order = await _orderService.GetOrderAsync(orderId, ct);
 
             return order is not null ? Ok(order) : NotFound();
         }
@@ -50,9 +50,9 @@ namespace OrderService.Api.Controllers
 
         [Authorize(Roles = UserRoles.Admin)]
         [HttpPost]
-        public async Task<IActionResult> CreateOrder([FromBody] CreateOrderDto createDto)
+        public async Task<IActionResult> CreateOrder([FromBody] CreateOrderDto createDto, CancellationToken ct)
         {
-            OrderDto order = await _orderService.CreateOrderAsync(createDto);
+            OrderDto order = await _orderService.CreateOrderAsync(createDto, ct);
 
             return CreatedAtAction(nameof(CreateOrder), new { orderId = order.Id }, order);
         }
@@ -60,9 +60,9 @@ namespace OrderService.Api.Controllers
 
 
         [HttpPatch("{orderId}")]
-        public async Task<IActionResult> UpdateOrder(Guid orderId, [FromBody] UpdateOrderNoteDto updateDto)
+        public async Task<IActionResult> UpdateOrder(Guid orderId, [FromBody] UpdateOrderNoteDto updateDto, CancellationToken ct)
         {
-            OrderDto? order = await _orderService.UpdateOrderNoteAsync(orderId, updateDto);
+            OrderDto? order = await _orderService.UpdateOrderNoteAsync(orderId, updateDto, ct);
 
             return order is not null ? Ok(order) : NotFound();
         }
@@ -71,9 +71,9 @@ namespace OrderService.Api.Controllers
 
         [Authorize(Roles = UserRoles.Admin)]
         [HttpDelete("{orderId}")]
-        public async Task<IActionResult> DeleteOrder(Guid orderId)
+        public async Task<IActionResult> DeleteOrder(Guid orderId, CancellationToken ct)
         {
-            OrderDto? order = await _orderService.DeleteOrderAsync(orderId);
+            OrderDto? order = await _orderService.DeleteOrderAsync(orderId, ct);
 
             return order is not null ? Ok(order) : NotFound();
         }
@@ -81,9 +81,9 @@ namespace OrderService.Api.Controllers
 
 
         [HttpPatch("{orderId}/status")]
-        public async Task<IActionResult> ChangeOrderStatus(Guid orderId, ChangeOrderStatusDto changeStatus)
+        public async Task<IActionResult> ChangeOrderStatus(Guid orderId, ChangeOrderStatusDto changeStatus, CancellationToken ct)
         {
-            OrderDto? order = await _orderService.ChangeOrderStatusAsync(orderId, changeStatus);
+            OrderDto? order = await _orderService.ChangeOrderStatusAsync(orderId, changeStatus, ct);
 
             return order is not null ? Ok(order) : NotFound();
         }
@@ -91,9 +91,9 @@ namespace OrderService.Api.Controllers
 
 
         [HttpPost("external")]
-        public async Task<IActionResult> CreateOrderFromCart([FromBody] ExternalCreateOrderDto createDto)
+        public async Task<IActionResult> CreateOrderFromCart([FromBody] ExternalCreateOrderDto createDto, CancellationToken ct)
         {
-            OrderDto order = await _orderService.CreateOrderFromCartAsync(createDto);
+            OrderDto order = await _orderService.CreateOrderFromCartAsync(createDto, ct);
 
             return CreatedAtAction(nameof(CreateOrder), new { orderId = order.Id }, order);
         }

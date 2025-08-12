@@ -18,18 +18,20 @@ namespace NotificationService.Api.Consumers
 
         public async Task Consume(ConsumeContext<DeliveryCanceledEvent> context)
         {
+            var ct = context.CancellationToken;
+
             DeliveryCanceledEvent message = context.Message;
 
             CreateNofiticationDto createNotification = new()
             {
                 UserId = message.UserId,
-                Title = "Order created",
+                Title = "Delivery canceled",
                 Message = $"Your order #{message.OrderId} delivery was canceled.",
                 CreatedAt = DateTime.UtcNow,
                 Type = NotificationType.DeliveryStatusChanged
             };
 
-            NotificationDto notification = await _notificationService.CreateNotificationAsync(createNotification);
+            NotificationDto notification = await _notificationService.CreateNotificationAsync(createNotification,ct);
 
             await _hubContext.Clients.User(message.UserId.ToString())
                 .SendAsync("ReceiveNotification", new
@@ -38,7 +40,7 @@ namespace NotificationService.Api.Consumers
                     notification.Title,
                     notification.Message,
                     notification.CreatedAt,
-                });
+                },ct);
 
             _logger.LogInformation("Notification created and sent via SignalR. NotificationId: {NotificationId}", notification.Id);
         }

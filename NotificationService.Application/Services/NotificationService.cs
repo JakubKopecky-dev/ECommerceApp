@@ -15,11 +15,11 @@ namespace NotificationService.Application.Services
 
 
 
-        public async Task<IReadOnlyList<NotificationDto>> GetAllNotificationByUserIdAsync(Guid userId)
+        public async Task<IReadOnlyList<NotificationDto>> GetAllNotificationByUserIdAsync(Guid userId, CancellationToken ct = default)
         {
             _logger.LogInformation("Retrieving all notification by UserId. UserId: {UserId}.", userId);
 
-            IReadOnlyList<Notification> notifications = await _notificationRepository.GetAllNotificationsByUserIdAsync(userId);
+            IReadOnlyList<Notification> notifications = await _notificationRepository.GetAllNotificationsByUserIdAsync(userId,ct);
             _logger.LogInformation("Retrieved all notofication by userId. Count: {Count}, UserId: {UserId}.", notifications.Count, userId);
 
             return _mapper.Map<List<NotificationDto>>(notifications);
@@ -27,10 +27,9 @@ namespace NotificationService.Application.Services
 
 
 
-        public async Task<NotificationDto?> GetNotificationAsync(Guid notificationId)
+        public async Task<NotificationDto?> GetNotificationAsync(Guid notificationId, CancellationToken ct = default)
         {
-            Notification? notification = await _notificationRepository.FindByIdAsync(notificationId);
-
+            Notification? notification = await _notificationRepository.FindByIdAsync(notificationId,ct);
             if (notification is null)
             {
                 _logger.LogWarning("Notification not found. NotificationId: {NotificationId}", notificationId);
@@ -44,13 +43,13 @@ namespace NotificationService.Application.Services
 
 
 
-        public async Task<NotificationDto> CreateNotificationAsync(CreateNofiticationDto createDto)
+        public async Task<NotificationDto> CreateNotificationAsync(CreateNofiticationDto createDto, CancellationToken ct = default)
         {
             _logger.LogInformation("Creating notification. UserId: {UserId}.", createDto.UserId);
 
             Notification notification = _mapper.Map<Notification>(createDto);
 
-            Notification createdNotification = await _notificationRepository.InsertAsync(notification);
+            Notification createdNotification = await _notificationRepository.InsertAsync(notification, ct);
             _logger.LogInformation("Notification created. NotificationId: {NotificationId}, UserId: {UserId}.", createdNotification.Id, createdNotification.UserId);
 
             return _mapper.Map<NotificationDto>(createdNotification);

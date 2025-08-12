@@ -4,12 +4,16 @@ namespace ProductService.Application.Interfaces.Services
 {
     public interface IProductService
     {
-        Task<ProductDto?> ActivateProductAsync(Guid productId);
-        Task<ProductDto> CreateProductAsync(CreateProductDto createDto);
-        Task<ProductDto?> DeleteProductAsync(Guid productId);
-        Task<IReadOnlyList<ProductDto>> GetAllProducts();
-        Task<ProductDto?> GetProductByIdAsync(Guid productId);
-        Task<ProductDto?> InactivateProductAsync(Guid productId);
-        Task<ProductDto?> UpdateProductAsync(Guid productId, UpdateProductDto updateDto);
+        Task<ProductDto?> ActivateProductAsync(Guid productId, CancellationToken ct = default);
+        Task<ProductExtendedDto> CreateProductAsync(CreateProductDto createDto, CancellationToken ct = default);
+        Task<ProductDto?> DeleteProductAsync(Guid productId, CancellationToken ct = default);
+        Task<IReadOnlyList<ProductDto>> GetAllActiveProductsAsync(CancellationToken ct = default);
+        Task<IReadOnlyList<ProductDto>> GetAllInactiveProductsAsync(CancellationToken ct = default);
+        Task<IReadOnlyList<ProductDto>> GetAllProductsAsync(CancellationToken ct = default);
+        Task<IReadOnlyList<ProductDto>> GetAllProductsByBrandIdAsync(Guid brandId, CancellationToken ct = default);
+        Task<IReadOnlyList<ProductDto>> GetAllProductsByCategoriesAsync(List<string> categories, CancellationToken ct = default);
+        Task<ProductExtendedDto?> GetProductByIdAsync(Guid productId, CancellationToken ct = default);
+        Task<ProductDto?> InactivateProductAsync(Guid productId, CancellationToken ct = default);
+        Task<ProductExtendedDto?> UpdateProductAsync(Guid productId, UpdateProductDto updateDto, CancellationToken ct = default);
     }
 }

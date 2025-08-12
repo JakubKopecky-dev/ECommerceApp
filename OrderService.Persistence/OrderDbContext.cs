@@ -1,4 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Text.Json;
+using System.Text.Json.Serialization;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.Extensions.Hosting;
 using OrderService.Domain.Common;
@@ -43,7 +46,6 @@ namespace OrderService.Persistence
 
 
 
-        // Audit EF
         public override int SaveChanges()
         {
             AuditEntityChanges();
@@ -62,47 +64,84 @@ namespace OrderService.Persistence
                 return;
 
             var entries = ChangeTracker.Entries()
-                .Where(e => e.State == EntityState.Added
-                         || e.State == EntityState.Modified
-                         || e.State == EntityState.Deleted)
+                .Where(e => e.State is EntityState.Added or EntityState.Modified or EntityState.Deleted)
                 .ToList();
+
+            var jsonOptions = new JsonSerializerOptions
+            {
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+                // ReferenceHandler = ReferenceHandler.IgnoreCycles // už není potřeba
+            };
 
             foreach (var entry in entries)
             {
-                object data;
+                object payload;
 
-                // Pokud chceš logovat změny při Update, vypiš změněné vlastnosti s hodnotami před/po
                 if (entry.State == EntityState.Modified)
                 {
-                    var changes = new Dictionary<string, object>();
-                    foreach (var prop in entry.Properties)
+                    var changes = new Dictionary<string, object?>();
+                    foreach (var p in entry.Properties)
                     {
-                        if (!Equals(prop.OriginalValue, prop.CurrentValue))
+                        // jen skalární properties; navigace tady vůbec nejsou
+                        if (!Equals(p.OriginalValue, p.CurrentValue))
                         {
-                            changes[prop.Metadata.Name] = new
+                            changes[p.Metadata.Name] = new
                             {
-                                Original = prop.OriginalValue,
-                                Current = prop.CurrentValue
+                                Original = p.OriginalValue,
+                                Current = p.CurrentValue
                             };
                         }
                     }
-                    data = changes;
+
+                    payload = new
+                    {
+                        Keys = GetKeys(entry),
+                        Changes = changes
+                    };
                 }
-                else
+                else if (entry.State == EntityState.Added)
                 {
-                    // Pro přidání/smazání stačí celá entita
-                    data = entry.Entity;
+                    payload = new
+                    {
+                        Keys = GetKeys(entry),
+                        Values = GetScalarValues(entry, original: false)
+                    };
+                }
+                else // Deleted
+                {
+                    payload = new
+                    {
+                        Keys = GetKeys(entry),
+                        Values = GetScalarValues(entry, original: true)
+                    };
                 }
 
-                var auditLog = new AuditEventLog
+                AuditEventLogs.Add(new AuditEventLog
                 {
                     EntityName = entry.Metadata.ClrType.Name,
                     EventType = entry.State.ToString(),
                     InsertedDate = DateTime.UtcNow,
-                    Data = System.Text.Json.JsonSerializer.Serialize(data)
-                };
-                AuditEventLogs.Add(auditLog);
+                    Data = JsonSerializer.Serialize(payload, jsonOptions)
+                });
             }
+        }
+
+        // Helpers – jen skalární hodnoty (žádné navigace)
+        private static Dictionary<string, object?> GetScalarValues(EntityEntry entry, bool original)
+        {
+            return entry.Properties
+                .Where(p => !p.Metadata.IsShadowProperty() && !p.Metadata.IsIndexerProperty())
+                .ToDictionary(
+                    p => p.Metadata.Name,
+                    p => original ? p.OriginalValue : p.CurrentValue
+                );
+        }
+
+        private static Dictionary<string, object?> GetKeys(EntityEntry entry)
+        {
+            return entry.Properties
+                .Where(p => p.Metadata.IsPrimaryKey())
+                .ToDictionary(p => p.Metadata.Name, p => p.CurrentValue);
         }
 
 

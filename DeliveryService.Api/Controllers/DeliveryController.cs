@@ -16,9 +16,9 @@ namespace DeliveryService.Api.Controllers
 
 
         [HttpGet("{orderId}")]
-        public async Task<IActionResult> GetDelivery(Guid orderId)
+        public async Task<IActionResult> GetDelivery(Guid orderId, CancellationToken ct)
         {
-            DeliveryExtendedDto? delivery = await _deliveryService.GetDeliveryByOrderIdAsync(orderId);
+            DeliveryExtendedDto? delivery = await _deliveryService.GetDeliveryByOrderIdAsync(orderId, ct);
 
             return delivery is not null ? Ok(delivery) : NotFound();
         }
@@ -26,9 +26,9 @@ namespace DeliveryService.Api.Controllers
 
 
         [HttpPost]
-        public async Task<IActionResult> CreateDelivery([FromBody] CreateUpdateDeliveryDto createDto)
+        public async Task<IActionResult> CreateDelivery([FromBody] CreateUpdateDeliveryDto createDto, CancellationToken ct)
         {
-            DeliveryDto delivery = await _deliveryService.CreateDeliveryAsync(createDto);
+            DeliveryDto delivery = await _deliveryService.CreateDeliveryAsync(createDto, ct);
 
             return CreatedAtAction(nameof(GetDelivery), new { orderId = delivery.OrderId }, delivery);
         }
@@ -36,9 +36,9 @@ namespace DeliveryService.Api.Controllers
 
         [Authorize(Roles = UserRoles.Admin)]
         [HttpPut("{deliveryId}")]
-        public async Task<IActionResult> UpdateDelivery(Guid deliveryId, [FromBody] CreateUpdateDeliveryDto updateDto)
+        public async Task<IActionResult> UpdateDelivery(Guid deliveryId, [FromBody] CreateUpdateDeliveryDto updateDto, CancellationToken ct)
         {
-            DeliveryDto? delivery = await _deliveryService.UpdateDeliveryAsync(deliveryId, updateDto);
+            DeliveryDto? delivery = await _deliveryService.UpdateDeliveryAsync(deliveryId, updateDto, ct);
 
             return delivery is not null ? Ok(delivery) : NotFound();
         }
@@ -47,9 +47,9 @@ namespace DeliveryService.Api.Controllers
 
         [Authorize(Roles = UserRoles.Admin)]
         [HttpDelete("{deliveryId}")]
-        public async Task<IActionResult> DeleteDelivery(Guid deliveryId)
+        public async Task<IActionResult> DeleteDelivery(Guid deliveryId, CancellationToken ct)
         {
-            DeliveryDto? delivery = await _deliveryService.DeleteDeliveryAsync(deliveryId);
+            DeliveryDto? delivery = await _deliveryService.DeleteDeliveryAsync(deliveryId, ct);
 
             return delivery is not null ? Ok(delivery) : NotFound();
         }
@@ -57,9 +57,9 @@ namespace DeliveryService.Api.Controllers
 
 
         [HttpPatch("{deliveryId}/status")]
-        public async Task<IActionResult> ChangeDeliveryStatus(Guid deliveryId, [FromBody] ChangeDeliveryStatusDto changeDto)
+        public async Task<IActionResult> ChangeDeliveryStatus(Guid deliveryId, [FromBody] ChangeDeliveryStatusDto changeDto, CancellationToken ct)
         {
-            DeliveryDto? delivery = await _deliveryService.ChangeDeliveryStatusAsync(deliveryId, changeDto);
+            DeliveryDto? delivery = await _deliveryService.ChangeDeliveryStatusAsync(deliveryId, changeDto, ct);
 
             return delivery is not null ? Ok(delivery) : NotFound();
         }

@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using NotificationService.Api.DependencyInjection;
 using NotificationService.Api.Hubs;
+using NotificationService.Api.Middleware;
 using NotificationService.Application;
 using NotificationService.Persistence;
 
@@ -16,6 +17,9 @@ builder.Services.AddApplicationServices();
 
 // Authentication
 builder.Services.AddAuthenticationServiceCollection(builder.Configuration);
+
+// MassTransit + RebbitMQ
+builder.Services.AddMassTransitService();
 
 // Controllers & JSON setting
 builder.Services.AddControllers().AddJsonOptions(options =>
@@ -43,6 +47,12 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+// Global error handling
+app.UseGlobalExceptionHandling();
+
+// Client cancellation logging
+app.UseClientCancellationLogging();
+
 // HTTPS Redirect
 app.UseHttpsRedirection();
 
@@ -64,3 +74,20 @@ app.Run();
 
 
 public partial class Program { };
+
+
+
+
+
+
+/*
+ 
+
+
+
+
+
+
+1315e35c-0d2c-42c0-6908-08ddd6a13a94
+
+*/

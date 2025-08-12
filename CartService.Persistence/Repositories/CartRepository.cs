@@ -6,8 +6,8 @@ namespace CartService.Persistence.Repositories
 {
     public class CartRepository(CartDbContext dbContext) : BaseRepository<Cart>(dbContext), ICartRepository
     {
-        public async Task<Cart?> FindCartByUserIdIncludeItemsAsync(Guid userId) => await _dbSet
-                                                                                .Include(c => c.Items)
-                                                                                .FirstOrDefaultAsync(c => c.UserId == userId);
+        public async Task<Cart?> FindCartByUserIdIncludeItemsAsync(Guid userId, CancellationToken ct = default) => await _dbSet
+            .Include(c => c.Items)
+            .FirstOrDefaultAsync(c => c.UserId == userId,ct);
     }
 }

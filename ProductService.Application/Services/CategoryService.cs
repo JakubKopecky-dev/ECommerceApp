@@ -16,11 +16,11 @@ namespace ProductService.Application.Services
 
 
 
-        public async Task<IReadOnlyList<CategoryDto>> GetAllCategoriesAsync()
+        public async Task<IReadOnlyList<CategoryDto>> GetAllCategoriesAsync(CancellationToken ct = default)
         {
             _logger.LogInformation("Retrieving all categories.");
 
-            IReadOnlyList<Category> categories = await _categoryRepository.GetAllAsync();
+            IReadOnlyList<Category> categories = await _categoryRepository.GetAllAsync(ct);
             _logger.LogInformation("Retrieved all categories. Count: {Count}.", categories.Count);
 
             return _mapper.Map<List<CategoryDto>>(categories);
@@ -28,11 +28,11 @@ namespace ProductService.Application.Services
 
 
 
-        public async Task<CategoryDto?> GetCategoryByIdAsync(Guid categoryId)
+        public async Task<CategoryDto?> GetCategoryByIdAsync(Guid categoryId, CancellationToken ct = default)
         {
             _logger.LogInformation("Retrieving category. CategoryId: {CategoryId}.", categoryId);
 
-            Category? category = await _categoryRepository.FindByIdAsync(categoryId);
+            Category? category = await _categoryRepository.FindByIdAsync(categoryId,ct);
             if (category is null)
             {
                 _logger.LogWarning("Category not found. CategoryId: {CategoryId}.", categoryId);
@@ -46,7 +46,7 @@ namespace ProductService.Application.Services
 
 
 
-        public async Task<CategoryDto> CreateCategoryAsync(CreateUpdateCategoryDto createDto)
+        public async Task<CategoryDto> CreateCategoryAsync(CreateUpdateCategoryDto createDto, CancellationToken ct = default)
         {
             _logger.LogInformation("Creating new category. Title: {Title}.", createDto.Title);
 
@@ -54,7 +54,7 @@ namespace ProductService.Application.Services
             category.Id = Guid.Empty;
             category.CreatedAt = DateTime.UtcNow;
 
-            Category addedCategory = await _categoryRepository.InsertAsync(category);
+            Category addedCategory = await _categoryRepository.InsertAsync(category,ct);
             _logger.LogInformation("Category created. CategoryId: {CategoryId}.", addedCategory.Id);
 
             return _mapper.Map<CategoryDto>(addedCategory);
@@ -62,11 +62,11 @@ namespace ProductService.Application.Services
 
 
 
-        public async Task<CategoryDto?> UpdateCategoryAsync(Guid categoryId, CreateUpdateCategoryDto updateDto)
+        public async Task<CategoryDto?> UpdateCategoryAsync(Guid categoryId, CreateUpdateCategoryDto updateDto, CancellationToken ct = default)
         {
             _logger.LogInformation("Updating category. CategoryId: {CategoryId}.", categoryId);
 
-            Category? categoryDb = await _categoryRepository.FindByIdAsync(categoryId);
+            Category? categoryDb = await _categoryRepository.FindByIdAsync(categoryId, ct);
             if (categoryDb is null)
             {
                 _logger.LogWarning("Cannot update. Category not foud. CategoryId: {CategoryId}.", categoryId);
@@ -77,7 +77,7 @@ namespace ProductService.Application.Services
 
             categoryDb.UpdatedAt = DateTime.UtcNow;
 
-            Category updatedCategory = await _categoryRepository.UpdateAsync(categoryDb);
+            Category updatedCategory = await _categoryRepository.UpdateAsync(categoryDb, ct);
             _logger.LogInformation("Category updated. CategoryId: {CategoryId}.", categoryId);
 
             return _mapper.Map<CategoryDto>(updatedCategory);
@@ -85,11 +85,11 @@ namespace ProductService.Application.Services
 
 
 
-        public async Task<CategoryDto?> DeleteCategoryAsync(Guid categoryId)
+        public async Task<CategoryDto?> DeleteCategoryAsync(Guid categoryId, CancellationToken ct = default)
         {
             _logger.LogInformation("Deleting category. CategoryId: {CategoryId}.", categoryId);
 
-            Category? category = await _categoryRepository.FindCategoryByIdWithIncludeProductsAsync(categoryId);
+            Category? category = await _categoryRepository.FindCategoryByIdWithIncludeProductsAsync(categoryId, ct);
             if (category is null)
             {
                 _logger.LogWarning("Cannot delete. Category not foud. CategoryId: {CategoryId}.", categoryId);
@@ -101,9 +101,9 @@ namespace ProductService.Application.Services
             _logger.LogInformation("Clearing all related products");
 
             category.Products.Clear();
-            await _categoryRepository.UpdateAsync(category);
+            await _categoryRepository.UpdateAsync(category, ct);
 
-            await _categoryRepository.DeleteAsync(categoryId);
+            await _categoryRepository.DeleteAsync(categoryId, ct);
             _logger.LogInformation("Category deleted. CategoryId: {CategoryId}.", categoryId);
 
             return deletedCategory;

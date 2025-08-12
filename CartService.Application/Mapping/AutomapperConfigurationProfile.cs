@@ -13,6 +13,7 @@ namespace CartService.Application.Mapping
 
             CreateMap<CreateCartItemDto, CartItem>();
             CreateMap<CartItem, CartItemDto>();
+            CreateMap<CartItem, CartItemForCheckoutDto>();
 
 
             CreateMap<Cart, CartExtendedDto>()

@@ -18,7 +18,7 @@ namespace UserService.Api.Controller
 
         [Authorize(Roles = UserRoles.Admin)]
         [HttpGet]
-        public async Task<IReadOnlyList<UserDto>> GetAllUsers() => await _userService.GetAllUsersAsync();
+        public async Task<IReadOnlyList<UserDto>> GetAllUsers(CancellationToken ct) => await _userService.GetAllUsersAsync(ct);
 
 
         [Authorize(Roles = UserRoles.Admin)]

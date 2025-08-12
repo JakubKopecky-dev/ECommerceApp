@@ -6,8 +6,8 @@ namespace DeliveryService.Persistence.Repository
 {
     public class DeliveryRepository(DeliveryDbContext dbContext) : BaseRepository<Delivery>(dbContext), IDeliveryRepository
     {
-        public async Task<Delivery?> FindDeliveryByOrderIdIncludeCourierAsync(Guid orderId) => await _dbSet
-                                                                                                        .Include(d => d.Courier)
-                                                                                                        .FirstOrDefaultAsync(d => d.OrderId == orderId);
+        public async Task<Delivery?> FindDeliveryByOrderIdIncludeCourierAsync(Guid orderId,CancellationToken ct = default) => await _dbSet
+            .Include(d => d.Courier)
+            .FirstOrDefaultAsync(d => d.OrderId == orderId,ct);
     }
 }

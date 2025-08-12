@@ -5,7 +5,7 @@ using Shared.Contracts.Events;
 
 namespace OrderService.Api.Consumers
 {
-    public class DeliveryDeliveredConsumer(IOrderService orderService, ILogger<DeliveryDeliveredConsumer> logger)
+    public class DeliveryDeliveredConsumer(IOrderService orderService, ILogger<DeliveryDeliveredConsumer> logger) : IConsumer<DeliveryDeliveredEvent>
     {
         private readonly IOrderService _orderService = orderService;
         private readonly ILogger<DeliveryDeliveredConsumer> _logger = logger;
@@ -14,10 +14,12 @@ namespace OrderService.Api.Consumers
 
         public async Task Consume(ConsumeContext<DeliveryDeliveredEvent> context)
         {
+            var ct = context.CancellationToken;
+
             DeliveryDeliveredEvent message = context.Message;
             _logger.LogInformation("Consuming DeliveryDeliveredEvent. OrderId: {OrderId}", message.OrderId);
 
-            await _orderService.SetOrderStatusCompletedFromDelivery(message.OrderId);
+            await _orderService.SetOrderStatusCompletedFromDelivery(message.OrderId,ct);
         }
 
 

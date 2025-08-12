@@ -40,11 +40,11 @@ namespace DeliveryService.Application.Services
 
 
 
-        public async Task<DeliveryExtendedDto?> GetDeliveryByOrderIdAsync(Guid orderId)
+        public async Task<DeliveryExtendedDto?> GetDeliveryByOrderIdAsync(Guid orderId, CancellationToken ct = default)
         {
             _logger.LogInformation("Retrieving delivry by orderId. OrderId: {OrderId}.", orderId);
 
-            Delivery? delivery = await _deliveryRepository.FindDeliveryByOrderIdIncludeCourierAsync(orderId);
+            Delivery? delivery = await _deliveryRepository.FindDeliveryByOrderIdIncludeCourierAsync(orderId, ct);
             if (delivery is null)
             {
                 _logger.LogWarning("Delivery not found. OrderId: {OrderId}.", orderId);
@@ -58,7 +58,7 @@ namespace DeliveryService.Application.Services
 
 
 
-        public async Task<DeliveryDto> CreateDeliveryAsync(CreateUpdateDeliveryDto createDto)
+        public async Task<DeliveryDto> CreateDeliveryAsync(CreateUpdateDeliveryDto createDto, CancellationToken ct = default)
         {
             _logger.LogInformation("Creating new delivery. OrderId: {OrderId}.", createDto.OrderId);
 
@@ -67,7 +67,7 @@ namespace DeliveryService.Application.Services
             delivery.CreatedAt = DateTime.UtcNow;
             delivery.Status = DeliveryStatus.Pending;
 
-            Delivery createdDelivery = await _deliveryRepository.InsertAsync(delivery);
+            Delivery createdDelivery = await _deliveryRepository.InsertAsync(delivery, ct);
             _logger.LogInformation("Delivery created. DelivryId: {DeliveryId}, OrderId: {OrderId}.", createdDelivery.Id, createdDelivery.OrderId);
 
             return _mapper.Map<DeliveryDto>(createdDelivery);
@@ -75,11 +75,11 @@ namespace DeliveryService.Application.Services
 
 
 
-        public async Task<DeliveryDto?> UpdateDeliveryAsync(Guid deliveryId, CreateUpdateDeliveryDto updateDto)
+        public async Task<DeliveryDto?> UpdateDeliveryAsync(Guid deliveryId, CreateUpdateDeliveryDto updateDto, CancellationToken ct = default)
         {
             _logger.LogInformation("Updating delivry. DeliveryId: {DeliveryId}.", deliveryId);
 
-            Delivery? deliveryDb = await _deliveryRepository.FindByIdAsync(deliveryId);
+            Delivery? deliveryDb = await _deliveryRepository.FindByIdAsync(deliveryId, ct);
             if (deliveryDb is null)
             {
                 _logger.LogWarning("Cannot update. Delivery not found. DeliveryId: {DeliveryId}.", deliveryId);
@@ -90,7 +90,7 @@ namespace DeliveryService.Application.Services
 
             deliveryDb.UpdatedAt = DateTime.UtcNow;
 
-            Delivery updatedDelivery = await _deliveryRepository.UpdateAsync(deliveryDb);
+            Delivery updatedDelivery = await _deliveryRepository.UpdateAsync(deliveryDb, ct);
             _logger.LogInformation("Delivery updated. DeliveryId: {DeliveryId}.", deliveryId);
 
             return _mapper.Map<DeliveryDto>(updatedDelivery);
@@ -98,11 +98,11 @@ namespace DeliveryService.Application.Services
 
 
 
-        public async Task<DeliveryDto?> DeleteDeliveryAsync(Guid deliveryId)
+        public async Task<DeliveryDto?> DeleteDeliveryAsync(Guid deliveryId, CancellationToken ct = default)
         {
             _logger.LogInformation("Deleting delivery. DeliveryId: {DeliveryId}.", deliveryId);
 
-            Delivery? delivery = await _deliveryRepository.FindByIdAsync(deliveryId);
+            Delivery? delivery = await _deliveryRepository.FindByIdAsync(deliveryId, ct);
             if (delivery is null)
             {
                 _logger.LogWarning("Cannot delete. Delivery not found. DeliveryId: {DeliveryId}.", deliveryId);
@@ -111,7 +111,7 @@ namespace DeliveryService.Application.Services
 
             DeliveryDto deletedDelivery = _mapper.Map<DeliveryDto>(delivery);
 
-            await _deliveryRepository.DeleteAsync(deliveryId);
+            await _deliveryRepository.DeleteAsync(deliveryId, ct);
             _logger.LogInformation("Delivery deleted. DeliveryId: {DeliveryId}.", deliveryId);
 
             return deletedDelivery;
@@ -119,11 +119,11 @@ namespace DeliveryService.Application.Services
 
 
 
-        public async Task<DeliveryDto?> ChangeDeliveryStatusAsync(Guid deliveryId, ChangeDeliveryStatusDto changeDto)
+        public async Task<DeliveryDto?> ChangeDeliveryStatusAsync(Guid deliveryId, ChangeDeliveryStatusDto changeDto, CancellationToken ct = default)
         {
             _logger.LogInformation("Chanding delivryStatus. DeliveryId: {DeliveryId}.", deliveryId);
 
-            Delivery? delivery = await _deliveryRepository.FindByIdAsync(deliveryId);
+            Delivery? delivery = await _deliveryRepository.FindByIdAsync(deliveryId, ct);
             if (delivery is null)
             {
                 _logger.LogWarning("Cannot change deliveryStatus. Delivery not found. DeliveryId: {DeliveryId}.", deliveryId);
@@ -144,7 +144,7 @@ namespace DeliveryService.Application.Services
             if (changeDto.Status == DeliveryStatus.Delivered)
                 delivery.DeliveredAt = DateTime.UtcNow;
 
-            Delivery updatedDelivery = await _deliveryRepository.UpdateAsync(delivery);
+            Delivery updatedDelivery = await _deliveryRepository.UpdateAsync(delivery, ct);
             _logger.LogInformation("DeliveryStatus changed. DeliveryId: {DeliveryId}.", deliveryId);
 
 
@@ -152,7 +152,7 @@ namespace DeliveryService.Application.Services
             if (updatedDelivery.Status == DeliveryStatus.Delivered)
             {
                 DeliveryDeliveredEvent deliveryDeliveredEvent = new() { OrderId = updatedDelivery.OrderId };
-                await _publishEndpoint.Publish(deliveryDeliveredEvent);
+                await _publishEndpoint.Publish(deliveryDeliveredEvent, ct);
             }
 
 
@@ -166,16 +166,7 @@ namespace DeliveryService.Application.Services
 
                 OrderExternalDto? order;
 
-                try
-                {
-                    order = await httpClient.GetFromJsonAsync<OrderExternalDto>($"api/Order/{delivery.OrderId}");
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to get order. OrderId: {OrderId}, DeliveryId: {DeliveryId}.", delivery.OrderId, delivery.Id);
-                    return null;
-                }
-
+                order = await httpClient.GetFromJsonAsync<OrderExternalDto>($"api/Order/{delivery.OrderId}", ct);
 
                 if (order is null)
                 {
@@ -187,7 +178,7 @@ namespace DeliveryService.Application.Services
                 Guid userId = order.UserId;
 
                 DeliveryCanceledEvent deliveryCanceledEvent = new() { UserId = userId, OrderId = delivery.OrderId };
-                await _publishEndpoint.Publish(deliveryCanceledEvent);
+                await _publishEndpoint.Publish(deliveryCanceledEvent, ct);
             }
 
             return _mapper.Map<DeliveryDto>(updatedDelivery);

@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using ProductService.Api.DependencyInjection;
+using ProductService.Api.Middleware;
 using ProductService.Application;
 using ProductService.Persistence;
 
@@ -39,6 +40,12 @@ if (app.Environment.IsDevelopment())
         options.SwaggerEndpoint("ProductService/swagger.json", "ProductService - v1");
     });
 }
+
+// Global error handling
+app.UseGlobalExceptionHandling();
+
+// Client cancellation logging
+app.UseClientCancellationLogging();
 
 // HTTPS Redirect
 app.UseHttpsRedirection();

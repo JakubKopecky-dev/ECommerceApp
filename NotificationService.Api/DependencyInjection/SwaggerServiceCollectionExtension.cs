@@ -8,7 +8,7 @@ namespace NotificationService.Api.DependencyInjection
         {
             services.AddSwaggerGen(options =>
             {
-                options.SwaggerDoc("NotifactionService", new OpenApiInfo
+                options.SwaggerDoc("NotificationService", new OpenApiInfo
                 {
                     Version = "v1",
                     Title = "Notification Service API",

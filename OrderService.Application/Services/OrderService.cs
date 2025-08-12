@@ -27,7 +27,7 @@ namespace OrderService.Application.Services
         private readonly IMapper _mapper = mapper;
         private readonly ILogger<OrderService> _logger = logger;
         private readonly IPublishEndpoint _publishEndpoint = publishEndpoint;
-        private readonly IHttpClientFactory _httpClientFactory  = httpClientFactory;
+        private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
         private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
 
 
@@ -48,11 +48,11 @@ namespace OrderService.Application.Services
 
 
 
-        public async Task<IReadOnlyList<OrderDto>> GetAllOrdersByUserIdAsync(Guid userId)
+        public async Task<IReadOnlyList<OrderDto>> GetAllOrdersByUserIdAsync(Guid userId, CancellationToken ct = default)
         {
             _logger.LogInformation("Retrieving all orders by userId. UserId: {UserId}.", userId);
 
-            IReadOnlyList<Order> orders = await _orderRepository.GetAllOrderByUserIdAsync(userId);
+            IReadOnlyList<Order> orders = await _orderRepository.GetAllOrderByUserIdAsync(userId, ct);
             _logger.LogInformation("Retrieved all orders. Count: {Count}, UserId: {UserId}.", orders.Count, userId);
 
             return _mapper.Map<List<OrderDto>>(orders);
@@ -60,11 +60,11 @@ namespace OrderService.Application.Services
 
 
 
-        public async Task<IReadOnlyList<OrderDto>> GetAllOrdersAsync()
+        public async Task<IReadOnlyList<OrderDto>> GetAllOrdersAsync(CancellationToken ct = default)
         {
             _logger.LogInformation("Retrieving all orders.");
 
-            IReadOnlyList<Order> orders = await _orderRepository.GetAllAsync();
+            IReadOnlyList<Order> orders = await _orderRepository.GetAllAsync(ct);
             _logger.LogInformation("Retrieved all orders. Count: {Count}.", orders.Count);
 
             return _mapper.Map<List<OrderDto>>(orders);
@@ -72,11 +72,11 @@ namespace OrderService.Application.Services
 
 
 
-        public async Task<OrderExtendedDto?> GetOrderAsync(Guid orderId)
+        public async Task<OrderExtendedDto?> GetOrderAsync(Guid orderId, CancellationToken ct = default)
         {
             _logger.LogInformation("Retrieving order. OrderId: {OrderId}.", orderId);
 
-            Order? order = await _orderRepository.FindByIdAsync(orderId);
+            Order? order = await _orderRepository.FindOrderByIdIncludeOrderItemAsync(orderId, ct);
             if (order is null)
             {
                 _logger.LogWarning("Order not found. OrderId: {OrderId}.", orderId);
@@ -90,7 +90,7 @@ namespace OrderService.Application.Services
 
 
 
-        public async Task<OrderDto> CreateOrderAsync(CreateOrderDto createDto)
+        public async Task<OrderDto> CreateOrderAsync(CreateOrderDto createDto, CancellationToken ct = default)
         {
             _logger.LogInformation("Creating new order. UserId: {UserId}.", createDto.UserId);
 
@@ -99,7 +99,7 @@ namespace OrderService.Application.Services
             order.CreatedAt = DateTime.UtcNow;
             order.Status = OrderStatus.Created;
 
-            Order createdOrder = await _orderRepository.InsertAsync(order);
+            Order createdOrder = await _orderRepository.InsertAsync(order, ct);
             _logger.LogInformation("Order created. OrderId: {OrderId}.", createdOrder.Id);
 
             OrderCreatedEvent orderCreatedEvent = new()
@@ -111,18 +111,18 @@ namespace OrderService.Application.Services
                 Note = order.Note ?? ""
             };
 
-            await _publishEndpoint.Publish(orderCreatedEvent);
+            await _publishEndpoint.Publish(orderCreatedEvent, ct);
 
             return _mapper.Map<OrderDto>(createdOrder);
         }
 
 
 
-        public async Task<OrderDto?> UpdateOrderNoteAsync(Guid orderId, UpdateOrderNoteDto updateDto)
+        public async Task<OrderDto?> UpdateOrderNoteAsync(Guid orderId, UpdateOrderNoteDto updateDto, CancellationToken ct = default)
         {
             _logger.LogInformation("Updating order note. OrderId: {OrderId}.", orderId);
 
-            Order? order = await _orderRepository.FindByIdAsync(orderId);
+            Order? order = await _orderRepository.FindByIdAsync(orderId, ct);
             if (order is null)
             {
                 _logger.LogInformation("Cannot update order note. Order not found. OrderId: {OrderId}.", orderId);
@@ -132,7 +132,7 @@ namespace OrderService.Application.Services
             order.Note = updateDto.Note;
             order.UpdatedAt = DateTime.UtcNow;
 
-            Order updatedOrder = await _orderRepository.UpdateAsync(order);
+            Order updatedOrder = await _orderRepository.UpdateAsync(order, ct);
             _logger.LogInformation("Order updated. OrderId: {OrderId}.", orderId);
 
             return _mapper.Map<OrderDto>(updatedOrder);
@@ -140,11 +140,11 @@ namespace OrderService.Application.Services
 
 
 
-        public async Task<OrderDto?> DeleteOrderAsync(Guid orderId)
+        public async Task<OrderDto?> DeleteOrderAsync(Guid orderId, CancellationToken ct = default)
         {
             _logger.LogInformation("Deleting order. OrderId: {OrderId}.", orderId);
 
-            Order? order = await _orderRepository.FindOrderByIdIncludeOrderItemAsync(orderId);
+            Order? order = await _orderRepository.FindOrderByIdIncludeOrderItemAsync(orderId, ct);
             if (order is null)
             {
                 _logger.LogWarning("Cannot delete. Order not found. OrderId: {OrderId}.", orderId);
@@ -157,12 +157,12 @@ namespace OrderService.Application.Services
             {
                 _logger.LogInformation("Deleting all related orderItems before deleting Order. Count: {Count}.", order.Items.Count);
 
-                var deletedTask = order.Items.Select(oi => _orderItemRepository.DeleteAsync(oi.Id));
+                var deletedTask = order.Items.Select(oi => _orderItemRepository.DeleteAsync(oi.Id, ct));
                 await Task.WhenAll(deletedTask);
 
             }
 
-            await _orderRepository.DeleteAsync(orderId);
+            await _orderRepository.DeleteAsync(orderId, ct);
             _logger.LogInformation("Order deleted. OrderId: {OrderId}.", orderId);
 
             return deletedOrder;
@@ -170,11 +170,11 @@ namespace OrderService.Application.Services
 
 
 
-        public async Task<OrderDto?> ChangeOrderStatusAsync(Guid orderId, ChangeOrderStatusDto statusDto)
+        public async Task<OrderDto?> ChangeOrderStatusAsync(Guid orderId, ChangeOrderStatusDto statusDto, CancellationToken ct = default)
         {
             _logger.LogInformation("Changing orderStatus. OrderId: {OrderId}.", orderId);
 
-            Order? order = await _orderRepository.FindOrderByIdIncludeOrderItemAsync(orderId);
+            Order? order = await _orderRepository.FindOrderByIdIncludeOrderItemAsync(orderId, ct);
             if (order is null)
             {
                 _logger.LogWarning("Cannot change orderStatus. Order not found. OrderId: {OrderId}.", orderId);
@@ -197,18 +197,8 @@ namespace OrderService.Application.Services
                 if (!string.IsNullOrWhiteSpace(token))
                     httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-                DeliveryExternalDto? delivery;
 
-                try
-                {
-                    delivery = await httpClient.GetFromJsonAsync<DeliveryExternalDto>($"api/Delivery/{order.Id}");
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Failed to get delivery info for orderId {OrderId}", order.Id);
-                    return null;
-                }
-
+                DeliveryExternalDto? delivery = await httpClient.GetFromJsonAsync<DeliveryExternalDto>($"api/Delivery/{order.Id}", ct);
 
                 if (delivery is null)
                 {
@@ -228,7 +218,7 @@ namespace OrderService.Application.Services
             order.Status = statusDto.Status;
             order.UpdatedAt = DateTime.UtcNow;
 
-            Order updatedOrder = await _orderRepository.UpdateAsync(order);
+            Order updatedOrder = await _orderRepository.UpdateAsync(order,ct);
             _logger.LogInformation("OrderStatus changed. OrderId: {OrderId}.", orderId);
 
 
@@ -240,14 +230,14 @@ namespace OrderService.Application.Services
                 UpdatedAt = DateTime.UtcNow
             };
 
-            await _publishEndpoint.Publish(orderStatusChangedEvent);
+            await _publishEndpoint.Publish(orderStatusChangedEvent,ct);
 
             return _mapper.Map<OrderDto>(updatedOrder);
         }
 
 
 
-        public async Task<OrderDto> CreateOrderFromCartAsync(ExternalCreateOrderDto createDto)
+        public async Task<OrderDto> CreateOrderFromCartAsync(ExternalCreateOrderDto createDto, CancellationToken ct = default)
         {
             _logger.LogInformation("Creating new order from cart. UserId: {UserId}.", createDto.UserId);
 
@@ -256,7 +246,7 @@ namespace OrderService.Application.Services
             order.CreatedAt = DateTime.UtcNow;
             order.Status = OrderStatus.Created;
 
-            Order createdOrder = await _orderRepository.InsertAsync(order);
+            Order createdOrder = await _orderRepository.InsertAsync(order,ct);
             _logger.LogInformation("Order from cart created. OrderId: {OrderId}.", createdOrder.Id);
 
             return _mapper.Map<OrderDto>(createdOrder);
@@ -264,11 +254,11 @@ namespace OrderService.Application.Services
 
 
 
-        public async Task<OrderDto?> SetOrderStatusCompletedFromDelivery(Guid orderId)
+        public async Task<OrderDto?> SetOrderStatusCompletedFromDelivery(Guid orderId, CancellationToken ct = default)
         {
             _logger.LogInformation("Setting orderStatus to completed from DeliveryDeliveredEvent. OrderId: {OrderId}.", orderId);
 
-            Order? order = await _orderRepository.FindByIdAsync(orderId);
+            Order? order = await _orderRepository.FindByIdAsync(orderId, ct);
             if (order is null)
             {
                 _logger.LogWarning("Cannot set orderStatus to completed. Order not found. OrderId: {OrderId}.", orderId);
@@ -278,7 +268,7 @@ namespace OrderService.Application.Services
             order.Status = OrderStatus.Completed;
             order.UpdatedAt = DateTime.UtcNow;
 
-            Order updatedOrder = await _orderRepository.UpdateAsync(order);
+            Order updatedOrder = await _orderRepository.UpdateAsync(order, ct);
             _logger.LogInformation("OrderStatus set to completed. OrderId: {OrderId}.", orderId);
 
             return _mapper.Map<OrderDto>(updatedOrder);
