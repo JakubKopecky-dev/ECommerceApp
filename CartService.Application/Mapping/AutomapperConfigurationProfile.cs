@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using CartService.Application.DTOs.Cart;
 using CartService.Application.DTOs.CartItem;
+using CartService.Application.DTOs.External;
 using CartService.Domain.Entity;
 
 namespace CartService.Application.Mapping
@@ -22,7 +23,7 @@ namespace CartService.Application.Mapping
             CreateMap<Cart, CartDto>()
                 .ForMember(dest => dest.TotalPrice, opt => opt.MapFrom(src => src.Items.Sum(i => i.UnitPrice * i.Quantity)));
 
-            CreateMap<Cart, CheckoutCartDto>()
+            CreateMap<Cart, CreateOrderAndDelivery>()
                 .ForMember(dest => dest.TotalPrice, opt => opt.MapFrom(src => src.Items.Sum(i => i.UnitPrice * i.Quantity)));
 
 

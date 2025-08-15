@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Authentication;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using OrderService.Application.DTOs.External;
+using Shared.Contracts.DTOs;
 
 
 
@@ -101,17 +102,6 @@ namespace OrderService.Application.Services
 
             Order createdOrder = await _orderRepository.InsertAsync(order, ct);
             _logger.LogInformation("Order created. OrderId: {OrderId}.", createdOrder.Id);
-
-            OrderCreatedEvent orderCreatedEvent = new()
-            {
-                OrderId = createdOrder.Id,
-                UserId = createdOrder.UserId,
-                TotalPrice = createdOrder.TotalPrice,
-                CreatedAt = DateTime.UtcNow,
-                Note = order.Note ?? ""
-            };
-
-            await _publishEndpoint.Publish(orderCreatedEvent, ct);
 
             return _mapper.Map<OrderDto>(createdOrder);
         }
@@ -218,7 +208,7 @@ namespace OrderService.Application.Services
             order.Status = statusDto.Status;
             order.UpdatedAt = DateTime.UtcNow;
 
-            Order updatedOrder = await _orderRepository.UpdateAsync(order,ct);
+            Order updatedOrder = await _orderRepository.UpdateAsync(order, ct);
             _logger.LogInformation("OrderStatus changed. OrderId: {OrderId}.", orderId);
 
 
@@ -230,24 +220,77 @@ namespace OrderService.Application.Services
                 UpdatedAt = DateTime.UtcNow
             };
 
-            await _publishEndpoint.Publish(orderStatusChangedEvent,ct);
+            await _publishEndpoint.Publish(orderStatusChangedEvent, ct);
 
             return _mapper.Map<OrderDto>(updatedOrder);
         }
 
 
 
-        public async Task<OrderDto> CreateOrderFromCartAsync(ExternalCreateOrderDto createDto, CancellationToken ct = default)
+        public async Task<OrderDto?> CreateOrderAndDeliveryFromCartAsync(ExternalCreateOrderDto createDto, CancellationToken ct = default)
         {
             _logger.LogInformation("Creating new order from cart. UserId: {UserId}.", createDto.UserId);
 
-            Order order = _mapper.Map<Order>(createDto);
-            order.Id = Guid.Empty;
-            order.CreatedAt = DateTime.UtcNow;
-            order.Status = OrderStatus.Created;
+            Order order = new()
+            {
 
-            Order createdOrder = await _orderRepository.InsertAsync(order,ct);
+                Id = Guid.Empty,
+                UserId = createDto.UserId,
+                TotalPrice = createDto.TotalPrice,
+                Status = OrderStatus.Created,
+                Note = createDto.Note,
+                CreatedAt = DateTime.UtcNow,
+                Items = _mapper.Map<List<OrderItem>>(createDto.Items)
+            };
+
+            Order createdOrder = await _orderRepository.InsertAsync(order, ct);
             _logger.LogInformation("Order from cart created. OrderId: {OrderId}.", createdOrder.Id);
+
+            var httpClient = _httpClientFactory.CreateClient("DeliveryService");
+            var token = await _httpContextAccessor.HttpContext.GetTokenAsync("access_token");
+            if (!string.IsNullOrWhiteSpace(token))
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+
+            CreateDeliveryDto createDeliveryDto = new()
+            {
+                OrderId = createdOrder.Id,
+                CourierId = createDto.CourierId,
+                Email = createDto.Email,
+                FirstName = createDto.FirstName,
+                LastName = createDto.LastName,
+                PhoneNumber = createDto.PhoneNumber,
+                Street = createDto.Street,
+                City = createDto.City,
+                PostalCode = createDto.PostalCode,
+                State = createDto.State
+            };
+
+            var response = await httpClient.PostAsJsonAsync("api/Delivery", createDeliveryDto, ct);
+
+            if (!response.IsSuccessStatusCode)
+                return null;
+
+            OrderCreatedEvent orderCreatedEvent = new()
+            {
+                OrderId = createdOrder.Id,
+                UserId = createdOrder.UserId,
+                TotalPrice = createdOrder.TotalPrice,
+                CreatedAt = DateTime.UtcNow,
+                Note = order.Note ?? "",
+            };
+
+            // Order created notification
+            await _publishEndpoint.Publish(orderCreatedEvent, ct);
+
+            OrderItemsReservedEvent orderItemsReservedEvent = new()
+            {
+                OrderId = createdOrder.Id,
+                Items = [.. createdOrder.Items.Select(p => new OrderItemCreatedDto { ProductId = p.ProductId, Quantity = p.Quantity })]
+            };
+
+            // Reserve products for orderItems
+            await _publishEndpoint.Publish(orderItemsReservedEvent, ct);
 
             return _mapper.Map<OrderDto>(createdOrder);
         }

@@ -2,26 +2,26 @@
 
 namespace ProductService.Application.DTOs.Product
 {
-    public class CreateProductDto
+    public sealed record CreateProductDto
     {
         [MinLength(2)]
-        public string Title { get; set; } = "";
+        public string Title { get; init; } = "";
 
         [MaxLength(2000)]
-        public string Description { get; set; } = "";
+        public string Description { get; init; } = "";
 
-        public uint QuantityInStock { get; set; }
+        public uint QuantityInStock { get; init; }
 
-        public bool IsActive { get; set; }
+        public bool IsActive { get; init; }
 
-        public decimal Price { get; set; }
+        public decimal Price { get; init; }
         
         [Url]
-        public string ImageUrl { get; set; } = "";
+        public string ImageUrl { get; init; } = "";
 
-        public Guid BrandId { get; set; }
+        public Guid BrandId { get; init; }
 
-        public List<string> Categories { get; set; } = [];
+        public List<string> Categories { get; init; } = [];
 
 
     }

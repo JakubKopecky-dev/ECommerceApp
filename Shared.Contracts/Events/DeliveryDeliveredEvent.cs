@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Shared.Contracts.Events
 {
-    public class DeliveryDeliveredEvent
+    public sealed record DeliveryDeliveredEvent
     {
         public Guid OrderId { get; set; }
     }

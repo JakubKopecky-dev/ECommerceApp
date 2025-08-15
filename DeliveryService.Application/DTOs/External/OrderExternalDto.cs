@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace DeliveryService.Application.DTOs.External
 {
-    public class OrderExternalDto
+    public sealed record OrderExternalDto
     {
-        public Guid UserId { get; set; }
+        public Guid UserId { get; init; }
     }
 }

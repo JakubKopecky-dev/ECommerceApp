@@ -1,7 +1,7 @@
 ﻿namespace UserService.Application.DTOs.User
 {
-    public class ChangeIsAdminDto
+    public sealed record ChangeIsAdminDto
     {
-        public bool IsAdmin { get; set; }
+        public bool IsAdmin { get; init; }
     }
 }

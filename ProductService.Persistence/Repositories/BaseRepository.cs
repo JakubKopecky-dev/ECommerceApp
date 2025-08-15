@@ -50,5 +50,12 @@ namespace ProductService.Persistence.Repositories
 
 
 
+        public async Task SaveChangeAsync(CancellationToken ct = default)
+        {
+            await _dbContext.SaveChangesAsync(ct);
+        }
+
+
+
     }
 }

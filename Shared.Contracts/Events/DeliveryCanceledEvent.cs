@@ -1,6 +1,6 @@
 ﻿namespace Shared.Contracts.Events
 {
-    public class DeliveryCanceledEvent
+    public sealed record DeliveryCanceledEvent
     {
        public Guid OrderId { get; set; }
 

@@ -17,6 +17,9 @@ builder.Services.AddApplicationServices();
 // Autentization
 builder.Services.AddAuthenticationServiceCollection(builder.Configuration);
 
+// MassTransit + RebbitMQ
+builder.Services.AddMassTransitService();
+
 // Controllers && JSON Setting
 builder.Services.AddControllers().AddJsonOptions(options =>
 options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));

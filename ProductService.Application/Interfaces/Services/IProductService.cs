@@ -1,4 +1,5 @@
 ﻿using ProductService.Application.DTOs.Product;
+using Shared.Contracts.DTOs;
 
 namespace ProductService.Application.Interfaces.Services
 {
@@ -14,6 +15,8 @@ namespace ProductService.Application.Interfaces.Services
         Task<IReadOnlyList<ProductDto>> GetAllProductsByCategoriesAsync(List<string> categories, CancellationToken ct = default);
         Task<ProductExtendedDto?> GetProductByIdAsync(Guid productId, CancellationToken ct = default);
         Task<ProductDto?> InactivateProductAsync(Guid productId, CancellationToken ct = default);
+        Task<IReadOnlyList<ProductQuantityCheckResponseDto>> ProductQuantityCheckFromCartAsync(List<ProductQuantityCheckRequestDto> productsFromCart, CancellationToken ct = default);
+        Task ProductQuantityReserved(List<OrderItemCreatedDto> orderItemsDto, CancellationToken ct = default);
         Task<ProductExtendedDto?> UpdateProductAsync(Guid productId, UpdateProductDto updateDto, CancellationToken ct = default);
     }
 }

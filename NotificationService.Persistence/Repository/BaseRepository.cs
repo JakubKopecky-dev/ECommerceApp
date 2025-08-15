@@ -51,5 +51,12 @@ namespace NotificationService.Persistence.Repository
 
 
 
+        public async Task SaveChangeAsync(CancellationToken ct = default)
+        {
+            await _dbContext.SaveChangesAsync(ct);
+        }
+
+
+
     }
 }

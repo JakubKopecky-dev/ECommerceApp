@@ -2,26 +2,28 @@
 
 namespace UserService.Application.DTOs.User
 {
-    public class CreateUserDto
+    public sealed record CreateUserDto
     {
         [EmailAddress]
-        public string Email { get; set; } = "";
+        public string Email { get; init; } = "";
 
-        public string Password { get; set; } = "";
+        public string Password { get; init; } = "";
 
-        public bool IsAdmin { get; set; }
+        public bool IsAdmin { get; init; }
 
-        public string? FirstName { get; set; }
+        public string? FirstName { get; init; }
 
-        public string? LastName { get; set; }
+        public string? LastName { get; init; }
 
-        public string? Street { get; set; }
+        public string? PhoneNumber { get; init; }
 
-        public string? City { get; set; }
+        public string? Street { get; init; }
 
-        public string? PostalCode { get; set; }
+        public string? City { get; init; }
 
-        public string? Country { get; set; }
+        public string? PostalCode { get; init; }
+
+        public string? Country { get; init; }
 
     }
 }

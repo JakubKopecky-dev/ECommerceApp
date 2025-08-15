@@ -93,8 +93,10 @@ namespace OrderService.Api.Controllers
         [HttpPost("external")]
         public async Task<IActionResult> CreateOrderFromCart([FromBody] ExternalCreateOrderDto createDto, CancellationToken ct)
         {
-            OrderDto order = await _orderService.CreateOrderFromCartAsync(createDto, ct);
-
+            OrderDto? order = await _orderService.CreateOrderAndDeliveryFromCartAsync(createDto, ct);
+            if (order is null)
+                return BadRequest(new {Message = "Order created but delivery not created."});
+            
             return CreatedAtAction(nameof(CreateOrder), new { orderId = order.Id }, order);
         }
 

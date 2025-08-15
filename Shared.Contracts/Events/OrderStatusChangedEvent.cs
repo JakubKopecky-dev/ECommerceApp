@@ -3,7 +3,7 @@
 
 namespace Shared.Contracts.Events
 {
-    public class OrderStatusChangedEvent
+    public sealed record OrderStatusChangedEvent
     {
         public Guid OrderId { get; set; }
 

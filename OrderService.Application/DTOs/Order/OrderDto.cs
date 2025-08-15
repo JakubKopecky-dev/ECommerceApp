@@ -3,21 +3,21 @@ using OrderService.Domain.Enum;
 
 namespace OrderService.Application.DTOs.Order
 {
-    public class OrderDto
+    public sealed record OrderDto
     {
-        public Guid Id { get; set; }
+        public Guid Id { get; init; }
 
-        public Guid UserId { get; set; }
+        public Guid UserId { get; init; }
 
-        public decimal TotalPrice { get; set; }
+        public decimal TotalPrice { get; init; }
 
-        public OrderStatus Status { get; set; }
+        public OrderStatus Status { get; init; }
 
         [MaxLength(1000)]
-        public string? Note { get; set; }
+        public string? Note { get; init; }
 
-        public DateTime CreatedAt { get; set; }
+        public DateTime CreatedAt { get; init; }
 
-        public DateTime? UpdatedAt { get; set; }
+        public DateTime? UpdatedAt { get; init; }
     }
 }

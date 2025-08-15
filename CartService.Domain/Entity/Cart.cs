@@ -6,8 +6,6 @@ namespace CartService.Domain.Entity
     {
         public Guid UserId { get; set; }
 
-        public string? Note { get; set; }
-
         public ICollection<CartItem> Items { get; set; } = [];
     }
 }

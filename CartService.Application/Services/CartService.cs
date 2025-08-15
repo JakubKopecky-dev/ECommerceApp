@@ -8,6 +8,9 @@ using CartService.Domain.Entity;
 using Microsoft.Extensions.Logging;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Authentication;
+using CartService.Application.DTOs.External;
+using CartService.Application.DTOs.CartItem;
+using CartService.Application.Common;
 
 
 namespace CartService.Application.Services
@@ -22,11 +25,12 @@ namespace CartService.Application.Services
         private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
 
 
+
         public async Task<CartExtendedDto> GetOrCreateCartByUserIdAsync(Guid userId, CancellationToken ct = default)
         {
             _logger.LogInformation("Retrieving cart. UserId: {UserId}.", userId);
 
-            Cart? cart = await _cartRepository.FindCartByUserIdIncludeItemsAsync(userId,ct);
+            Cart? cart = await _cartRepository.FindCartByUserIdIncludeItemsAsync(userId, ct);
             if (cart is null)
             {
                 _logger.LogInformation("Cart not found. Creating new cart for user. UserId: {UserId}.", userId);
@@ -44,6 +48,7 @@ namespace CartService.Application.Services
         }
 
 
+
         public async Task<CartDto?> DeleteCartByUserIdAsync(Guid userId, CancellationToken ct = default)
         {
             _logger.LogInformation("Deleting cart. UserId: {UserId}.", userId);
@@ -57,14 +62,15 @@ namespace CartService.Application.Services
 
             CartDto deletedCart = _mapper.Map<CartDto>(cart);
 
-            await _cartRepository.DeleteAsync(cart.Id,ct);
+            await _cartRepository.DeleteAsync(cart.Id, ct);
             _logger.LogInformation("Deleted cart and its items. UserId: {UserId}.", userId);
 
             return deletedCart;
         }
 
 
-        public async Task<bool> CheckoutCartByUserIdAsync(Guid userId, CancellationToken ct = default)
+
+        public async Task<Result<CheckoutResult,CartError>> CheckoutCartByUserIdAsync(Guid userId, CartCheckoutRequestDto cartCheckoutRequestDto, CancellationToken ct = default)
         {
             _logger.LogInformation("Checking out cart. UserId: {UserId}.", userId);
 
@@ -72,43 +78,70 @@ namespace CartService.Application.Services
             if (cart is null || cart.Items.Count == 0)
             {
                 _logger.LogWarning("Checkout failed. Cart not found or empty. UserId: {UserId}", userId);
-                return false;
+                return Result<CheckoutResult, CartError>.Fail(CartError.CartNotFound);
             }
 
-            /*
-            var productIds = cart.Items.Select(c => c.ProductId).ToList();
-            foreach (Guid productId in productIds)
-            {
-
-
-            VALIDACE PŘI CHECKOUTU DODĚLAT
-
-            }
-            */
-
-            CheckoutCartDto checkoutCartDto = _mapper.Map<CheckoutCartDto>(cart);
-
-            var httpclient = _httpClientFactory.CreateClient("OrderService");
-
+            var orderHttpClient = _httpClientFactory.CreateClient("OrderService");
+            var productHttpClient = _httpClientFactory.CreateClient("ProductService");
             var token = await _httpContextAccessor.HttpContext.GetTokenAsync("access_token");
+
+
             if (!string.IsNullOrWhiteSpace(token))
-                httpclient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            {
+                orderHttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                productHttpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            }
 
-            
-                var response = await httpclient.PostAsJsonAsync("api/Order/external", checkoutCartDto,ct);
 
-                if (!response.IsSuccessStatusCode)
-                {
-                    _logger.LogError("Failed to create order. StatusCode: {StatusCode}.", response.StatusCode);
-                    return false;
-                }
-            
+            List<ProductQuantityCheckRequestDto> cartItemProducts = [.. cart.Items.Select(c => new ProductQuantityCheckRequestDto { Id = c.Id, Quantity = c.Quantity })];
 
-            await DeleteCartByUserIdAsync(userId,ct);
+            var productResponse = await productHttpClient.PostAsJsonAsync("api/Product/availability",cartItemProducts,ct);
+
+            IReadOnlyList<ProductQuantityCheckResponseDto> badProducts = await productResponse.Content.ReadFromJsonAsync<IReadOnlyList<ProductQuantityCheckResponseDto>>(ct) ?? [];
+
+            if (badProducts.Any())
+            {
+                _logger.LogWarning("Cannot check out cart. Lack of goods in stock. CartId: {CartId}, ProductIds: {ProductIds}.", cart.Id, string.Join(", ", badProducts.Select(p => p.Id)));
+                return Result<CheckoutResult, CartError>.Ok(new CheckoutResult(false, badProducts));
+            }
+
+            // creating order and delivery
+            CreateOrderAndDelivery checkoutCartDto = new()
+            {
+                UserId = userId,
+                CourierId = cartCheckoutRequestDto.CourierId,
+                TotalPrice = cart.Items.Sum(i => i.UnitPrice * i.Quantity),
+                Note = cartCheckoutRequestDto.Note,
+                Email = cartCheckoutRequestDto.Email,
+                FirstName = cartCheckoutRequestDto.FirstName,
+                LastName = cartCheckoutRequestDto.LastName,
+                PhoneNumber = cartCheckoutRequestDto.PhoneNumber,
+                Street = cartCheckoutRequestDto.Street,
+                City = cartCheckoutRequestDto.City,
+                PostalCode = cartCheckoutRequestDto.PostalCode,
+                State = cartCheckoutRequestDto.State,
+                Items = _mapper.Map<List<CartItemForCheckoutDto>>(cart.Items)
+            };
+
+
+            var orderResponse = await orderHttpClient.PostAsJsonAsync("api/Order/external", checkoutCartDto, ct);
+
+            if (!orderResponse.IsSuccessStatusCode)
+            {
+                var errorMessage = await orderResponse.Content.ReadAsStringAsync(ct);
+
+                _logger.LogError("Failed to create order or order delivery. StatusCode: {StatusCode}, Message: {Message}.", orderResponse.StatusCode, errorMessage);
+                return Result<CheckoutResult,CartError>.Fail(CartError.OrderNotCreated);
+            }
+
+            await DeleteCartByUserIdAsync(userId, ct);
 
             _logger.LogInformation("Checkout completed successfully. UserId: {UserId}.", userId);
 
-            return true;
+            return Result<CheckoutResult, CartError>.Ok(new CheckoutResult(true, []));
         }
+
+
+
     }
 }

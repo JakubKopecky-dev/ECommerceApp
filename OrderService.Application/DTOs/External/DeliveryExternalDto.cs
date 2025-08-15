@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace OrderService.Application.DTOs.External
 {
-    public class DeliveryExternalDto
+    public sealed record DeliveryExternalDto
     {
-        public Guid Id { get; set; }
-        public Guid OrderId { get; set; }
-        public DeliveryStatus Status { get; set; }
+        public Guid Id { get; init; }
+        public Guid OrderId { get; init; }
+        public DeliveryStatus Status { get; init; }
     }
 }

@@ -17,7 +17,7 @@ namespace OrderService.Api.Consumers
             var ct = context.CancellationToken;
 
             DeliveryDeliveredEvent message = context.Message;
-            _logger.LogInformation("Consuming DeliveryDeliveredEvent. OrderId: {OrderId}", message.OrderId);
+            _logger.LogInformation("Received DeliveryDeliveredEvent. OrderId: {OrderId}", message.OrderId);
 
             await _orderService.SetOrderStatusCompletedFromDelivery(message.OrderId,ct);
         }

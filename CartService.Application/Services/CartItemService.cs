@@ -1,5 +1,6 @@
 ﻿using System.Net.Http.Json;
 using AutoMapper;
+using CartService.Application.Common;
 using CartService.Application.DTOs.CartItem;
 using CartService.Application.DTOs.External;
 using CartService.Application.Interfaces.Repositories;
@@ -45,7 +46,7 @@ namespace CartService.Application.Services
 
 
 
-        public async Task<CartItemDto?> CreateCartItemOrChangeQuantityAsync(CreateCartItemDto createDto, CancellationToken ct = default)
+        public async Task<Result<CartItemDto,CartItemError>> CreateCartItemOrChangeQuantityAsync(CreateCartItemDto createDto, CancellationToken ct = default)
         {
             _logger.LogInformation("Creating new cartItem. CartId: {CartId}, ProductId: {ProductId}.", createDto.CartId, createDto.ProductId);
 
@@ -57,15 +58,13 @@ namespace CartService.Application.Services
             {
                 _logger.LogInformation("CartItem already exists for productId: {ProductId}, CartId: {CartId}. Changing cartItem quantity", createDto.ProductId, createDto.CartId);
 
-
                 _logger.LogInformation("Checking product availability. ProductId: {ProductId}.", alreadyExistCartItem.ProductId);
-
 
                 productDto = await GetProductAsync(alreadyExistCartItem.ProductId, ct);
                 if (productDto is null)
                 {
                     _logger.LogWarning("Cannot change cartItem quantity. Product not foud. ProdutId: {ProductId}.", alreadyExistCartItem.ProductId);
-                    return null;
+                    return Result<CartItemDto,CartItemError>.Fail(CartItemError.ProductNotFound);
                 }
 
                 uint newQuantity = alreadyExistCartItem.Quantity + createDto.Quantity;
@@ -73,7 +72,7 @@ namespace CartService.Application.Services
                 if (productDto.QuantityInStock < newQuantity)
                 {
                     _logger.LogWarning("Cannot change cartItem quantity. Lack of goods in stock. CartItemId: {CartItemId}.", alreadyExistCartItem.Id);
-                    return null;
+                    return Result<CartItemDto,CartItemError>.Fail(CartItemError.OutOfStock);
                 }
 
                 alreadyExistCartItem.Quantity = newQuantity;
@@ -82,7 +81,7 @@ namespace CartService.Application.Services
                 CartItem updatedCartItem = await _cartItemRepository.UpdateAsync(alreadyExistCartItem, ct);
                 _logger.LogInformation("CartItem updated. CartItemId: {CartItemId}.", updatedCartItem.Id);
 
-                return _mapper.Map<CartItemDto>(updatedCartItem);
+                return Result<CartItemDto,CartItemError>.Ok(_mapper.Map<CartItemDto>(updatedCartItem));
             }
 
 
@@ -97,13 +96,13 @@ namespace CartService.Application.Services
             if (productDto is null)
             {
                 _logger.LogWarning("Cannot create cartItem. Product not found. {ProductId}.", createDto.ProductId);
-                return null;
+                return Result<CartItemDto,CartItemError>.Fail(CartItemError.ProductNotFound);
             }
 
             if (productDto.QuantityInStock < createDto.Quantity)
             {
                 _logger.LogWarning("Cannot create cartItem. Lack of goods in stock.");
-                return null;
+                return Result<CartItemDto,CartItemError>.Fail(CartItemError.OutOfStock);
             }
 
             cartItem.Id = Guid.Empty;
@@ -114,12 +113,12 @@ namespace CartService.Application.Services
             CartItem createdCartItem = await _cartItemRepository.InsertAsync(cartItem, ct);
             _logger.LogInformation("CartItem created. CartItemId: {CartItemId}, ProductId: {ProductId}, Quantity: {Quantity}.", createdCartItem.Id, createdCartItem.ProductId, createdCartItem.Quantity);
 
-            return _mapper.Map<CartItemDto>(createdCartItem);
+            return Result<CartItemDto, CartItemError>.Ok(_mapper.Map<CartItemDto>(createdCartItem));
         }
 
 
 
-        public async Task<CartItemDto?> ChangeCartItemQuantityAsync(Guid cartItemId, ChangeQuantityCartItemDto changeDto, CancellationToken ct = default)
+        public async Task<Result<CartItemDto,CartItemError>> ChangeCartItemQuantityAsync(Guid cartItemId, ChangeQuantityCartItemDto changeDto, CancellationToken ct = default)
         {
             _logger.LogInformation("Changing cartItem quantity. CartItemId: {CartItemId}.", cartItemId);
 
@@ -127,7 +126,7 @@ namespace CartService.Application.Services
             if (cartItem is null)
             {
                 _logger.LogInformation("Cannot change cartItem quantity. CartItem not found. CartItemId: {CartItemId}.", cartItemId);
-                return null;
+                return Result<CartItemDto,CartItemError>.Fail(CartItemError.ProductNotFound);
             }
 
             if (changeDto.Quantity == 0)
@@ -139,7 +138,7 @@ namespace CartService.Application.Services
                 await _cartItemRepository.DeleteAsync(cartItemId, ct);
                 _logger.LogInformation("CartItem deleted. CartItemId: {CartItemId}.", cartItemId);
 
-                return deletedCartItem;
+                return Result<CartItemDto,CartItemError>.Ok(deletedCartItem);
             }
 
             ProductDto? productDto;
@@ -150,14 +149,14 @@ namespace CartService.Application.Services
             if (productDto is null)
             {
                 _logger.LogWarning("Cannot change cartItem quantity. Product not foud. ProdutId: {ProductId}.", cartItem.ProductId);
-                return null;
+                return Result<CartItemDto,CartItemError>.Fail(CartItemError.ProductNotFound);
             }
 
 
             if (productDto.QuantityInStock < changeDto.Quantity)
             {
                 _logger.LogWarning("Cannot change cartItem quantity. Lack of goods in stock.");
-                return null;
+                return Result<CartItemDto,CartItemError>.Fail(CartItemError.OutOfStock);
             }
 
             cartItem.Quantity = changeDto.Quantity;
@@ -166,7 +165,7 @@ namespace CartService.Application.Services
             CartItem updatedCartItem = await _cartItemRepository.UpdateAsync(cartItem, ct);
             _logger.LogInformation("CartItem updated. CartItemId: {CartItemId}.", cartItemId);
 
-            return _mapper.Map<CartItemDto>(updatedCartItem);
+            return Result<CartItemDto, CartItemError>.Ok(_mapper.Map<CartItemDto>(updatedCartItem));
         }
 
 

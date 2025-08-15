@@ -2,14 +2,32 @@
 
 namespace OrderService.Application.DTOs.Order
 {
-    public class ExternalCreateOrderDto
+    public sealed record ExternalCreateOrderDto
     {
-        public Guid UserId { get; set; }
+        public Guid UserId { get; init; }
 
-        public decimal TotalPrice { get; set; }
+        public Guid CourierId { get; init; }
 
-        public string? Note { get; set; }
+        public decimal TotalPrice { get; init; }
 
-        public List<ExternalCreateOrderItemDto> Items { get; set; } = [];
+        public string Email { get; init; } = "";
+
+        public string FirstName { get; set; } = "";
+
+        public string LastName { get; set; } = "";
+
+        public string PhoneNumber { get; set; } = "";
+
+        public string Street { get; init; } = "";
+
+        public string City { get; init; } = "";
+
+        public string PostalCode { get; init; } = "";
+
+        public string State { get; init; } = "";
+
+        public string? Note { get; init; }
+
+        public List<ExternalCreateOrderItemDto> Items { get; init; } = [];
     }
 }

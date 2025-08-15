@@ -1,9 +1,9 @@
 ﻿using MassTransit;
-using NotificationService.Api.Consumers;
+using ProductService.Api.Consumers;
 
-namespace NotificationService.Api.DependencyInjection
+namespace ProductService.Api.DependencyInjection
 {
-    public static class MassTransitServiceCollectionExtesion
+    public static class MassTransitServiceCollectionExtension
     {
         public static IServiceCollection AddMassTransitService(this IServiceCollection services)
         {
@@ -11,12 +11,7 @@ namespace NotificationService.Api.DependencyInjection
             {
                 x.SetKebabCaseEndpointNameFormatter();
 
-                // register consumers
-                x.AddConsumer<DeliveryCanceledConsumer>();
-                x.AddConsumer<OrderCreatedConsumer>();
-                x.AddConsumer<OrderStatusChangedConsumer>();
-
-
+                x.AddConsumer<OrderItemReservedConsumer>();
 
                 x.UsingRabbitMq((context, cfg) =>
                 {
@@ -24,13 +19,17 @@ namespace NotificationService.Api.DependencyInjection
                     {
                         h.Username("guest");
                         h.Password("guest");
-
                     });
 
                     cfg.ConfigureEndpoints(context);
 
                 });
+                
+
             });
+            
+            
+
 
 
 

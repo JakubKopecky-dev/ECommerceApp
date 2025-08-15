@@ -2,11 +2,11 @@
 
 namespace OrderService.Application.DTOs.Order
 {
-    public class CreateOrderDto
+    public sealed record CreateOrderDto
     {
-        public Guid UserId { get; set; }
+        public Guid UserId { get; init; }
 
         [MaxLength(1000)]
-        public string? Note { get; set; }
+        public string? Note { get; init; }
     }
 }

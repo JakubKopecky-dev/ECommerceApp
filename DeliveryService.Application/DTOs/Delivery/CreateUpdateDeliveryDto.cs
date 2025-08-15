@@ -1,17 +1,25 @@
 ﻿namespace DeliveryService.Application.DTOs.Delivery
 {
-    public class CreateUpdateDeliveryDto
+    public sealed record CreateUpdateDeliveryDto
     {
-        public Guid OrderId { get; set; }
+        public Guid OrderId { get; init; }
 
-        public Guid? CourierId { get; set; }
+        public Guid CourierId { get; init; }
 
-        public string Street { get; set; } = "";
+        public string Email { get; init; } = "";
 
-        public string City { get; set; } = "";
+        public string FirstName { get; set; } = "";
 
-        public string PostalCode { get; set; } = "";
+        public string LastName { get; set; } = "";
 
-        public string State { get; set; } = "";
+        public string PhoneNumber { get; set; } = "";
+
+        public string Street { get; init; } = "";
+
+        public string City { get; init; } = "";
+
+        public string PostalCode { get; init; } = "";
+
+        public string State { get; init; } = "";
     }
 }

@@ -2,10 +2,10 @@
 
 namespace UserService.Application.DTOs.Auth
 {
-    public class AuthResponseDto
+    public sealed record AuthResponseDto
     {
-        public required UserDto User { get; set; }
+        public required UserDto User { get; init; }
 
-        public string Token { get; set; } = "";
+        public string Token { get; init; } = "";
     }
 }

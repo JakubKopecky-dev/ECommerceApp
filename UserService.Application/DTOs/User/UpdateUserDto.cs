@@ -1,18 +1,20 @@
 ﻿namespace UserService.Application.DTOs.User
 {
-    public class UpdateUserDto
+    public sealed record UpdateUserDto
     {
-        public string? FirstName { get; set; }
+        public string? FirstName { get; init; }
 
-        public string? LastName { get; set; }
+        public string? LastName { get; init; }
 
-        public string? Street { get; set; }
+        public string? PhoneNumber { get; init; }
 
-        public string? City { get; set; }
+        public string? Street { get; init; }
 
-        public string? PostalCode { get; set; }
+        public string? City { get; init; }
 
-        public string? Country { get; set; }
+        public string? PostalCode { get; init; }
+
+        public string? Country { get; init; }
 
     }
 }

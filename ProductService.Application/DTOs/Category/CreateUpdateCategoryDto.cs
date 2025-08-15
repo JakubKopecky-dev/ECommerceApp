@@ -2,9 +2,9 @@
 
 namespace ProductService.Application.DTOs.Category
 {
-    public class CreateUpdateCategoryDto
+    public sealed record CreateUpdateCategoryDto
     {
         [MinLength(2)]
-        public string Title { get; set; } = "";
+        public string Title { get; init; } = "";
     }
 }

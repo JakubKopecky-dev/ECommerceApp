@@ -2,13 +2,13 @@
 
 namespace ProductService.Application.DTOs.Brand
 {
-    public  class CreateUpdateBrandDto
+    public sealed record CreateUpdateBrandDto
     {
         [MinLength(2)]
-        public string Title { get; set; } = "";
+        public string Title { get; init; } = "";
 
         [MaxLength(2000)]
-        public string Description { get; set; } = "";
+        public string Description { get; init; } = "";
 
     }
 }

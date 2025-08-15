@@ -2,12 +2,10 @@
 
 namespace OrderService.Application.DTOs.Order
 {
-    public class UpdateOrderNoteDto
+    public sealed record UpdateOrderNoteDto
     {
-
         [MaxLength(1000)]
-        public string? Note { get; set; }
-
+        public string? Note { get; init; }
 
     }
 }

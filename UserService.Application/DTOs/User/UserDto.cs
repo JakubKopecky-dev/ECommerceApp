@@ -1,21 +1,25 @@
 ﻿namespace UserService.Application.DTOs.User
 {
-    public class UserDto
+    public sealed record UserDto
     {
-        public Guid Id { get; set; }
+        public Guid Id { get; init; }
 
-        public string? FirstName { get; set; }
+        public string Email { get; init; } = "";
 
-        public string? LastName { get; set; }
+        public string? FirstName { get; init; }
 
-        public string? Street { get; set; }
+        public string? LastName { get; init; }
 
-        public string? City { get; set; }
+        public string? PhoneNumber { get; init; }
 
-        public string? PostalCode { get; set; }
+        public string? Street { get; init; }
 
-        public string? Country { get; set; }
+        public string? City { get; init; }
 
-        public bool IsAdmin { get; set; }
+        public string? PostalCode { get; init; }
+
+        public string? Country { get; init; }
+
+        public bool IsAdmin { get; init; }
     }
 }

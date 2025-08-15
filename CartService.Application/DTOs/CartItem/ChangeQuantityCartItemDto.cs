@@ -1,8 +1,8 @@
 ﻿namespace CartService.Application.DTOs.CartItem
 {
-    public class ChangeQuantityCartItemDto
+    public sealed record ChangeQuantityCartItemDto
     {
-        public uint Quantity { get; set; }
+        public uint Quantity { get; init; }
 
     }
 }

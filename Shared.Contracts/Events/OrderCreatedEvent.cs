@@ -1,6 +1,8 @@
-﻿namespace Shared.Contracts.Events
+﻿using Shared.Contracts.DTOs;
+
+namespace Shared.Contracts.Events
 {
-    public class OrderCreatedEvent
+    public sealed record OrderCreatedEvent
     {
         public Guid OrderId { get; set; }
 

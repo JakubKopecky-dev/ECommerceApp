@@ -2,9 +2,9 @@
 
 namespace DeliveryService.Application.DTOs.Delivery
 {
-    public class ChangeDeliveryStatusDto
+    public sealed record ChangeDeliveryStatusDto
     {
-        public DeliveryStatus Status { get; set; }
+        public DeliveryStatus Status { get; init; }
 
     }
 }

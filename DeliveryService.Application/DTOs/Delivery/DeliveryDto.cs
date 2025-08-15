@@ -2,28 +2,28 @@
 
 namespace DeliveryService.Application.DTOs.Delivery
 {
-    public class DeliveryDto
+    public sealed record DeliveryDto
     {
-        public Guid Id { get; set; }
+        public Guid Id { get; init; }
 
-        public Guid OrderId { get; set; }
+        public Guid OrderId { get; init; }
 
-        public Guid? CourierId { get; set; }
+        public Guid CourierId { get; init; }
 
-        public DeliveryStatus Status { get; set; }
+        public DeliveryStatus Status { get; init; }
 
-        public DateTime? DeliveredAt { get; set; }
+        public DateTime? DeliveredAt { get; init; }
 
-        public string Street { get; set; } = "";
+        public string Street { get; init; } = "";
 
-        public string City { get; set; } = "";
+        public string City { get; init; } = "";
 
-        public string PostalCode { get; set; } = "";
+        public string PostalCode { get; init; } = "";
 
-        public string State { get; set; } = "";
+        public string State { get; init; } = "";
 
-        public DateTime CreatedAt { get; set; }
+        public DateTime CreatedAt { get; init; }
 
-        public DateTime UpdatedAt { get; set; }
+        public DateTime UpdatedAt { get; init; }
     }
 }

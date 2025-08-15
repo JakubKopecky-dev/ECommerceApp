@@ -1,4 +1,5 @@
-﻿using ProductService.Domain.Entity;
+﻿using ProductService.Application.DTOs.Product;
+using ProductService.Domain.Entity;
 
 namespace ProductService.Application.Interfaces.Repositories
 {
@@ -10,5 +11,7 @@ namespace ProductService.Application.Interfaces.Repositories
         Task<IReadOnlyList<Product>> GetAllProductsByCategoriesAsync(List<string> categories, CancellationToken ct = default);
         Task<IReadOnlyList<Product>> GetAllActiveProductsAsync(CancellationToken ct = default);
         Task<IReadOnlyList<Product>> GetAllInactiveProductsAsync(CancellationToken ct = default);
+        Task<IReadOnlyList<ProductQuantityCheckResponseDto>> GetProductsAsQuantityCheckDtoAsync(List<Guid> productIds, CancellationToken ct = default);
+        Task<IReadOnlyList<Product>> GetAllProductsByIdsAsync(List<Guid> productIds, CancellationToken ct = default);
     }
 }

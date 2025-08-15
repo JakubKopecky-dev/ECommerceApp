@@ -4,6 +4,8 @@ using ProductService.Application.DTOs.Product;
 using ProductService.Application.Interfaces.Repositories;
 using ProductService.Application.Interfaces.Services;
 using ProductService.Domain.Entity;
+using Shared.Contracts.DTOs;
+
 
 namespace ProductService.Application.Services
 {
@@ -32,7 +34,7 @@ namespace ProductService.Application.Services
         public async Task<ProductExtendedDto?> GetProductByIdAsync(Guid productId, CancellationToken ct = default)
         {
             _logger.LogInformation("Retrieving product. ProductId: {ProductId}.", productId);
-            Product? product = await _productRepository.FindProductByIdIncludeCategoriesAsync(productId,ct);
+            Product? product = await _productRepository.FindProductByIdIncludeCategoriesAsync(productId, ct);
             if (product is null)
             {
                 _logger.LogInformation("Product not found. ProductId: {ProductId}.", productId);
@@ -54,7 +56,7 @@ namespace ProductService.Application.Services
             product.Id = Guid.Empty;
             product.CreatedAt = DateTime.UtcNow;
 
-            List<Category> categories = await _categoryRepository.GetCategoriesByName(createDto.Categories,ct);
+            List<Category> categories = await _categoryRepository.GetCategoriesByName(createDto.Categories, ct);
 
             categories.ForEach(product.Categories.Add);
 
@@ -113,7 +115,7 @@ namespace ProductService.Application.Services
             product.IsActive = false;
 
             Product updatedProduct = await _productRepository.UpdateAsync(product, ct);
-            _logger.LogInformation("Product inactive. ProductId: {ProductId}.",productId);
+            _logger.LogInformation("Product inactive. ProductId: {ProductId}.", productId);
 
             return _mapper.Map<ProductDto>(updatedProduct);
         }
@@ -179,10 +181,10 @@ namespace ProductService.Application.Services
 
         public async Task<IReadOnlyList<ProductDto>> GetAllProductsByBrandIdAsync(Guid brandId, CancellationToken ct = default)
         {
-            _logger.LogInformation("Retrieving all products by BranId. BrandId: {BrandId}.",brandId);
+            _logger.LogInformation("Retrieving all products by BranId. BrandId: {BrandId}.", brandId);
 
             IReadOnlyList<Product> products = await _productRepository.GetAllProductsByBrandIdAsync(brandId, ct);
-            _logger.LogInformation("Retrieved all products by BrandId. Count: {Count}, BrandId: {BrandId}.",products.Count,brandId);
+            _logger.LogInformation("Retrieved all products by BrandId. Count: {Count}, BrandId: {BrandId}.", products.Count, brandId);
 
             return _mapper.Map<List<ProductDto>>(products);
         }
@@ -191,12 +193,12 @@ namespace ProductService.Application.Services
 
         public async Task<IReadOnlyList<ProductDto>> GetAllProductsByCategoriesAsync(List<string> categories, CancellationToken ct = default)
         {
-            _logger.LogInformation("Retrieving all products by categories. Categories: {Categories}.", string.Join(", ",categories));
+            _logger.LogInformation("Retrieving all products by categories. Categories: {Categories}.", string.Join(", ", categories));
 
             IReadOnlyList<Product> products = await _productRepository.GetAllProductsByCategoriesAsync(categories, ct);
             _logger.LogInformation("Retrieved all products by categories. Count: {Count}, Categories: {Categories}.", products.Count, string.Join(", ", categories));
 
-            return _mapper.Map<List<ProductDto>>(products); 
+            return _mapper.Map<List<ProductDto>>(products);
         }
 
 
@@ -222,6 +224,61 @@ namespace ProductService.Application.Services
 
             return _mapper.Map<IReadOnlyList<ProductDto>>(products);
         }
+
+
+
+        public async Task<IReadOnlyList<ProductQuantityCheckResponseDto>> ProductQuantityCheckFromCartAsync(List<ProductQuantityCheckRequestDto> productsFromCart, CancellationToken ct = default)
+        {
+            _logger.LogInformation("Checking product availability for productIds: {ProductIds}.", string.Join(", ", productsFromCart.Select(p => p.Id)));
+
+            IReadOnlyList<ProductQuantityCheckResponseDto> productsStock = await _productRepository.GetProductsAsQuantityCheckDtoAsync([.. productsFromCart.Select(p => p.Id)], ct);
+
+            var stockById = productsStock.ToDictionary(p => p.Id);
+
+            List<ProductQuantityCheckResponseDto> outOfStockProducts = [];
+
+
+            foreach (var cartItem in productsFromCart)
+            {
+                if (!stockById.TryGetValue(cartItem.Id, out ProductQuantityCheckResponseDto? productFromDb))
+                {
+                    outOfStockProducts.Add(new() { Id = cartItem.Id, Title = "(Nout found)", QuantityInStock = 0 });
+
+                    continue;
+                }
+
+                if (cartItem.Quantity > productFromDb.QuantityInStock)
+                {
+                    outOfStockProducts.Add(productFromDb);
+                }
+            }
+
+            return outOfStockProducts;
+        }
+
+
+
+        public async Task ProductQuantityReserved(List<OrderItemCreatedDto> orderItemsDto, CancellationToken ct = default)
+        {
+            IReadOnlyList<Product> products = await _productRepository.GetAllProductsByIdsAsync([.. orderItemsDto.Select(o => o.ProductId)], ct);
+
+            var productsInStockById = products.ToDictionary(p => p.Id);
+
+            foreach (var orderItem in orderItemsDto)
+            {
+                if (productsInStockById.TryGetValue(orderItem.ProductId, out Product? product))
+                {
+                    product.QuantityInStock -= orderItem.Quantity;
+
+                }
+            }
+
+            await _productRepository.SaveChangeAsync(ct);
+        }
+
+
+
+
 
 
 

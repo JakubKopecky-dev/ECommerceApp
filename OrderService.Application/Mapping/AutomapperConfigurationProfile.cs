@@ -7,29 +7,33 @@ namespace OrderService.Application.Mapping
 {
     public class AutomapperConfigurationProfile : Profile
     {
-        public AutomapperConfigurationProfile() 
+        public AutomapperConfigurationProfile()
         {
-            CreateMap<ExternalCreateOrderDto,Order>();
+            CreateMap<ExternalCreateOrderDto, Order>();
             CreateMap<CreateOrderDto, Order>();
-            CreateMap<Order,OrderDto>();
+            CreateMap<Order, OrderDto>();
             CreateMap<Order, OrderExtendedDto>();
 
+            CreateMap<ExternalCreateOrderItemDto, OrderItem>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore()) 
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(_ => DateTime.UtcNow))
+                .ForMember(dest => dest.Order, opt => opt.Ignore()) 
+                .ForMember(dest => dest.OrderId, opt => opt.Ignore()); 
 
-            CreateMap<ExternalCreateOrderItemDto, OrderItem>();
             CreateMap<CreateOrderItemDto, OrderItem>();
-            CreateMap<OrderItem,OrderItemDto>();
-            CreateMap<OrderItem,OrderItemForExtendedDto>();
+            CreateMap<OrderItem, OrderItemDto>();
+            CreateMap<OrderItem, OrderItemForExtendedDto>();
 
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+
+
+
+
+
+
+
+
+
+
         }
     }
 }

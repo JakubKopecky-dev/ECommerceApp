@@ -60,7 +60,7 @@ namespace UserService.Api.Controller
         }
 
 
-       // [Authorize(Roles = UserRoles.Admin)]
+        [Authorize(Roles = UserRoles.Admin)]
         [HttpPatch("{userId}")]
         public async Task<IActionResult> ChangeIsAdminAsync(Guid userId, [FromBody] ChangeIsAdminDto changeIsAdminDto)
         {

@@ -2,8 +2,8 @@
 
 namespace OrderService.Application.DTOs.Order
 {
-    public class ChangeOrderStatusDto
+    public sealed record ChangeOrderStatusDto
     {
-        public OrderStatus Status { get; set; }
+        public OrderStatus Status { get; init; }
     }
 }

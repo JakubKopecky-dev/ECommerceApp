@@ -1,10 +1,11 @@
-﻿using CartService.Application.DTOs.Cart;
+﻿using CartService.Application.Common;
+using CartService.Application.DTOs.Cart;
 
 namespace CartService.Application.Interfaces.Services
 {
     public interface ICartService
     {
-        Task<bool> CheckoutCartByUserIdAsync(Guid userId, CancellationToken ct = default);
+        Task<Result<CheckoutResult, CartError>> CheckoutCartByUserIdAsync(Guid userId, CartCheckoutRequestDto cartCheckoutRequestDto, CancellationToken ct = default);
         Task<CartDto?> DeleteCartByUserIdAsync(Guid userId, CancellationToken ct = default);
         Task<CartExtendedDto> GetOrCreateCartByUserIdAsync(Guid userId, CancellationToken ct = default);
     }

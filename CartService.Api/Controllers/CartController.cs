@@ -1,4 +1,5 @@
 ﻿using System.Security.Claims;
+using CartService.Api.Extensions;
 using CartService.Application.DTOs.Cart;
 using CartService.Application.Interfaces.Services;
 using CartService.Domain.Enum;
@@ -45,15 +46,15 @@ namespace CartService.Api.Controllers
 
 
         [HttpPost("checkout")]
-        public async Task<IActionResult> CheckoutCart(CancellationToken ct)
+        public async Task<IActionResult> CheckoutCart(CartCheckoutRequestDto cartCheckoutRequestDto,CancellationToken ct)
         {
             string? userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!Guid.TryParse(userIdString, out Guid userId))
                 return Unauthorized();
 
-            bool result = await _cartService.CheckoutCartByUserIdAsync(userId, ct);
+            var result = await _cartService.CheckoutCartByUserIdAsync(userId,cartCheckoutRequestDto, ct);
 
-            return result ? Ok() : BadRequest("Cart is empty or checkout failed.");
+            return result.ToActionResult(this);
         }
 
 

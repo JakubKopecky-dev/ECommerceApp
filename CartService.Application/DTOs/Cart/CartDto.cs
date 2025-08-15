@@ -1,14 +1,13 @@
 ﻿namespace CartService.Application.DTOs.Cart
 {
-    public class CartDto
+    public sealed record CartDto
     {
-        public Guid Id { get; set; }
+        public Guid Id { get; init; }
 
-        public Guid UserId { get; set; }
+        public Guid UserId { get; init; }
 
-        public decimal TotalPrice { get; set; }
+        public decimal TotalPrice { get; init; }
 
-        public string? Note { get; set; }
     }
     
 }

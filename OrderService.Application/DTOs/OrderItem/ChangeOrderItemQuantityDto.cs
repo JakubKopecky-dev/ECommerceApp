@@ -1,7 +1,7 @@
 ﻿namespace OrderService.Application.DTOs.OrderItem
 {
-    public class ChangeOrderItemQuantityDto
+    public sealed record ChangeOrderItemQuantityDto
     {
-        public uint Quantity { get; set; }
+        public uint Quantity { get; init; }
     }
 }

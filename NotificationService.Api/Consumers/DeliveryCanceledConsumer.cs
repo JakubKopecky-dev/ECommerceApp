@@ -18,6 +18,8 @@ namespace NotificationService.Api.Consumers
 
         public async Task Consume(ConsumeContext<DeliveryCanceledEvent> context)
         {
+            _logger.LogInformation("Received DeliveryCancaledEvent");
+
             var ct = context.CancellationToken;
 
             DeliveryCanceledEvent message = context.Message;

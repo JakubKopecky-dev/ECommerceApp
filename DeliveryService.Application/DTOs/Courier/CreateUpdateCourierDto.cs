@@ -1,11 +1,11 @@
 ﻿namespace DeliveryService.Application.DTOs.Courier
 {
-    public class CreateUpdateCourierDto
+    public sealed record CreateUpdateCourierDto
     {
-        public string Name { get; set; } = "";
+        public string Name { get; init; } = "";
 
-        public string? PhoneNumber { get; set; }
+        public string? PhoneNumber { get; init; }
 
-        public string? Email { get; set; }
+        public string? Email { get; init; }
     }
 }

@@ -15,7 +15,7 @@ namespace CartService.Api.Middleware
         {
             try
             {
-                await _next(context); // Pokračuj v pipeline
+                await _next(context);
             }
             catch (Exception ex)
             {

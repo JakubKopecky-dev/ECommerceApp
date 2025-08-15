@@ -1,13 +1,13 @@
 ﻿namespace ProductService.Application.DTOs.Category
 {
-    public class CategoryDto
+    public sealed record CategoryDto
     {
-        public Guid Id { get; set; }
+        public Guid Id { get; init; }
 
-        public string Title { get; set; } = "";
+        public string Title { get; init; } = "";
 
-        public DateTime CreatedAt { get; set; }
+        public DateTime CreatedAt { get; init; }
 
-        public DateTime? UpdatedAt { get; set; }
+        public DateTime? UpdatedAt { get; init; }
     }
 }

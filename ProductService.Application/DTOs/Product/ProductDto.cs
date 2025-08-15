@@ -1,28 +1,28 @@
 ﻿namespace ProductService.Application.DTOs.Product
 {
-    public class ProductDto
+    public sealed record ProductDto
     {
-        public Guid Id { get; set; }
+        public Guid Id { get; init; }
 
-        public string Title { get; set; } = "";
+        public string Title { get; init; } = "";
 
-        public string Description { get; set; } = "";
+        public string Description { get; init; } = "";
 
-        public uint QuantityInStock { get; set; }
+        public uint QuantityInStock { get; init; }
 
-        public bool IsActive { get; set; }
+        public bool IsActive { get; init; }
 
-        public uint SoldCount { get; set; }
+        public uint SoldCount { get; init; }
 
-        public decimal Price { get; set; }
+        public decimal Price { get; init; }
 
-        public string ImageUrl { get; set; } = "";
+        public string ImageUrl { get; init; } = "";
 
-        public DateTime CreatedAt { get; set; }
+        public DateTime CreatedAt { get; init; }
 
-        public DateTime? UpdatedAt { get; set; }
+        public DateTime? UpdatedAt { get; init; }
 
-        public Guid BrandId { get; set; }
+        public Guid BrandId { get; init; }
 
 
     }

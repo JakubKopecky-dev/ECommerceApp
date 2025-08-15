@@ -1,8 +1,8 @@
 ﻿namespace CartService.Application.DTOs.Cart
 {
-    public class CreateCartDto
+    public sealed record CreateCartDto
     {
-        public Guid UserId { get; set; }
+        public Guid UserId { get; init; }
 
     }
 }

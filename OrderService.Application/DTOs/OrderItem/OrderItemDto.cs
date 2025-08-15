@@ -1,22 +1,22 @@
 ﻿namespace OrderService.Application.DTOs.OrderItem
 {
-    public class OrderItemDto
+    public sealed record OrderItemDto
     {
-        public Guid Id { get; set; }
+        public Guid Id { get; init; }
 
-        public Guid ProductId { get; set; }
+        public Guid ProductId { get; init; }
 
-        public string ProductName { get; set; } = "";
+        public string ProductName { get; init; } = "";
 
-        public decimal UnitPrice { get; set; }
+        public decimal UnitPrice { get; init; }
 
-        public uint Quantity { get; set; }
+        public uint Quantity { get; init; }
 
-        public Guid OrderId { get; set; }
+        public Guid OrderId { get; init; }
 
-        public DateTime CreatedAt { get; set; }
+        public DateTime CreatedAt { get; init; }
 
-        public DateTime? UpdatedAt { get; set; }
+        public DateTime? UpdatedAt { get; init; }
 
     }
 }

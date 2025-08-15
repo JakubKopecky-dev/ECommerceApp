@@ -90,7 +90,7 @@ namespace DeliveryService.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid?>("CourierId")
+                    b.Property<Guid>("CourierId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -99,8 +99,24 @@ namespace DeliveryService.Persistence.Migrations
                     b.Property<DateTime?>("DeliveredAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<Guid>("OrderId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PostalCode")
                         .IsRequired()
@@ -124,6 +140,8 @@ namespace DeliveryService.Persistence.Migrations
 
                     b.HasIndex("CourierId");
 
+                    b.HasIndex("OrderId");
+
                     b.ToTable("Deliveries");
                 });
 
@@ -131,7 +149,9 @@ namespace DeliveryService.Persistence.Migrations
                 {
                     b.HasOne("DeliveryService.Domain.Entity.Courier", "Courier")
                         .WithMany("Deliveries")
-                        .HasForeignKey("CourierId");
+                        .HasForeignKey("CourierId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.Navigation("Courier");
                 });
