@@ -1,0 +1,49 @@
+﻿syntax = "proto3";
+
+package delivery;
+option csharp_namespace = "DeliveryService.Grpc";
+
+
+service DeliveryService{
+	rpc GetDeliveryByOrderId (GetDeliveryByOrderIdRequest) returns (GetDeliveryByOrderIdResponse);
+	rpc CreateDelivery (CreateDeliveryRequest) returns (CreateDeliveryResponse);
+}
+
+
+enum DeliveryStatus {
+  PENDING = 0;     
+  IN_PROGRESS = 1;
+  DELIVERED = 2;   
+  CANCELED = 3;    
+}
+
+
+message GetDeliveryByOrderIdRequest{
+	string order_id = 1;
+}
+
+
+message GetDeliveryByOrderIdResponse{
+	DeliveryStatus status = 1;
+}
+
+
+message CreateDeliveryRequest{
+	string order_id = 1;
+	string courier_id = 2;
+	string email = 3;
+	string first_name = 4;
+	string last_name = 5;
+	string phone_number = 6;
+	string street = 7;
+	string city = 8;
+	string postal_code = 9;
+	string state = 10;
+}
+
+
+message CreateDeliveryResponse{
+	string delivery_id = 1;
+}
+
+

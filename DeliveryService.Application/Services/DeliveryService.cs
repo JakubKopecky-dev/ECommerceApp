@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using AutoMapper;
 using DeliveryService.Application.DTOs.Delivery;
 using DeliveryService.Application.DTOs.External;
+using DeliveryService.Application.Interfaces.External;
 using DeliveryService.Application.Interfaces.Repositories;
 using DeliveryService.Application.Interfaces.Services;
 using DeliveryService.Domain.Entity;
@@ -15,14 +16,14 @@ using Shared.Contracts.Events;
 
 namespace DeliveryService.Application.Services
 {
-    public class DeliveryService(IDeliveryRepository deliveryRepository, IMapper mapper, ILogger<DeliveryService> logger, IPublishEndpoint publishEndpoint, IHttpClientFactory httpClientFactory, IHttpContextAccessor httpContextAccessor) : IDeliveryService
+    public class DeliveryService(IDeliveryRepository deliveryRepository, IMapper mapper, ILogger<DeliveryService> logger, IPublishEndpoint publishEndpoint, IOrderReadClient orderReadClient) : IDeliveryService
     {
         private readonly IDeliveryRepository _deliveryRepository = deliveryRepository;
         private readonly IMapper _mapper = mapper;
         private readonly ILogger<DeliveryService> _logger = logger;
         private readonly IPublishEndpoint _publishEndpoint = publishEndpoint;
-        private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
-        private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
+        private readonly IOrderReadClient _orderReadClient = orderReadClient;
+
 
 
 
@@ -90,10 +91,10 @@ namespace DeliveryService.Application.Services
 
             deliveryDb.UpdatedAt = DateTime.UtcNow;
 
-            Delivery updatedDelivery = await _deliveryRepository.UpdateAsync(deliveryDb, ct);
+            await _deliveryRepository.SaveChangesAsync(ct);
             _logger.LogInformation("Delivery updated. DeliveryId: {DeliveryId}.", deliveryId);
 
-            return _mapper.Map<DeliveryDto>(updatedDelivery);
+            return _mapper.Map<DeliveryDto>(deliveryDb);
         }
 
 
@@ -111,7 +112,8 @@ namespace DeliveryService.Application.Services
 
             DeliveryDto deletedDelivery = _mapper.Map<DeliveryDto>(delivery);
 
-            await _deliveryRepository.DeleteAsync(deliveryId, ct);
+            _deliveryRepository.Remove(delivery);
+            await _deliveryRepository.SaveChangesAsync(ct);
             _logger.LogInformation("Delivery deleted. DeliveryId: {DeliveryId}.", deliveryId);
 
             return deletedDelivery;
@@ -144,44 +146,35 @@ namespace DeliveryService.Application.Services
             if (changeDto.Status == DeliveryStatus.Delivered)
                 delivery.DeliveredAt = DateTime.UtcNow;
 
-            Delivery updatedDelivery = await _deliveryRepository.UpdateAsync(delivery, ct);
+            await _deliveryRepository.SaveChangesAsync(ct);
             _logger.LogInformation("DeliveryStatus changed. DeliveryId: {DeliveryId}.", deliveryId);
 
 
             // changing status on order to completed
-            if (updatedDelivery.Status == DeliveryStatus.Delivered)
+            if (delivery.Status == DeliveryStatus.Delivered)
             {
-                DeliveryDeliveredEvent deliveryDeliveredEvent = new() { OrderId = updatedDelivery.OrderId };
+                DeliveryDeliveredEvent deliveryDeliveredEvent = new() { OrderId = delivery.OrderId };
                 await _publishEndpoint.Publish(deliveryDeliveredEvent, ct);
             }
-
-
+            
+            
             // notification user delivery canceled
-            if (updatedDelivery.Status == DeliveryStatus.Canceled)
+            if (delivery.Status == DeliveryStatus.Canceled)
             {
-                var httpClient = _httpClientFactory.CreateClient("OrderService");
-                var token = await _httpContextAccessor.HttpContext.GetTokenAsync("access_token");
-                if (!string.IsNullOrWhiteSpace(token))
-                    httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                Guid? userId = await _orderReadClient.GetUserIdByOrderIdAsync(delivery.OrderId,ct);
 
-                OrderExternalDto? order;
-
-                order = await httpClient.GetFromJsonAsync<OrderExternalDto>($"api/Order/{delivery.OrderId}", ct);
-
-                if (order is null)
+                if (userId is null)
                 {
                     _logger.LogWarning("Cannot sent notification. Order not found. OrderId: {OrderId}.", delivery.OrderId);
                     return null;
                 }
+            
 
-
-                Guid userId = order.UserId;
-
-                DeliveryCanceledEvent deliveryCanceledEvent = new() { UserId = userId, OrderId = delivery.OrderId };
+                DeliveryCanceledEvent deliveryCanceledEvent = new() { UserId = userId.Value, OrderId = delivery.OrderId };
                 await _publishEndpoint.Publish(deliveryCanceledEvent, ct);
             }
-
-            return _mapper.Map<DeliveryDto>(updatedDelivery);
+              
+            return _mapper.Map<DeliveryDto>(delivery);
         }
 
 

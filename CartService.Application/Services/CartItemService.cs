@@ -1,4 +1,5 @@
 ﻿using System.Net.Http.Json;
+using System.Net;
 using AutoMapper;
 using CartService.Application.Common;
 using CartService.Application.DTOs.CartItem;
@@ -7,23 +8,24 @@ using CartService.Application.Interfaces.Repositories;
 using CartService.Application.Interfaces.Services;
 using CartService.Domain.Entity;
 using Microsoft.Extensions.Logging;
+using CartService.Application.Interfaces.External;
 
 namespace CartService.Application.Services
 {
-    public class CartItemService(ICartItemRepository cartItemRepository, IMapper mapper, ILogger<CartItemService> logger, IHttpClientFactory httpClientFactory) : ICartItemService
+    public class CartItemService(ICartItemRepository cartItemRepository, IMapper mapper, ILogger<CartItemService> logger, IProductReadClient client) : ICartItemService
     {
         private readonly ICartItemRepository _cartItemRepository = cartItemRepository;
         private readonly IMapper _mapper = mapper;
         private readonly ILogger<CartItemService> _logger = logger;
-        private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
+        private readonly IProductReadClient _client = client;
 
 
-
+        // helper
         private async Task<ProductDto?> GetProductAsync(Guid productId, CancellationToken ct)
         {
-            var httpClient = _httpClientFactory.CreateClient("ProductService");
+            ProductDto? product = await _client.GetProductAsync(productId, ct);
 
-            return await httpClient.GetFromJsonAsync<ProductDto>($"api/Product/{productId}", ct);
+            return product is not null ? product : null;
         }
 
 
@@ -46,7 +48,7 @@ namespace CartService.Application.Services
 
 
 
-        public async Task<Result<CartItemDto,CartItemError>> CreateCartItemOrChangeQuantityAsync(CreateCartItemDto createDto, CancellationToken ct = default)
+        public async Task<Result<CartItemDto, CartItemError>> CreateCartItemOrChangeQuantityAsync(CreateCartItemDto createDto, CancellationToken ct = default)
         {
             _logger.LogInformation("Creating new cartItem. CartId: {CartId}, ProductId: {ProductId}.", createDto.CartId, createDto.ProductId);
 
@@ -64,7 +66,7 @@ namespace CartService.Application.Services
                 if (productDto is null)
                 {
                     _logger.LogWarning("Cannot change cartItem quantity. Product not foud. ProdutId: {ProductId}.", alreadyExistCartItem.ProductId);
-                    return Result<CartItemDto,CartItemError>.Fail(CartItemError.ProductNotFound);
+                    return Result<CartItemDto, CartItemError>.Fail(CartItemError.ProductNotFound);
                 }
 
                 uint newQuantity = alreadyExistCartItem.Quantity + createDto.Quantity;
@@ -72,16 +74,16 @@ namespace CartService.Application.Services
                 if (productDto.QuantityInStock < newQuantity)
                 {
                     _logger.LogWarning("Cannot change cartItem quantity. Lack of goods in stock. CartItemId: {CartItemId}.", alreadyExistCartItem.Id);
-                    return Result<CartItemDto,CartItemError>.Fail(CartItemError.OutOfStock);
+                    return Result<CartItemDto, CartItemError>.Fail(CartItemError.OutOfStock);
                 }
 
                 alreadyExistCartItem.Quantity = newQuantity;
                 alreadyExistCartItem.UpdatedAt = DateTime.UtcNow;
 
-                CartItem updatedCartItem = await _cartItemRepository.UpdateAsync(alreadyExistCartItem, ct);
-                _logger.LogInformation("CartItem updated. CartItemId: {CartItemId}.", updatedCartItem.Id);
+                await _cartItemRepository.SaveChangesAsync(ct);
+                _logger.LogInformation("CartItem updated. CartItemId: {CartItemId}.", alreadyExistCartItem.Id);
 
-                return Result<CartItemDto,CartItemError>.Ok(_mapper.Map<CartItemDto>(updatedCartItem));
+                return Result<CartItemDto, CartItemError>.Ok(_mapper.Map<CartItemDto>(alreadyExistCartItem));
             }
 
 
@@ -96,13 +98,13 @@ namespace CartService.Application.Services
             if (productDto is null)
             {
                 _logger.LogWarning("Cannot create cartItem. Product not found. {ProductId}.", createDto.ProductId);
-                return Result<CartItemDto,CartItemError>.Fail(CartItemError.ProductNotFound);
+                return Result<CartItemDto, CartItemError>.Fail(CartItemError.ProductNotFound);
             }
 
             if (productDto.QuantityInStock < createDto.Quantity)
             {
                 _logger.LogWarning("Cannot create cartItem. Lack of goods in stock.");
-                return Result<CartItemDto,CartItemError>.Fail(CartItemError.OutOfStock);
+                return Result<CartItemDto, CartItemError>.Fail(CartItemError.OutOfStock);
             }
 
             cartItem.Id = Guid.Empty;
@@ -118,7 +120,7 @@ namespace CartService.Application.Services
 
 
 
-        public async Task<Result<CartItemDto,CartItemError>> ChangeCartItemQuantityAsync(Guid cartItemId, ChangeQuantityCartItemDto changeDto, CancellationToken ct = default)
+        public async Task<Result<CartItemDto, CartItemError>> ChangeCartItemQuantityAsync(Guid cartItemId, ChangeQuantityCartItemDto changeDto, CancellationToken ct = default)
         {
             _logger.LogInformation("Changing cartItem quantity. CartItemId: {CartItemId}.", cartItemId);
 
@@ -126,7 +128,7 @@ namespace CartService.Application.Services
             if (cartItem is null)
             {
                 _logger.LogInformation("Cannot change cartItem quantity. CartItem not found. CartItemId: {CartItemId}.", cartItemId);
-                return Result<CartItemDto,CartItemError>.Fail(CartItemError.ProductNotFound);
+                return Result<CartItemDto, CartItemError>.Fail(CartItemError.ProductNotFound);
             }
 
             if (changeDto.Quantity == 0)
@@ -135,10 +137,11 @@ namespace CartService.Application.Services
 
                 CartItemDto deletedCartItem = _mapper.Map<CartItemDto>(cartItem);
 
-                await _cartItemRepository.DeleteAsync(cartItemId, ct);
+                _cartItemRepository.Remove(cartItem);
+                await _cartItemRepository.SaveChangesAsync(ct);
                 _logger.LogInformation("CartItem deleted. CartItemId: {CartItemId}.", cartItemId);
 
-                return Result<CartItemDto,CartItemError>.Ok(deletedCartItem);
+                return Result<CartItemDto, CartItemError>.Ok(deletedCartItem);
             }
 
             ProductDto? productDto;
@@ -149,23 +152,23 @@ namespace CartService.Application.Services
             if (productDto is null)
             {
                 _logger.LogWarning("Cannot change cartItem quantity. Product not foud. ProdutId: {ProductId}.", cartItem.ProductId);
-                return Result<CartItemDto,CartItemError>.Fail(CartItemError.ProductNotFound);
+                return Result<CartItemDto, CartItemError>.Fail(CartItemError.ProductNotFound);
             }
 
 
             if (productDto.QuantityInStock < changeDto.Quantity)
             {
                 _logger.LogWarning("Cannot change cartItem quantity. Lack of goods in stock.");
-                return Result<CartItemDto,CartItemError>.Fail(CartItemError.OutOfStock);
+                return Result<CartItemDto, CartItemError>.Fail(CartItemError.OutOfStock);
             }
 
             cartItem.Quantity = changeDto.Quantity;
             cartItem.UpdatedAt = DateTime.UtcNow;
 
-            CartItem updatedCartItem = await _cartItemRepository.UpdateAsync(cartItem, ct);
+            await _cartItemRepository.SaveChangesAsync(ct);
             _logger.LogInformation("CartItem updated. CartItemId: {CartItemId}.", cartItemId);
 
-            return Result<CartItemDto, CartItemError>.Ok(_mapper.Map<CartItemDto>(updatedCartItem));
+            return Result<CartItemDto, CartItemError>.Ok(_mapper.Map<CartItemDto>(cartItem));
         }
 
 
@@ -183,7 +186,8 @@ namespace CartService.Application.Services
 
             CartItemDto deletedCartItem = _mapper.Map<CartItemDto>(cartItem);
 
-            await _cartItemRepository.DeleteAsync(cartItemId, ct);
+            _cartItemRepository.Remove(cartItem);
+            await _cartItemRepository.SaveChangesAsync(ct);
             _logger.LogInformation("CartItem deleted. CartItemId: {CartItemId}.", cartItemId);
 
             return deletedCartItem;

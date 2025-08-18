@@ -8,8 +8,8 @@ namespace Shared.Contracts.DTOs
 {
     public sealed record OrderItemCreatedDto
     {
-        public Guid ProductId { get; set; }
+        public Guid ProductId { get; init; }
 
-        public uint Quantity { get; set; }
+        public uint Quantity { get; init; }
     }
 }

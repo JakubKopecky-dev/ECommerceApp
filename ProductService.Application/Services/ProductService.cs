@@ -92,10 +92,10 @@ namespace ProductService.Application.Services
                 productDb.Categories.Add(c);
 
 
-            Product updatedProduct = await _productRepository.UpdateAsync(productDb, ct);
+            await _productRepository.SaveChangesAsync(ct);
             _logger.LogInformation("Product updated. ProductId: {ProductId}.", productId);
 
-            return _mapper.Map<ProductExtendedDto>(updatedProduct);
+            return _mapper.Map<ProductExtendedDto>(productDb);
         }
 
 
@@ -114,10 +114,10 @@ namespace ProductService.Application.Services
             product.UpdatedAt = DateTime.UtcNow;
             product.IsActive = false;
 
-            Product updatedProduct = await _productRepository.UpdateAsync(product, ct);
+            await _productRepository.SaveChangesAsync(ct);
             _logger.LogInformation("Product inactive. ProductId: {ProductId}.", productId);
 
-            return _mapper.Map<ProductDto>(updatedProduct);
+            return _mapper.Map<ProductDto>(product);
         }
 
 
@@ -136,10 +136,10 @@ namespace ProductService.Application.Services
             product.UpdatedAt = DateTime.UtcNow;
             product.IsActive = true;
 
-            Product updatedProduct = await _productRepository.UpdateAsync(product, ct);
+            await _productRepository.SaveChangesAsync(ct);
             _logger.LogInformation("Product activated. ProductId: {ProductId}.", productId);
 
-            return _mapper.Map<ProductDto>(updatedProduct);
+            return _mapper.Map<ProductDto>(product);
         }
 
 
@@ -160,6 +160,7 @@ namespace ProductService.Application.Services
             if (product.Reviews.Count > 0)
             {
                 _logger.LogInformation("Deleting all related reviews before deleting product. ProductId: {ProductId}, Review count: {Count}.", productId, product.Reviews.Count);
+                
                 var deletedTasks = product.Reviews.Select(r => _productReviewRepository.DeleteAsync(r.Id, ct));
                 await Task.WhenAll(deletedTasks);
                 _logger.LogInformation("All related reviews deleted.");
@@ -168,11 +169,10 @@ namespace ProductService.Application.Services
             _logger.LogInformation("Clearing all related categories before deleting product. ProductId: {ProductId}", productId);
 
             product.Categories.Clear();
-            await _productRepository.UpdateAsync(product, ct);
-            _logger.LogInformation("All related categories cleared.");
+            _productRepository.Remove(product);
 
-            await _productRepository.DeleteAsync(productId, ct);
-            _logger.LogInformation("Product deleted. ProductId: {ProductId}.", productId);
+            await _productRepository.SaveChangesAsync(ct);
+            _logger.LogInformation("All related categories cleared and product deleted. ProductId: {ProductId}.", productId);
 
             return deletedProduct;
         }
@@ -227,7 +227,7 @@ namespace ProductService.Application.Services
 
 
 
-        public async Task<IReadOnlyList<ProductQuantityCheckResponseDto>> ProductQuantityCheckFromCartAsync(List<ProductQuantityCheckRequestDto> productsFromCart, CancellationToken ct = default)
+        public async Task<IReadOnlyList<ProductQuantityCheckResponseDto>> ProductsQuantityCheckFromCartAsync(List<ProductQuantityCheckRequestDto> productsFromCart, CancellationToken ct = default)
         {
             _logger.LogInformation("Checking product availability for productIds: {ProductIds}.", string.Join(", ", productsFromCart.Select(p => p.Id)));
 
@@ -273,7 +273,7 @@ namespace ProductService.Application.Services
                 }
             }
 
-            await _productRepository.SaveChangeAsync(ct);
+            await _productRepository.SaveChangesAsync(ct);
         }
 
 

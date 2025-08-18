@@ -9,7 +9,7 @@ namespace Shared.Contracts.Events
 {
     public sealed record OrderItemsReservedEvent
     {
-        public Guid OrderId { get; set; }
-        public IReadOnlyList<OrderItemCreatedDto> Items { get; set; } = [];
+        public Guid OrderId { get; init; }
+        public IReadOnlyList<OrderItemCreatedDto> Items { get; init; } = [];
     }
 }

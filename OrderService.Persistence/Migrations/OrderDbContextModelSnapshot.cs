@@ -124,7 +124,7 @@ namespace OrderService.Persistence.Migrations
                     b.HasOne("OrderService.Domain.Entity.Order", "Order")
                         .WithMany("Items")
                         .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Order");

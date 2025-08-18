@@ -13,7 +13,6 @@ namespace OrderService.Application.DTOs.Order
 
         public OrderStatus Status { get; init; }
 
-        [MaxLength(1000)]
         public string? Note { get; init; }
 
         public DateTime CreatedAt { get; init; }

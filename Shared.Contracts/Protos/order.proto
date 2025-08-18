@@ -1,0 +1,50 @@
+﻿syntax = "proto3";
+
+
+package order;
+option csharp_namespace = "OrderService.Grpc";
+
+
+service OrderService {
+	rpc GetOrderById (GetOrderByIdRequest) returns (GetOrderByIdResponse);
+	rpc CreateOrderFromCart (CreateOrderFromCartRequest) returns (CreateOrderFromCartResponse);
+}
+
+
+message GetOrderByIdRequest {
+	string order_id = 1;
+}
+
+message GetOrderByIdResponse {
+string user_id = 1;
+}
+
+
+message CreateOrderFromCartRequest{
+	string user_id = 1;
+	string courier_id = 2;
+	string total_price = 3;
+	string note = 4;
+	string email = 5;
+	string first_name = 6;
+	string last_name = 7;
+	string phone_number = 8;
+	string street = 9;
+	string city = 10;
+	string postal_code = 11;
+	string state = 12;
+	repeated CartItemForCheckout items = 13;
+}
+
+
+message CreateOrderFromCartResponse{
+	string order_id = 1;
+}
+
+
+message CartItemForCheckout{
+	string product_id = 1;
+	string product_name = 2;
+	string unit_price = 3;
+	uint32 quantity = 4;
+}

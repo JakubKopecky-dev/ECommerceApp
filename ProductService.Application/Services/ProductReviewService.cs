@@ -44,7 +44,6 @@ namespace ProductService.Application.Services
 
 
 
-
         public async Task<ProductReviewDto> CreateProductReviewAsync(CreateProductReviewDto createDto, CancellationToken ct = default)
         {
             _logger.LogInformation("Creating new productReview. Title: {Title}.", createDto.Title);
@@ -77,10 +76,10 @@ namespace ProductService.Application.Services
 
             reviewDb.UpdatedAt = DateTime.UtcNow;
 
-            ProductReview updatedReview = await _productReviewRepository.UpdateAsync(reviewDb, ct);
+            await _productReviewRepository.SaveChangesAsync(ct);
             _logger.LogInformation("ProductReview updated. ProductReviewId: {ReviewId}.", reviewId);
 
-            return _mapper.Map<ProductReviewDto>(updatedReview);
+            return _mapper.Map<ProductReviewDto>(reviewDb);
         }
 
 
@@ -98,12 +97,13 @@ namespace ProductService.Application.Services
 
             ProductReviewDto deletedReview = _mapper.Map<ProductReviewDto>(review);
 
-            await _productReviewRepository.DeleteAsync(reviewId, ct);
+            _productReviewRepository.Remove(review);
+
+            await _productReviewRepository.SaveChangesAsync(ct);
             _logger.LogInformation("ProductReview deleted. ProductReviewId: {ReviewId}.", reviewId);
 
             return deletedReview;
         }
-
 
 
 
@@ -125,10 +125,10 @@ namespace ProductService.Application.Services
                 return null;
             }
 
-
             ProductReviewDto deletedReview = _mapper.Map<ProductReviewDto>(review);
 
-            await _productReviewRepository.DeleteAsync(reviewId, ct);
+            _productReviewRepository.Remove(review);
+            await _productReviewRepository.SaveChangesAsync(ct);
             _logger.LogInformation("ProductReview deleted. ProductReviewId: {ReviewId}.", reviewId);
 
             return deletedReview;

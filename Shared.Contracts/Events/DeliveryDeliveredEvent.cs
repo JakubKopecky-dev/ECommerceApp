@@ -8,6 +8,6 @@ namespace Shared.Contracts.Events
 {
     public sealed record DeliveryDeliveredEvent
     {
-        public Guid OrderId { get; set; }
+        public Guid OrderId { get; init; }
     }
 }

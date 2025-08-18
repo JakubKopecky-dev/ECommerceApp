@@ -77,10 +77,10 @@ namespace OrderService.Application.Services
             orderItem.Quantity = changeDto.Quantity;
             orderItem.UpdatedAt = DateTime.UtcNow;
 
-            OrderItem updatedOrderItem = await _orderItemRepository.UpdateAsync(orderItem, ct);
+            await _orderItemRepository.SaveChangesAsync(ct);
             _logger.LogInformation("OrderItem quantity changed. OrderItemId: {OrderItemId}.", orderItemId);
 
-            return _mapper.Map<OrderItemDto>(updatedOrderItem);
+            return _mapper.Map<OrderItemDto>(orderItem);
         }
 
 
@@ -98,7 +98,8 @@ namespace OrderService.Application.Services
 
             OrderItemDto deletedOrderItem = _mapper.Map<OrderItemDto>(orderItem);
 
-            await _orderItemRepository.DeleteAsync(orderItemId, ct);
+            _orderItemRepository.Remove(orderItem);
+            await _orderItemRepository.SaveChangesAsync(ct);
             _logger.LogInformation("OrderItem deleted. OrderItemId: {OrderItemId}.", orderItemId);
 
             return deletedOrderItem;

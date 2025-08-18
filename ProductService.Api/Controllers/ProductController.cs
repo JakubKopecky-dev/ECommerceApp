@@ -108,11 +108,5 @@ namespace ProductService.Api.Controllers
 
 
 
-        [Authorize(Roles = UserRoles.User)]
-        [HttpPost("availability")]
-        public async Task<IReadOnlyList<ProductQuantityCheckResponseDto>> CheckProductQuantityFromCart([FromBody] List<ProductQuantityCheckRequestDto> productsFromCart, CancellationToken ct) => await _productService.ProductQuantityCheckFromCartAsync(productsFromCart, ct);
-
-
-
     }
 }

@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using ProductService.Api.DependencyInjection;
+using ProductService.Api.Grpc.GrpcServices;
 using ProductService.Api.Middleware;
 using ProductService.Application;
 using ProductService.Persistence;
@@ -19,6 +20,9 @@ builder.Services.AddAuthenticationServiceCollection(builder.Configuration);
 
 // MassTransit + RebbitMQ
 builder.Services.AddMassTransitService();
+
+// gRPC server
+builder.Services.AddGrpc();
 
 // Controllers && JSON Setting
 builder.Services.AddControllers().AddJsonOptions(options =>
@@ -60,6 +64,9 @@ app.UseAuthorization();
 
 // Controller map
 app.MapControllers();
+
+// gRPC map services
+app.MapGrpcService<ProductGrpcService>();
 
 
 #endregion

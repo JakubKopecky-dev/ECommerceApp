@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using DeliveryService.Api.DependencyInjection;
+using DeliveryService.Api.Grpc.GrpcServices;
 using DeliveryService.Api.Middleware;
 using DeliveryService.Application;
 using DeliveryService.Persistence;
@@ -14,20 +15,17 @@ builder.Services.AddPersistenceServices(builder.Configuration);
 // Application (Services, AutoMapper)
 builder.Services.AddApplicationServices();
 
-//Authentization
+//Authentication
 builder.Services.AddAuthenticationServiceCollection(builder.Configuration);
 
-// HTTP Context accessor
-builder.Services.AddHttpContextAccessor();
-
-// HTTP client for OrderService
-builder.Services.AddHttpClient("OrderService", client =>
-{
-    client.BaseAddress = new Uri(builder.Configuration["OrderService:BaseUrl"]!);
-});
+// gRPC clients
+builder.Services.AddGrpcClients(builder.Configuration);
 
 // MassTransit + RebbitMQ
 builder.Services.AddMassTransitService();
+
+//gRPC server
+builder.Services.AddGrpcClients(builder.Configuration);
 
 // Controllers && JSON Setting
 builder.Services.AddControllers().AddJsonOptions(options =>
@@ -68,6 +66,9 @@ app.UseAuthorization();
 
 // Controller map
 app.MapControllers();
+
+// gRPC map
+app.MapGrpcService<DeliveryGrpcService>();
 
 #endregion
 

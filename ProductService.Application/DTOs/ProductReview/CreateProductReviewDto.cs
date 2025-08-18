@@ -11,7 +11,7 @@ namespace ProductService.Application.DTOs.ProductReview
 
         public Guid UserId { get; set; }
 
-        [MinLength(2)]
+        [MaxLength(40)]
         public string UserName { get; set; } = "";
 
         [Range(0,5)]

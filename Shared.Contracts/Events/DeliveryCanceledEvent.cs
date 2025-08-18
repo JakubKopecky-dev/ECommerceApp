@@ -2,9 +2,9 @@
 {
     public sealed record DeliveryCanceledEvent
     {
-       public Guid OrderId { get; set; }
+       public Guid OrderId { get; init; }
 
-       public Guid UserId { get; set; }
+       public Guid UserId { get; init; }
 
     }
 }

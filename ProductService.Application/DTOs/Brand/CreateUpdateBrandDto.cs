@@ -4,7 +4,7 @@ namespace ProductService.Application.DTOs.Brand
 {
     public sealed record CreateUpdateBrandDto
     {
-        [MinLength(2)]
+        [MaxLength(500)]
         public string Title { get; init; } = "";
 
         [MaxLength(2000)]

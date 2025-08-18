@@ -23,7 +23,7 @@ namespace CartService.Application.Mapping
             CreateMap<Cart, CartDto>()
                 .ForMember(dest => dest.TotalPrice, opt => opt.MapFrom(src => src.Items.Sum(i => i.UnitPrice * i.Quantity)));
 
-            CreateMap<Cart, CreateOrderAndDelivery>()
+            CreateMap<Cart, CreateOrderAndDeliveryDto>()
                 .ForMember(dest => dest.TotalPrice, opt => opt.MapFrom(src => src.Items.Sum(i => i.UnitPrice * i.Quantity)));
 
 

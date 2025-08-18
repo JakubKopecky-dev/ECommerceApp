@@ -50,9 +50,16 @@ namespace DeliveryService.Persistence.Repository
 
 
 
-        public async Task SaveChangeAsync(CancellationToken ct = default)
+        public async Task SaveChangesAsync(CancellationToken ct = default)
         {
             await _dbContext.SaveChangesAsync(ct);
+        }
+
+
+
+        public void Remove(TEntity entity)
+        {
+            _dbContext.Remove(entity);
         }
 
 

@@ -1,0 +1,49 @@
+﻿syntax = "proto3";
+
+
+package product;
+option csharp_namespace = "ProductService.Grpc";
+
+
+service ProductService{
+	rpc GetProductById (GetProductByIdRequest) returns (GetProductByIdResponse);
+	rpc ProductsQuantityCheckFromCart (ProductsQuantityCheckFromCartRequest) returns (ProductsQuantityCheckFromCartResponse);
+}
+
+
+message GetProductByIdRequest{
+	string product_id = 1;
+}
+
+
+message GetProductByIdResponse
+{
+	string title = 1;
+	uint32 quantity_in_stock = 2;
+	string price = 3;
+}
+
+
+message ProductsQuantityCheckFromCartRequest{
+	repeated ProductQuantityCheckRequest products = 1;
+}
+
+
+message ProductsQuantityCheckFromCartResponse{
+	repeated ProductQuantityCheckResponse products = 1;
+}
+
+
+message ProductQuantityCheckRequest {
+	string id = 1;
+	uint32 quantity = 2;
+}
+
+
+message ProductQuantityCheckResponse {
+	string id = 1;
+	string title = 2;
+	uint32 quantity_in_stock = 3;
+}
+
+

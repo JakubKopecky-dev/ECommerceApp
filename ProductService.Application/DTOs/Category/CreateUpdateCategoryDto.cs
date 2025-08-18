@@ -4,7 +4,7 @@ namespace ProductService.Application.DTOs.Category
 {
     public sealed record CreateUpdateCategoryDto
     {
-        [MinLength(2)]
+        [MaxLength(500)]
         public string Title { get; init; } = "";
     }
 }

@@ -78,10 +78,10 @@ namespace ProductService.Application.Services
 
             brandDb.UpdatedAt = DateTime.UtcNow;
 
-            Brand updatedBrand = await _brandRepository.UpdateAsync(brandDb, ct);
+            await _brandRepository.SaveChangesAsync(ct);
             _logger.LogInformation("Brand updated. BrandId: {BrandId}.", brandId);
 
-            return _mapper.Map<BrandDto>(updatedBrand);
+            return _mapper.Map<BrandDto>(brandDb);
         }
 
 
@@ -100,8 +100,8 @@ namespace ProductService.Application.Services
             BrandDto deletedBrand = _mapper.Map<BrandDto>(brand);
 
 
-            var products = brand.Products.ToList();
-            var reviews = brand.Products.SelectMany(p => p.Reviews).ToList();
+            List<Product> products = [.. brand.Products];
+            List<ProductReview> reviews = [.. brand.Products.SelectMany(p => p.Reviews)];
 
 
             if (products.Count > 0)
@@ -132,8 +132,8 @@ namespace ProductService.Application.Services
                 _logger.LogInformation("All related products deleted.");
             }
 
-
-            await _brandRepository.DeleteAsync(brandId,ct);
+            _brandRepository.Remove(brand);
+            await _brandRepository.SaveChangesAsync(ct);
             _logger.LogInformation("Brand deleted. BrandId: {BrandId}.", brandId);
 
             return deletedBrand;

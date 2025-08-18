@@ -3,13 +3,13 @@
     // unused for now (can be used for orderItems in notification (probably mail))
     public sealed record OrderItemEvent
     {
-        public Guid ProductId { get; set; }
+        public Guid ProductId { get; init; }
 
-        public string ProductName { get; set; } = "";
+        public string ProductName { get; init; } = "";
 
-        public decimal UnitPrice { get; set; }
+        public decimal UnitPrice { get; init; }
 
-        public uint Quantity { get; set; }
+        public uint Quantity { get; init; }
 
     }
 }

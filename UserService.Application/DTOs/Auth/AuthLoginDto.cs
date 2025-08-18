@@ -9,6 +9,5 @@ namespace UserService.Application.DTOs.Auth
 
         public string Password { get; init; } = "";
 
-
     }
 }

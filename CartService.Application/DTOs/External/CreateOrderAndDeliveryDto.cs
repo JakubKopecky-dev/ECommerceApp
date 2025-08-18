@@ -1,8 +1,9 @@
-﻿using CartService.Application.DTOs.CartItem;
+﻿using System.ComponentModel.DataAnnotations;
+using CartService.Application.DTOs.CartItem;
 
 namespace CartService.Application.DTOs.External
 {
-    public sealed record CreateOrderAndDelivery
+    public sealed record CreateOrderAndDeliveryDto
     {
         public Guid UserId { get; init; }
 
@@ -10,12 +11,14 @@ namespace CartService.Application.DTOs.External
 
         public decimal TotalPrice { get; init; }
 
+        [EmailAddress]
         public string Email { get; init; } = "";
 
         public string FirstName { get; set; } = "";
 
         public string LastName { get; set; } = "";
 
+        [Phone]
         public string PhoneNumber { get; set; } = "";
 
         public string Street { get; init; } = "";
@@ -26,6 +29,7 @@ namespace CartService.Application.DTOs.External
 
         public string State { get; init; } = "";
 
+        [MaxLength(1000)]
         public string? Note { get; init; }
 
         public List<CartItemForCheckoutDto> Items { get; init; } = [];

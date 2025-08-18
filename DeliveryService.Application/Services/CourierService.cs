@@ -76,10 +76,10 @@ namespace DeliveryService.Application.Services
 
             courierDb.UpdatedAt = DateTime.UtcNow;
 
-            Courier updatedCourier = await _courierRepository.UpdateAsync(courierDb, ct);
+            await _courierRepository.SaveChangesAsync(ct);
             _logger.LogInformation("Courier updated. CourierId: {CourierId}.", courierId);
 
-            return _mapper.Map<CourierDto>(updatedCourier);
+            return _mapper.Map<CourierDto>(courierDb);
         }
 
 
@@ -95,7 +95,10 @@ namespace DeliveryService.Application.Services
                 return null;
             }
 
-            Courier deletedCourier = await _courierRepository.UpdateAsync(courierDb, ct);
+            CourierDto deletedCourier = _mapper.Map<CourierDto>(courierDb);
+
+            _courierRepository.Remove(courierDb);
+            await _courierRepository.SaveChangesAsync(ct);
             _logger.LogInformation("Courier updated. CourierId: {CourierId}.", courierId);
 
             return _mapper.Map<CourierDto>(deletedCourier);

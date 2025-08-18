@@ -1,4 +1,6 @@
-﻿namespace DeliveryService.Application.DTOs.Delivery
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace DeliveryService.Application.DTOs.Delivery
 {
     public sealed record CreateUpdateDeliveryDto
     {
@@ -6,12 +8,14 @@
 
         public Guid CourierId { get; init; }
 
+        [EmailAddress]
         public string Email { get; init; } = "";
 
         public string FirstName { get; set; } = "";
 
         public string LastName { get; set; } = "";
 
+        [Phone]
         public string PhoneNumber { get; set; } = "";
 
         public string Street { get; init; } = "";

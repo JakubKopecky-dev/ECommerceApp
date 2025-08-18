@@ -1,4 +1,6 @@
-﻿namespace OrderService.Application.DTOs.OrderItem
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace OrderService.Application.DTOs.OrderItem
 {
     public sealed record CreateOrderItemDto
     {
@@ -10,6 +12,7 @@
 
         public Guid OrderId { get; init; }
 
+        [MaxLength(500)]
         public string ProductName { get; init; } = "";
 
 

@@ -31,16 +31,6 @@ namespace OrderService.Persistence
                 .Property(oi => oi.UnitPrice)
                 .HasPrecision(10, 2);
 
-
-
-            //from cascade to restrict
-            IEnumerable<IMutableForeignKey> cascadeFKs = modelBuilder.Model.GetEntityTypes()
-                .SelectMany(type => type.GetForeignKeys())
-                .Where(foreignKey => !foreignKey.IsOwnership && foreignKey.DeleteBehavior == DeleteBehavior.Cascade);
-
-            foreach (IMutableForeignKey foreignKey in cascadeFKs)
-                foreignKey.DeleteBehavior = DeleteBehavior.Restrict;
-
         }
 
 

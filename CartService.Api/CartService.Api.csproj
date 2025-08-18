@@ -8,6 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Grpc.Net.Client" Version="2.71.0" />
+    <PackageReference Include="Grpc.Net.ClientFactory" Version="2.71.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Abstractions" Version="2.3.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.7" />
     <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.0" />
@@ -22,6 +24,11 @@
     <ProjectReference Include="..\CartService.Application\CartService.Application.csproj" />
     <ProjectReference Include="..\CartService.Domain\CartService.Domain.csproj" />
     <ProjectReference Include="..\CartService.Persistence\CartService.Persistence.csproj" />
+    <ProjectReference Include="..\Shared.Contracts\Shared.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Grpc\GrpcServices\" />
   </ItemGroup>
 
 </Project>

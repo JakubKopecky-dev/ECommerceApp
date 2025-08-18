@@ -77,10 +77,10 @@ namespace ProductService.Application.Services
 
             categoryDb.UpdatedAt = DateTime.UtcNow;
 
-            Category updatedCategory = await _categoryRepository.UpdateAsync(categoryDb, ct);
+            await _categoryRepository.SaveChangesAsync(ct);
             _logger.LogInformation("Category updated. CategoryId: {CategoryId}.", categoryId);
 
-            return _mapper.Map<CategoryDto>(updatedCategory);
+            return _mapper.Map<CategoryDto>(categoryDb);
         }
 
 
@@ -101,9 +101,9 @@ namespace ProductService.Application.Services
             _logger.LogInformation("Clearing all related products");
 
             category.Products.Clear();
-            await _categoryRepository.UpdateAsync(category, ct);
+            _categoryRepository.Remove(category);
 
-            await _categoryRepository.DeleteAsync(categoryId, ct);
+            await _categoryRepository.SaveChangesAsync(ct);
             _logger.LogInformation("Category deleted. CategoryId: {CategoryId}.", categoryId);
 
             return deletedCategory;

@@ -18,21 +18,8 @@ builder.Services.AddApplicationServices();
 // Authentication
 builder.Services.AddAuthenticationServiceCollection(builder.Configuration);
 
-// HTTP Context accessor
-builder.Services.AddHttpContextAccessor();
-
-// HTTP client for OrderService
-builder.Services.AddHttpClient("OrderService", client =>
-{
-    client.BaseAddress = new Uri(builder.Configuration["OrderService:BaseUrl"]!);
-});
-
-// HTTP client for ProductService
-builder.Services.AddHttpClient("ProductService", client =>
-{
-    client.BaseAddress = new Uri(builder.Configuration["ProductService:BaseUrl"]!);
-});
-
+// gRPC clients
+builder.Services.AddGrpcClients(builder.Configuration);
 
 // Controllers
 builder.Services.AddControllers().AddJsonOptions(options =>

@@ -9,6 +9,6 @@ namespace CartService.Application.Common
     public enum CartError
     {
         CartNotFound,
-        OrderNotCreated,
+        OrderOrDeliveryNotCreated,
     }
 }

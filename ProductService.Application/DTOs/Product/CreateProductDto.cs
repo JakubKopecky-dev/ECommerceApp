@@ -4,7 +4,7 @@ namespace ProductService.Application.DTOs.Product
 {
     public sealed record CreateProductDto
     {
-        [MinLength(2)]
+        [MaxLength(500)]
         public string Title { get; init; } = "";
 
         [MaxLength(2000)]

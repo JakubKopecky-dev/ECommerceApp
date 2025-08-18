@@ -13,6 +13,8 @@ namespace UserService.Application.DTOs.Auth
 
         public string? LastName { get; init; }
 
+        public string? PhoneNumber { get; init; }
+
         public string? Street { get; init; }
 
         public string? City { get; init; }
