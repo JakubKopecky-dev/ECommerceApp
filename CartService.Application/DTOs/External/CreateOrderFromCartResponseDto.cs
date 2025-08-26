@@ -1,0 +1,14 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace CartService.Application.DTOs.External
+{
+    public sealed record CreateOrderFromCartResponseDto
+    {
+        public Guid OrderId { get; set; }
+        public Guid? DeliveryId { get; set; }
+    }
+}

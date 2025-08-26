@@ -62,6 +62,9 @@ namespace OrderService.Persistence.Migrations
                     b.Property<Guid?>("DeliveryId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int>("InternalStatus")
+                        .HasColumnType("int");
+
                     b.Property<string>("Note")
                         .HasColumnType("nvarchar(max)");
 

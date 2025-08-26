@@ -51,7 +51,7 @@ namespace CartService.Api.Extensions
             return result.Error switch
             {
                 CartError.CartNotFound => controller.NotFound(new { Message = "Cart not found." }),
-                CartError.OrderOrDeliveryNotCreated => controller.BadRequest(new { Message = "Order not created." }),
+                CartError.DeliveryNotCreated => controller.BadRequest(new { Message = "Order created but its delivery not created." }),
                 _ => controller.StatusCode(StatusCodes.Status500InternalServerError, new { Message = "An unexpected error occurred." })
             };
         }

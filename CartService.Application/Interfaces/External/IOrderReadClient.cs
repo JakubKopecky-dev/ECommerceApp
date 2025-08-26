@@ -9,6 +9,6 @@ namespace CartService.Application.Interfaces.External
 {
     public interface IOrderReadClient
     {
-        Task<Guid?> CreateOrderAndDeliveryAsync(CreateOrderAndDeliveryDto checkOutCartDto, CancellationToken ct = default);
+        Task<CreateOrderFromCartResponseDto> CreateOrderAndDeliveryAsync(CreateOrderAndDeliveryDto checkOutCartDto, CancellationToken ct = default);
     }
 }

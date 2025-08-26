@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using OrderService.Application.Interfaces.Repositories;
 using OrderService.Domain.Entity;
+using OrderService.Domain.Enum;
 
 namespace OrderService.Persistence.Repositories
 {
@@ -8,7 +9,7 @@ namespace OrderService.Persistence.Repositories
     {
         public async Task<Order?> FindOrderByIdIncludeOrderItemAsync(Guid orderId, CancellationToken ct = default) => await _dbSet
             .Include(o => o.Items)
-            .FirstOrDefaultAsync(o => o.Id == orderId,ct);
+            .SingleOrDefaultAsync(o => o.Id == orderId,ct);
 
 
 
@@ -17,6 +18,11 @@ namespace OrderService.Persistence.Repositories
             .Where(o => o.UserId == userId)
             .ToListAsync(ct);
 
+
+
+        public async Task<IReadOnlyList<Order>> GetAllOrderStatusWithDeliveryFaildInternalStatus(CancellationToken ct = default) => await _dbSet
+            .Where(o => o.InternalStatus == InternalOrderStatus.DeliveryFaild)
+            .ToListAsync(ct);
 
 
 

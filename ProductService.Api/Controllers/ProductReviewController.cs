@@ -78,5 +78,10 @@ namespace ProductService.Api.Controllers
 
 
 
+        [HttpGet("by-productId/{productId}")]
+        public async Task<IReadOnlyList<ProductReviewDto>> GetAllProductReviewsByProductId(Guid productId, CancellationToken ct) => await _productReviewService.GetAllProductReviewsByProductIdAsync(productId, ct);
+
+
+
     }
 }

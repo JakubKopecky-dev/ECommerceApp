@@ -56,7 +56,7 @@ namespace ProductService.Application.Services
             _logger.LogInformation("ProductReview created. ProductReviewId: {ReviewId}.", createdReview.Id);
 
 
-            return _mapper.Map<ProductReviewDto>(review);
+            return _mapper.Map<ProductReviewDto>(createdReview);
         }
 
 
@@ -98,7 +98,6 @@ namespace ProductService.Application.Services
             ProductReviewDto deletedReview = _mapper.Map<ProductReviewDto>(review);
 
             _productReviewRepository.Remove(review);
-
             await _productReviewRepository.SaveChangesAsync(ct);
             _logger.LogInformation("ProductReview deleted. ProductReviewId: {ReviewId}.", reviewId);
 
@@ -118,7 +117,6 @@ namespace ProductService.Application.Services
                 return null;
             }
 
-
             if (review.UserId != userId)
             {
                 _logger.LogWarning("Cannot delete. User is not owner  ProductReviewId: {ReviewId}, UserId: {UserId}.", reviewId, userId);
@@ -134,6 +132,17 @@ namespace ProductService.Application.Services
             return deletedReview;
         }
 
+
+
+        public async Task<IReadOnlyList<ProductReviewDto>> GetAllProductReviewsByProductIdAsync(Guid productId, CancellationToken ct = default)
+        {
+            _logger.LogInformation("Retrieving all productReviews by productId. ProductId: {ProductId}.", productId);
+
+            IReadOnlyList<ProductReview> productReviews = await _productReviewRepository.GetAllProductReviewsByProductIdAsync(productId, ct);
+            _logger.LogInformation("Retrived all productReviews by productId. Count: {Count}, ProductId: {ProductId}.", productReviews.Count,productId);
+
+            return _mapper.Map<List<ProductReviewDto>>(productReviews);
+        }
 
 
 

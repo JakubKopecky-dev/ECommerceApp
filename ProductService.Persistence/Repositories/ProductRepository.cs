@@ -9,14 +9,14 @@ namespace ProductService.Persistence.Repositories
     {
         public async Task<Product?> FindProductByIdIncludeCategoriesAsync(Guid productId, CancellationToken ct = default) => await _dbSet
             .Include(c => c.Categories)
-            .FirstOrDefaultAsync(c => c.Id == productId, ct);
+            .SingleOrDefaultAsync(c => c.Id == productId, ct);
 
 
 
         public async Task<Product?> FindProductByIdIncludeCategoriesAndReviewsAsync(Guid productId, CancellationToken ct = default) => await _dbSet
             .Include(c => c.Categories)
             .Include(c => c.Reviews)
-            .FirstOrDefaultAsync(c => c.Id == productId, ct);
+            .SingleOrDefaultAsync(c => c.Id == productId, ct);
 
 
 

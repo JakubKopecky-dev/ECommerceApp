@@ -114,19 +114,21 @@ namespace CartService.Application.Services
             };
 
 
+            CreateOrderFromCartResponseDto createdOrder = await _orderClient.CreateOrderAndDeliveryAsync(checkOutCartDto, ct);
 
-            Guid? createdOrderId = await _orderClient.CreateOrderAndDeliveryAsync(checkOutCartDto, ct);
-
-            if (createdOrderId is null)
+            if (createdOrder.DeliveryId is null)
             {
-                _logger.LogError("Failed to create order or its delivery.");
-                return Result<CheckoutResult, CartError>.Fail(CartError.OrderOrDeliveryNotCreated);
+                _logger.LogWarning("Order created but not its delivery. OrderId: {OrderId} UserId: {UserId}, CourierId: {CourierId}.",createdOrder.OrderId,userId,cartCheckoutRequestDto.CourierId);
+
+                await DeleteCartByUserIdAsync(userId, ct);
+
+                return Result<CheckoutResult, CartError>.Fail(CartError.DeliveryNotCreated);
             }
             
 
             await DeleteCartByUserIdAsync(userId, ct);
 
-            _logger.LogInformation("Checkout completed successfully. UserId: {UserId}, OrderId: {OrderId}.", userId,createdOrderId);
+            _logger.LogInformation("Checkout completed successfully. UserId: {UserId}, OrderId: {OrderId}, DeliveryId: {DeliveryId}.", userId,createdOrder.OrderId,createdOrder.DeliveryId);
 
             return Result<CheckoutResult, CartError>.Ok(new CheckoutResult(true, []));
         }

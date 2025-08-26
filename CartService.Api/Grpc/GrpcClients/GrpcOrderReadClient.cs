@@ -11,12 +11,12 @@ namespace CartService.Api.Grpc.GrpcClients
         private readonly GrpcOrderClient _client = client;
 
 
-        public async Task<Guid?> CreateOrderAndDeliveryAsync(CreateOrderAndDeliveryDto checkOutCartDto, CancellationToken ct = default)
+        public async Task<CreateOrderFromCartResponseDto> CreateOrderAndDeliveryAsync(CreateOrderAndDeliveryDto checkOutCartDto, CancellationToken ct = default)
         {
             CreateOrderFromCartRequest request = new()
             {
                 UserId = checkOutCartDto.UserId.ToString(),
-                CourierId = checkOutCartDto.UserId.ToString(),
+                CourierId = checkOutCartDto.CourierId.ToString(),
                 TotalPrice = checkOutCartDto.TotalPrice.ToString(),
                 Note = checkOutCartDto.Note,
                 Email = checkOutCartDto.Email,
@@ -38,16 +38,16 @@ namespace CartService.Api.Grpc.GrpcClients
                 Quantity = i.Quantity
             }));
 
-            try
-            {
-                var response = await _client.CreateOrderFromCartAsync(request, cancellationToken: ct);
 
-                return Guid.Parse(response.OrderId);
-            }
-            catch (RpcException ex) when (ex.StatusCode == StatusCode.FailedPrecondition)
+            CreateOrderFromCartResponse response = await _client.CreateOrderFromCartAsync(request, cancellationToken: ct);
+
+            CreateOrderFromCartResponseDto responsedto = new()
             {
-                return null;
-            }
+                OrderId = Guid.Parse(response.OrderId),
+                DeliveryId = string.IsNullOrEmpty(response.DeliveryId) ? null : Guid.Parse(response.DeliveryId)
+            };
+
+            return responsedto;
         }
 
 

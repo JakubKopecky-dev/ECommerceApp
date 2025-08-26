@@ -6,5 +6,6 @@ namespace OrderService.Application.Interfaces.Repositories
     {
         Task<Order?> FindOrderByIdIncludeOrderItemAsync(Guid orderId,CancellationToken ct = default);
         Task<IReadOnlyList<Order>> GetAllOrderByUserIdAsync(Guid userId, CancellationToken ct = default);
+        Task<IReadOnlyList<Order>> GetAllOrderStatusWithDeliveryFaildInternalStatus(CancellationToken ct = default);
     }
 }

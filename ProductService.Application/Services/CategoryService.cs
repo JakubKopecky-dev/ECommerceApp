@@ -54,10 +54,10 @@ namespace ProductService.Application.Services
             category.Id = Guid.Empty;
             category.CreatedAt = DateTime.UtcNow;
 
-            Category addedCategory = await _categoryRepository.InsertAsync(category,ct);
-            _logger.LogInformation("Category created. CategoryId: {CategoryId}.", addedCategory.Id);
+            Category createdCategory = await _categoryRepository.InsertAsync(category,ct);
+            _logger.LogInformation("Category created. CategoryId: {CategoryId}.", createdCategory.Id);
 
-            return _mapper.Map<CategoryDto>(addedCategory);
+            return _mapper.Map<CategoryDto>(createdCategory);
         }
 
 

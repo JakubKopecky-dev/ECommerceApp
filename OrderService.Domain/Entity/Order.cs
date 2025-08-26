@@ -11,6 +11,8 @@ namespace OrderService.Domain.Entity
 
         public OrderStatus Status { get; set; }
 
+        public InternalOrderStatus InternalStatus { get; set; }
+
         public string? Note { get; set; }
 
         public Guid? DeliveryId { get; set; }

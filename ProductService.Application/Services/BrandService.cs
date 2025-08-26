@@ -55,10 +55,10 @@ namespace ProductService.Application.Services
             brand.Id = Guid.Empty;
             brand.CreatedAt = DateTime.UtcNow;
 
-            Brand addedBrand = await _brandRepository.InsertAsync(brand,ct);
-            _logger.LogInformation("Brand created. BrandId: {BrandId}.", addedBrand.Id);
+            Brand createdBrand = await _brandRepository.InsertAsync(brand,ct);
+            _logger.LogInformation("Brand created. BrandId: {BrandId}.", createdBrand.Id);
 
-            return _mapper.Map<BrandDto>(addedBrand);
+            return _mapper.Map<BrandDto>(createdBrand);
         }
 
 
@@ -99,16 +99,13 @@ namespace ProductService.Application.Services
 
             BrandDto deletedBrand = _mapper.Map<BrandDto>(brand);
 
-
             List<Product> products = [.. brand.Products];
             List<ProductReview> reviews = [.. brand.Products.SelectMany(p => p.Reviews)];
-
 
             if (products.Count > 0)
             {
                 _logger.LogInformation("Deleting all related products before deleting brand. BrandId: {BrandId}, Product count: {Count}.", brandId, products.Count);
-
-
+                
                 if (reviews.Count > 0)
                 {
                     _logger.LogInformation("Deleting all related reviews before deleting products. BrandId: {BrandId}, Product reviews count: {Count}.", brandId, reviews.Count);

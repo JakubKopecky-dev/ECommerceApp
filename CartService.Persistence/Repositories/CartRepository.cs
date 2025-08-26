@@ -8,6 +8,6 @@ namespace CartService.Persistence.Repositories
     {
         public async Task<Cart?> FindCartByUserIdIncludeItemsAsync(Guid userId, CancellationToken ct = default) => await _dbSet
             .Include(c => c.Items)
-            .FirstOrDefaultAsync(c => c.UserId == userId,ct);
+            .SingleOrDefaultAsync(c => c.UserId == userId,ct);
     }
 }

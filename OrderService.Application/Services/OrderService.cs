@@ -217,9 +217,11 @@ namespace OrderService.Application.Services
 
 
 
-        public async Task<OrderDto?> CreateOrderAndDeliveryFromCartAsync(ExternalCreateOrderDto createDto, CancellationToken ct = default)
+        public async Task<CreateOrderFromCartResponseDto> CreateOrderAndDeliveryFromCartAsync(ExternalCreateOrderDto createDto, CancellationToken ct = default)
         {
             _logger.LogInformation("Creating new order from cart. UserId: {UserId}.", createDto.UserId);
+
+            CreateOrderFromCartResponseDto responseDto = new();
 
             Order order = new()
             {
@@ -235,6 +237,7 @@ namespace OrderService.Application.Services
             Order createdOrder = await _orderRepository.InsertAsync(order, ct);
             _logger.LogInformation("Order from cart created. OrderId: {OrderId}.", createdOrder.Id);
 
+            responseDto.OrderId = createdOrder.Id;
 
             CreateDeliveryDto createDeliveryDto = new()
             {
@@ -253,11 +256,15 @@ namespace OrderService.Application.Services
             try
             {
                 Guid createdDeliveryId = await _deliveryReadClient.CreateDeliveryAsync(createDeliveryDto, ct);
+                responseDto.DeliveryId = createdDeliveryId;
             }
             catch(RpcException ex)
             {
                _logger.LogError(ex, "Failed to create delivery for OrderId {OrderId}", createdOrder.Id);
-                return null;
+                responseDto.DeliveryId = null;
+
+                createdOrder.InternalStatus = InternalOrderStatus.DeliveryFaild;
+                await _orderRepository.SaveChangesAsync(ct);
             }
 
             OrderCreatedEvent orderCreatedEvent = new()
@@ -281,7 +288,7 @@ namespace OrderService.Application.Services
             // Reserve products for orderItems
             await _publishEndpoint.Publish(orderItemsReservedEvent, ct);
 
-            return _mapper.Map<OrderDto>(createdOrder);
+            return responseDto;
         }
 
 
@@ -304,6 +311,38 @@ namespace OrderService.Application.Services
             _logger.LogInformation("OrderStatus set to completed. OrderId: {OrderId}.", orderId);
 
             return _mapper.Map<OrderDto>(order);
+        }
+
+
+
+        public async Task<OrderDto?> ChangeInternalOrderStatusAsync(Guid orderId,ChangeInternalOrderStatusDto changeDto, CancellationToken ct = default)
+        {
+            _logger.LogInformation("Changing internal orderStatus. OrderId: {OrderId}.", orderId);
+
+            Order? order = await _orderRepository.FindByIdAsync(orderId,ct);
+            if (order is null)
+            {
+                _logger.LogInformation("Cannot change internal orderStatus. Order not found. OrderId: {OrderId}.", orderId);
+                return null;
+            }
+
+            order.InternalStatus = changeDto.InternalStatus;
+            order.UpdatedAt = DateTime.UtcNow;
+            await _orderRepository.SaveChangesAsync(ct);
+
+            return _mapper.Map<OrderDto>(order);
+        }
+
+
+
+        public async Task<IReadOnlyList<OrderDto>> GetAllOrdersWithDeliveryFaildInternalStatusAsync(CancellationToken ct = default)
+        {
+            _logger.LogInformation("Retrieving all orders with DeliveryFaild internal status.");
+
+            IReadOnlyList<Order> orders = await _orderRepository.GetAllOrderStatusWithDeliveryFaildInternalStatus(ct);
+            _logger.LogInformation("Retrieved all orders with DeliveryFaild internal status. Count: {Count}.", orders.Count);
+
+            return _mapper.Map<List<OrderDto>>(orders);
         }
 
 

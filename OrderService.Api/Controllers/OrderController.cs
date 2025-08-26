@@ -80,26 +80,31 @@ namespace OrderService.Api.Controllers
 
 
 
+        [Authorize(Roles = UserRoles.Admin)]
         [HttpPatch("{orderId}/status")]
-        public async Task<IActionResult> ChangeOrderStatus(Guid orderId, ChangeOrderStatusDto changeStatus, CancellationToken ct)
+        public async Task<IActionResult> ChangeOrderStatus(Guid orderId, [FromBody] ChangeOrderStatusDto changeDto, CancellationToken ct)
         {
-            OrderDto? order = await _orderService.ChangeOrderStatusAsync(orderId, changeStatus, ct);
+            OrderDto? order = await _orderService.ChangeOrderStatusAsync(orderId, changeDto, ct);
 
             return order is not null ? Ok(order) : NotFound();
         }
 
 
 
-        [HttpPost("external")]
-        public async Task<IActionResult> CreateOrderFromCart([FromBody] ExternalCreateOrderDto createDto, CancellationToken ct)
+        [Authorize(Roles = UserRoles.Admin)]
+        [HttpPatch("{orderId}/internal-status")]
+        public async Task<IActionResult> ChangeInternalOrderStatus(Guid orderId, [FromBody] ChangeInternalOrderStatusDto changeDto, CancellationToken ct)
         {
-            OrderDto? order = await _orderService.CreateOrderAndDeliveryFromCartAsync(createDto, ct);
-            if (order is null)
-                return BadRequest(new {Message = "Order created but delivery not created."});
-            
-            return CreatedAtAction(nameof(CreateOrder), new { orderId = order.Id }, order);
+            OrderDto? order = await _orderService.ChangeInternalOrderStatusAsync(orderId, changeDto, ct);
+
+            return order is not null ? Ok(order) : NotFound();
         }
 
+
+
+        [Authorize(Roles = UserRoles.Admin)]
+        [HttpGet("internal-status/delivery-faild")]
+        public async Task<IReadOnlyList<OrderDto>> GetAllOrdersWithDeliveryFaildInternalStatus(CancellationToken ct) => await _orderService.GetAllOrdersWithDeliveryFaildInternalStatusAsync(ct);
 
 
 

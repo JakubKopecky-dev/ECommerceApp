@@ -50,9 +50,15 @@ namespace OrderService.Api.Grpc.GrpcServices
                 })]
             };
 
-            OrderDto? createdOrder = await _orderService.CreateOrderAndDeliveryFromCartAsync(createDto, context.CancellationToken);
+            CreateOrderFromCartResponseDto createdOrder = await _orderService.CreateOrderAndDeliveryFromCartAsync(createDto, context.CancellationToken);
 
-            return createdOrder is not null ? new() { OrderId = createdOrder.Id.ToString() } : throw new RpcException(new Status(StatusCode.FailedPrecondition, "Order created but delivery not created"));
+            CreateOrderFromCartResponse response = new()
+            {
+                OrderId = createdOrder.OrderId.ToString(),
+                DeliveryId = createdOrder.DeliveryId.ToString() ?? ""
+            };
+
+            return response;
         }
 
 

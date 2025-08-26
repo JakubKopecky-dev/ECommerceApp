@@ -8,7 +8,7 @@ namespace ProductService.Persistence.Repositories
     {
         public async Task<Category?> FindCategoryByIdWithIncludeProductsAsync(Guid categoryId, CancellationToken ct = default) => await _dbSet
             .Include(c => c.Products)
-            .FirstOrDefaultAsync(c => c.Id == categoryId, ct);
+            .SingleOrDefaultAsync(c => c.Id == categoryId, ct);
 
 
         public async Task<IReadOnlyList<Category>> GetCategoriesByTitle(List<string> titles, CancellationToken ct = default) => await _dbSet

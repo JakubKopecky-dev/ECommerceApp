@@ -21,11 +21,14 @@ builder.Services.AddAuthenticationServiceCollection(builder.Configuration);
 // gRPC clients
 builder.Services.AddGrpcClients(builder.Configuration);
 
+//gRPC server
+builder.Services.AddGrpcClients(builder.Configuration);
+
 // MassTransit + RebbitMQ
 builder.Services.AddMassTransitService();
 
-//gRPC server
-builder.Services.AddGrpcClients(builder.Configuration);
+// gRPC server
+builder.Services.AddGrpc();
 
 // Controllers && JSON Setting
 builder.Services.AddControllers().AddJsonOptions(options =>

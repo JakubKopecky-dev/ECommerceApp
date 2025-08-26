@@ -11,7 +11,7 @@ namespace ProductService.Persistence.Repositories
             .ThenInclude(p => p.Reviews)
             .Include(b => b.Products)
             .ThenInclude(p => p.Categories)
-            .FirstOrDefaultAsync(b => b.Id == brandId, ct);
+            .SingleOrDefaultAsync(b => b.Id == brandId, ct);
 
 
 

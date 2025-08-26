@@ -26,7 +26,7 @@ namespace ProductService.Application.Services
             IReadOnlyList<Product> products = await _productRepository.GetAllAsync(ct);
             _logger.LogInformation("Retrieved all products. Count: {Count}.", products.Count);
 
-            return _mapper.Map<IReadOnlyList<ProductDto>>(products);
+            return _mapper.Map<List<ProductDto>>(products);
         }
 
 
@@ -107,7 +107,7 @@ namespace ProductService.Application.Services
             Product? product = await _productRepository.FindByIdAsync(productId, ct);
             if (product is null)
             {
-                _logger.LogWarning("Cannot inactive. Product not found. ProductId: {ProductId}", productId);
+                _logger.LogWarning("Cannot inactivate. Product not found. ProductId: {ProductId}", productId);
                 return null;
             }
 
@@ -115,7 +115,7 @@ namespace ProductService.Application.Services
             product.IsActive = false;
 
             await _productRepository.SaveChangesAsync(ct);
-            _logger.LogInformation("Product inactive. ProductId: {ProductId}.", productId);
+            _logger.LogInformation("Product inactivated. ProductId: {ProductId}.", productId);
 
             return _mapper.Map<ProductDto>(product);
         }
@@ -210,7 +210,7 @@ namespace ProductService.Application.Services
             IReadOnlyList<Product> products = await _productRepository.GetAllActiveProductsAsync(ct);
             _logger.LogInformation("Retrieved all active products. Count: {Count}.", products.Count);
 
-            return _mapper.Map<IReadOnlyList<ProductDto>>(products);
+            return _mapper.Map<List<ProductDto>>(products);
         }
 
 
@@ -222,7 +222,7 @@ namespace ProductService.Application.Services
             IReadOnlyList<Product> products = await _productRepository.GetAllInactiveProductsAsync(ct);
             _logger.LogInformation("Retrieved all inactive products. Count: {Count}.", products.Count);
 
-            return _mapper.Map<IReadOnlyList<ProductDto>>(products);
+            return _mapper.Map<List<ProductDto>>(products);
         }
 
 

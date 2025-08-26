@@ -8,6 +8,7 @@ namespace ProductService.Application.DTOs.Product
 {
     public sealed record ProductQuantityCheckRequestDto
     {
+        // ProductId
         public Guid Id { get; init; }
 
         public uint Quantity { get; init; }
