@@ -17,7 +17,7 @@ namespace CartService.Api.Controllers
         [HttpGet("{cartItemId}")]
         public async Task<IActionResult> GetCartItem(Guid cartItemId)
         {
-            CartItemDto? cartItem = await _cartItemService.GetCartItemAsync(cartItemId);
+            CartItemDto? cartItem = await _cartItemService.GetCartItemByIdAsync(cartItemId);
 
             return cartItem is not null ? Ok(cartItem) : NotFound();
         }
@@ -25,7 +25,7 @@ namespace CartService.Api.Controllers
 
 
         [HttpPost]
-        public async Task<IActionResult> CreateCartItemAsync([FromBody] CreateCartItemDto createDto, CancellationToken ct)
+        public async Task<IActionResult> CreateCartItem([FromBody] CreateCartItemDto createDto, CancellationToken ct)
         {
             var result = await _cartItemService.CreateCartItemOrChangeQuantityAsync(createDto, ct);
 

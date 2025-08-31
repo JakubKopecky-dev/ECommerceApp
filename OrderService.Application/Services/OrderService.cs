@@ -75,7 +75,7 @@ namespace OrderService.Application.Services
 
 
 
-        public async Task<OrderExtendedDto?> GetOrderAsync(Guid orderId, CancellationToken ct = default)
+        public async Task<OrderExtendedDto?> GetOrderByIdAsync(Guid orderId, CancellationToken ct = default)
         {
             _logger.LogInformation("Retrieving order. OrderId: {OrderId}.", orderId);
 

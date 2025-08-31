@@ -22,7 +22,7 @@ namespace DeliveryService.Api.Controllers
         [HttpGet("{courierId}")]
         public async Task<IActionResult> GetCourier(Guid courierId, CancellationToken ct)
         {
-            CourierDto? courier = await _courierService.GetCourierAsync(courierId, ct);
+            CourierDto? courier = await _courierService.GetCourierByIdAsync(courierId, ct);
 
             return courier is not null ? Ok(courier) : NotFound();
         }

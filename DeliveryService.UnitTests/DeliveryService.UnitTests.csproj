@@ -23,12 +23,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="Xunit" />
+    <ProjectReference Include="..\DeliveryService.Api\DeliveryService.Api.csproj" />
+    <ProjectReference Include="..\DeliveryService.Application\DeliveryService.Application.csproj" />
+    <ProjectReference Include="..\DeliveryService.Persistence\DeliveryService.Persistence.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Controllers\" />
-    <Folder Include="Services\" />
+    <Using Include="Xunit" />
   </ItemGroup>
 
 </Project>

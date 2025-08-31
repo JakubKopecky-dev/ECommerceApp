@@ -35,7 +35,7 @@ namespace ProductService.Api.Controllers
         {
             CategoryDto category = await _categoryService.CreateCategoryAsync(createDto, ct);
 
-            return CreatedAtAction(nameof(CreateCategory), new { categoryId = category.Id }, category);
+            return CreatedAtAction(nameof(GetCategory), new { categoryId = category.Id }, category);
         }
 
 
@@ -59,8 +59,6 @@ namespace ProductService.Api.Controllers
 
             return category is not null ? Ok(category) : NotFound();
         }
-
-
 
 
 

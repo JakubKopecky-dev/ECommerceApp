@@ -27,7 +27,7 @@ namespace DeliveryService.Application.Services
 
 
 
-        public async Task<CourierDto?> GetCourierAsync(Guid courierId, CancellationToken ct = default)
+        public async Task<CourierDto?> GetCourierByIdAsync(Guid courierId, CancellationToken ct = default)
         {
             _logger.LogInformation("Retrieving courier. CourierId: {courierId}.", courierId);
 
@@ -88,20 +88,20 @@ namespace DeliveryService.Application.Services
         {
             _logger.LogInformation("Deleting courier. CourierId: {CourierId}.", courierId);
 
-            Courier? courierDb = await _courierRepository.FindByIdAsync(courierId, ct);
-            if (courierDb is null)
+            Courier? courier = await _courierRepository.FindByIdAsync(courierId, ct);
+            if (courier is null)
             {
                 _logger.LogWarning("Cannot delete. Courier not found. CourierId: {CourierId}.", courierId);
                 return null;
             }
 
-            CourierDto deletedCourier = _mapper.Map<CourierDto>(courierDb);
+            CourierDto deletedCourier = _mapper.Map<CourierDto>(courier);
 
-            _courierRepository.Remove(courierDb);
+            _courierRepository.Remove(courier);
             await _courierRepository.SaveChangesAsync(ct);
             _logger.LogInformation("Courier updated. CourierId: {CourierId}.", courierId);
 
-            return _mapper.Map<CourierDto>(deletedCourier);
+            return deletedCourier;
         }
 
 

@@ -23,12 +23,13 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Using Include="Xunit" />
+    <ProjectReference Include="..\CartService.Api\CartService.Api.csproj" />
+    <ProjectReference Include="..\CartService.Application\CartService.Application.csproj" />
+    <ProjectReference Include="..\CartService.Domain\CartService.Domain.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Controllers\" />
-    <Folder Include="Services\" />
+    <Using Include="Xunit" />
   </ItemGroup>
 
 </Project>

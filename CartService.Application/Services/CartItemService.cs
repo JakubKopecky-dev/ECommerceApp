@@ -30,7 +30,7 @@ namespace CartService.Application.Services
 
 
 
-        public async Task<CartItemDto?> GetCartItemAsync(Guid cartItemId, CancellationToken ct = default)
+        public async Task<CartItemDto?> GetCartItemByIdAsync(Guid cartItemId, CancellationToken ct = default)
         {
             _logger.LogInformation("Retrieving cartItem. CartItemId: {CartItemId}.", cartItemId);
 

@@ -25,7 +25,7 @@ namespace OrderService.Application.Services
             IReadOnlyList<OrderItem> orderItems = await _orderItemRepository.GetAllOrderItemsByOrderId(orderId,ct);
             _logger.LogInformation("Retrieved all orderItems. Count: {Count}, OrderId: {OrderId}.", orderItems.Count,orderId);
 
-            return _mapper.Map<IReadOnlyList<OrderItemDto>>(orderItems);
+            return _mapper.Map<List<OrderItemDto>>(orderItems);
         }
 
 

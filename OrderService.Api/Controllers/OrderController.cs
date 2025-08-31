@@ -41,7 +41,7 @@ namespace OrderService.Api.Controllers
         [HttpGet("{orderId}")]
         public async Task<IActionResult> GetOrder(Guid orderId, CancellationToken ct)
         {
-            OrderExtendedDto? order = await _orderService.GetOrderAsync(orderId, ct);
+            OrderExtendedDto? order = await _orderService.GetOrderByIdAsync(orderId, ct);
 
             return order is not null ? Ok(order) : NotFound();
         }

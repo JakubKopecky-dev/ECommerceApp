@@ -66,7 +66,5 @@ namespace DeliveryService.Api.Controllers
 
 
 
-
-
     }
 }

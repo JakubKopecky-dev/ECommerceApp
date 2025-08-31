@@ -66,7 +66,7 @@ namespace ProductService.Api.Controllers
 
         [Authorize(Roles = UserRoles.Admin)]
         [HttpPatch("{productId}/inactivate")]
-        public async Task<IActionResult> InActivateProduct(Guid productId, CancellationToken ct)
+        public async Task<IActionResult> InactivateProduct(Guid productId, CancellationToken ct)
         {
             ProductDto? product = await _productService.InactivateProductAsync(productId, ct);
 
@@ -88,23 +88,23 @@ namespace ProductService.Api.Controllers
 
 
         [HttpGet("by-brandId/{brandId}")]
-        public async Task<IReadOnlyList<ProductDto>> GetAllProductsByBrandId(Guid brandId) => await _productService.GetAllProductsByBrandIdAsync(brandId);
+        public async Task<IReadOnlyList<ProductDto>> GetAllProductsByBrandId(Guid brandId, CancellationToken ct) => await _productService.GetAllProductsByBrandIdAsync(brandId,ct);
 
 
 
         [HttpGet("by-categories")]
-        public async Task<IReadOnlyList<ProductDto>> GetAllProductsByCategories([FromQuery] List<string> categories) => await _productService.GetAllProductsByCategoriesAsync(categories);
+        public async Task<IReadOnlyList<ProductDto>> GetAllProductsByCategories([FromQuery] List<string> categories, CancellationToken ct) => await _productService.GetAllProductsByCategoriesAsync(categories, ct);
 
 
 
         [HttpGet("active")]
-        public async Task<IReadOnlyList<ProductDto>> GetAllActiveProducts() => await _productService.GetAllActiveProductsAsync();
+        public async Task<IReadOnlyList<ProductDto>> GetAllActiveProducts(CancellationToken ct) => await _productService.GetAllActiveProductsAsync(ct);
 
 
 
         [Authorize(Roles = UserRoles.Admin)]
         [HttpGet("inactive")]
-        public async Task<IReadOnlyList<ProductDto>> GetAllInactiveProducts() => await _productService.GetAllInactiveProductsAsync();
+        public async Task<IReadOnlyList<ProductDto>> GetAllInactiveProducts(CancellationToken ct) => await _productService.GetAllInactiveProductsAsync(ct);
 
 
 

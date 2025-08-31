@@ -17,7 +17,7 @@ namespace OrderService.Api.Grpc.GrpcServices
         {
             Guid orderId = Guid.Parse(request.OrderId);
 
-            OrderExtendedDto? order = await _orderService.GetOrderAsync(orderId, context.CancellationToken);
+            OrderExtendedDto? order = await _orderService.GetOrderByIdAsync(orderId, context.CancellationToken);
 
             return order is not null ? new() { UserId = order.UserId.ToString() } : throw new RpcException(new Status(StatusCode.NotFound, "Order not found"));
         }
