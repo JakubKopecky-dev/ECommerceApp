@@ -91,7 +91,7 @@ namespace CartService.Application.Services
             if (badProducts.Any())
             {
                 _logger.LogWarning("Cannot check out cart. Lack of goods in stock. CartId: {CartId}, ProductIds: {ProductIds}.", cart.Id, string.Join(", ", badProducts.Select(p => p.Id)));
-                return Result<CheckoutResult, CartError>.Ok(new CheckoutResult(false, badProducts));
+                return Result<CheckoutResult, CartError>.Ok(new CheckoutResult(false, badProducts,null));
             }
                 
 
@@ -116,6 +116,24 @@ namespace CartService.Application.Services
 
             CreateOrderFromCartResponseDto createdOrder = await _orderClient.CreateOrderAndDeliveryAsync(checkOutCartDto, ct);
 
+            if (createdOrder.DeliveryId is null && createdOrder.CheckoutUrl is null)
+            {
+                _logger.LogWarning("Order created but not its delivery and payment checkout url. OrderId: {OrderId} UserId: {UserId}, CourierId: {CourierId}.", createdOrder.OrderId, userId, cartCheckoutRequestDto.CourierId);
+                await DeleteCartByUserIdAsync(userId, ct);
+
+                return Result<CheckoutResult, CartError>.Fail(CartError.DeliveryAndPaymentCheckoutNotCreated);
+            }
+
+
+            if (createdOrder.CheckoutUrl is null)
+            {
+                _logger.LogWarning("Order created but not its payment checkout url. OrderId: {OrderId} UserId: {UserId}, CourierId: {CourierId}.", createdOrder.OrderId, userId, cartCheckoutRequestDto.CourierId);
+                await DeleteCartByUserIdAsync(userId, ct);
+
+                return Result<CheckoutResult, CartError>.Fail(CartError.PaymentCheckoutUrlNotCreated);
+            }
+
+
             if (createdOrder.DeliveryId is null)
             {
                 _logger.LogWarning("Order created but not its delivery. OrderId: {OrderId} UserId: {UserId}, CourierId: {CourierId}.",createdOrder.OrderId,userId,cartCheckoutRequestDto.CourierId);
@@ -130,7 +148,7 @@ namespace CartService.Application.Services
 
             _logger.LogInformation("Checkout completed successfully. UserId: {UserId}, OrderId: {OrderId}, DeliveryId: {DeliveryId}.", userId,createdOrder.OrderId,createdOrder.DeliveryId);
 
-            return Result<CheckoutResult, CartError>.Ok(new CheckoutResult(true, []));
+            return Result<CheckoutResult, CartError>.Ok(new CheckoutResult(true, [], createdOrder.CheckoutUrl));
         }
 
 

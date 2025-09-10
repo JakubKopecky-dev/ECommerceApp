@@ -388,7 +388,8 @@ namespace CartService.UnitTests.Services
             CreateOrderFromCartResponseDto orderResponse = new()
             {
                 OrderId = Guid.NewGuid(),
-                DeliveryId = Guid.NewGuid()
+                DeliveryId = Guid.NewGuid(),
+                CheckoutUrl = "www.url.com"
             };
 
             Mock<ICartRepository> cartRepositoryMock = new();
@@ -497,7 +498,8 @@ namespace CartService.UnitTests.Services
             CreateOrderFromCartResponseDto orderResponse = new()
             {
                 OrderId = Guid.NewGuid(),
-                DeliveryId = null
+                DeliveryId = null,
+                CheckoutUrl = "www.url.com"
             };
 
             Mock<ICartRepository> cartRepositoryMock = new();
@@ -543,6 +545,132 @@ namespace CartService.UnitTests.Services
             productClientMock.Verify(p => p.CheckProductAvailabilityAsync(It.IsAny<List<ProductQuantityCheckRequestDto>>(), It.IsAny<CancellationToken>()), Times.Once);
             mapperMock.Verify(m => m.Map<List<CartItemForCheckoutDto>>(cart.Items), Times.Once);
             orderClientMock.Verify(o => o.CreateOrderAndDeliveryAsync(expectedRequest, It.IsAny<CancellationToken>()), Times.Once);
+            cartRepositoryMock.Verify(c => c.Remove(cart), Times.Once);
+            cartRepositoryMock.Verify(c => c.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+
+
+        [Fact]
+        [Trait("Category", "Unit")]
+        public async Task CheckoutCartByUserIdAsync_ReturnsFail_DeliveryAndPaymentCheckoutNotCreated_WhenBothNull()
+        {
+            Guid userId = Guid.NewGuid();
+            List<CartItem> items =
+            [
+                new() { Id = Guid.NewGuid(), ProductId = Guid.NewGuid(), Quantity = 1, UnitPrice = 1200 }
+            ];
+            Cart cart = new() { Id = Guid.NewGuid(), UserId = userId, Items = items };
+
+            CreateOrderFromCartResponseDto orderResponse = new()
+            {
+                OrderId = Guid.NewGuid(),
+                DeliveryId = null,
+                CheckoutUrl = null
+            };
+
+            Mock<ICartRepository> cartRepositoryMock = new();
+            Mock<IMapper> mapperMock = new();
+            Mock<IProductReadClient> productClientMock = new();
+            Mock<IOrderReadClient> orderClientMock = new();
+
+            cartRepositoryMock
+                .Setup(c => c.FindCartByUserIdIncludeItemsAsync(userId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(cart);
+
+            productClientMock
+                .Setup(p => p.CheckProductAvailabilityAsync(It.IsAny<List<ProductQuantityCheckRequestDto>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+
+            mapperMock
+                .Setup(m => m.Map<List<CartItemForCheckoutDto>>(cart.Items))
+                .Returns([new() { ProductId = items[0].ProductId, Quantity = items[0].Quantity }]);
+
+            orderClientMock
+                .Setup(o => o.CreateOrderAndDeliveryAsync(It.IsAny<CreateOrderAndDeliveryDto>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(orderResponse);
+
+            CartServiceService service = new(
+                cartRepositoryMock.Object,
+                mapperMock.Object,
+                new Mock<ILogger<CartServiceService>>().Object,
+                productClientMock.Object,
+                orderClientMock.Object
+            );
+
+
+            var result = await service.CheckoutCartByUserIdAsync(userId, new CartCheckoutRequestDto(), It.IsAny<CancellationToken>());
+
+            result.IsSuccess.Should().BeFalse();
+            result.Error.Should().Be(CartError.DeliveryAndPaymentCheckoutNotCreated);
+
+            cartRepositoryMock.Verify(c => c.FindCartByUserIdIncludeItemsAsync(userId, It.IsAny<CancellationToken>()), Times.Exactly(2));
+            productClientMock.Verify(p => p.CheckProductAvailabilityAsync(It.IsAny<List<ProductQuantityCheckRequestDto>>(), It.IsAny<CancellationToken>()), Times.Once);
+            mapperMock.Verify(m => m.Map<List<CartItemForCheckoutDto>>(cart.Items), Times.Once);
+            orderClientMock.Verify(o => o.CreateOrderAndDeliveryAsync(It.IsAny<CreateOrderAndDeliveryDto>(), It.IsAny<CancellationToken>()), Times.Once);
+            cartRepositoryMock.Verify(c => c.Remove(cart), Times.Once);
+            cartRepositoryMock.Verify(c => c.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+
+
+        [Fact]
+        [Trait("Category", "Unit")]
+        public async Task CheckoutCartByUserIdAsync_ReturnsFail_PaymentCheckoutUrlNotCreated_WhenCheckoutUrlMissing()
+        {
+            Guid userId = Guid.NewGuid();
+            List<CartItem> items =
+            [
+                new() { Id = Guid.NewGuid(), ProductId = Guid.NewGuid(), Quantity = 1, UnitPrice = 1299 }
+            ];
+            Cart cart = new() { Id = Guid.NewGuid(), UserId = userId, Items = items };
+
+            CreateOrderFromCartResponseDto orderResponse = new()
+            {
+                OrderId = Guid.NewGuid(),
+                DeliveryId = Guid.NewGuid(),
+                CheckoutUrl = null
+            };
+
+            Mock<ICartRepository> cartRepositoryMock = new();
+            Mock<IMapper> mapperMock = new();
+            Mock<IProductReadClient> productClientMock = new();
+            Mock<IOrderReadClient> orderClientMock = new();
+
+            cartRepositoryMock
+                .Setup(c => c.FindCartByUserIdIncludeItemsAsync(userId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(cart);
+
+            productClientMock
+                .Setup(p => p.CheckProductAvailabilityAsync(It.IsAny<List<ProductQuantityCheckRequestDto>>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync([]);
+
+            mapperMock
+                .Setup(m => m.Map<List<CartItemForCheckoutDto>>(cart.Items))
+                .Returns([new() { ProductId = items[0].ProductId, Quantity = items[0].Quantity }]);
+
+            orderClientMock
+                .Setup(o => o.CreateOrderAndDeliveryAsync(It.IsAny<CreateOrderAndDeliveryDto>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(orderResponse);
+
+            CartServiceService service = new(
+                cartRepositoryMock.Object,
+                mapperMock.Object,
+                new Mock<ILogger<CartServiceService>>().Object,
+                productClientMock.Object,
+                orderClientMock.Object
+            );
+
+
+            var result = await service.CheckoutCartByUserIdAsync(userId, new CartCheckoutRequestDto(), It.IsAny<CancellationToken>());
+
+            result.IsSuccess.Should().BeFalse();
+            result.Error.Should().Be(CartError.PaymentCheckoutUrlNotCreated);
+
+            cartRepositoryMock.Verify(c => c.FindCartByUserIdIncludeItemsAsync(userId, It.IsAny<CancellationToken>()), Times.Exactly(2));
+            productClientMock.Verify(p => p.CheckProductAvailabilityAsync(It.IsAny<List<ProductQuantityCheckRequestDto>>(), It.IsAny<CancellationToken>()), Times.Once);
+            mapperMock.Verify(m => m.Map<List<CartItemForCheckoutDto>>(cart.Items), Times.Once);
+            orderClientMock.Verify(o => o.CreateOrderAndDeliveryAsync(It.IsAny<CreateOrderAndDeliveryDto>(), It.IsAny<CancellationToken>()), Times.Once);
             cartRepositoryMock.Verify(c => c.Remove(cart), Times.Once);
             cartRepositoryMock.Verify(c => c.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }

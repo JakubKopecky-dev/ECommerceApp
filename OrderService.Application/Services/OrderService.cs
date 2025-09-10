@@ -23,14 +23,14 @@ using Grpc.Core;
 
 namespace OrderService.Application.Services
 {
-    public class OrderService(IOrderRepository orderRepository, IOrderItemRepository orderItemRepository, IMapper mapper, ILogger<OrderService> logger, IPublishEndpoint publishEndpoint, IDeliveryReadClient deliveryReadClient) : IOrderService
+    public class OrderService(IOrderRepository orderRepository, IMapper mapper, ILogger<OrderService> logger, IPublishEndpoint publishEndpoint, IDeliveryReadClient deliveryReadClient, IPaymentReadClient paymentReadClient) : IOrderService
     {
         private readonly IOrderRepository _orderRepository = orderRepository;
-        private readonly IOrderItemRepository _orderItemRepository = orderItemRepository;
         private readonly IMapper _mapper = mapper;
         private readonly ILogger<OrderService> _logger = logger;
         private readonly IPublishEndpoint _publishEndpoint = publishEndpoint;
         private readonly IDeliveryReadClient _deliveryReadClient = deliveryReadClient;
+        private readonly IPaymentReadClient _paymentReadClient = paymentReadClient;
     
 
 
@@ -282,35 +282,25 @@ namespace OrderService.Application.Services
             OrderItemsReservedEvent orderItemsReservedEvent = new()
             {
                 OrderId = createdOrder.Id,
-                Items = [.. createdOrder.Items.Select(p => new OrderItemCreatedDto { ProductId = p.ProductId, Quantity = p.Quantity })]
+                Items = [.. createdOrder.Items.Select(p => new OrderItemCreatedDto { ProductId = p.ProductId, Quantity = p.Quantity })]  
             };
 
             // Reserve products for orderItems
             await _publishEndpoint.Publish(orderItemsReservedEvent, ct);
 
+
+            // Create payment session
+            CreateCheckoutSessionRequestDto checkoutSessionrequestDto = _mapper.Map<CreateCheckoutSessionRequestDto>(createdOrder);
+
+            CreateCheckoutSessionResponseDto? checkoutSessionResponseDto = await  _paymentReadClient.CreateCheckoutSessionAsync(checkoutSessionrequestDto, ct);
+            responseDto.CheckoutUrl = checkoutSessionResponseDto?.CheckoutUrl;
+
+            if(responseDto.CheckoutUrl is not null)
+                _logger.LogInformation("Checkout url created for orderId: {OrderId}.", createdOrder.Id);
+            else 
+                _logger.LogWarning("Checkout url not created for orderId: {OrderId}.", createdOrder.Id);
+
             return responseDto;
-        }
-
-
-
-        public async Task<OrderDto?> SetOrderStatusCompletedFromDelivery(Guid orderId, CancellationToken ct = default)
-        {
-            _logger.LogInformation("Setting orderStatus to completed from DeliveryDeliveredEvent. OrderId: {OrderId}.", orderId);
-
-            Order? order = await _orderRepository.FindByIdAsync(orderId, ct);
-            if (order is null)
-            {
-                _logger.LogWarning("Cannot set orderStatus to completed. Order not found. OrderId: {OrderId}.", orderId);
-                return null;
-            }
-
-            order.Status = OrderStatus.Completed;
-            order.UpdatedAt = DateTime.UtcNow;
-
-            await _orderRepository.SaveChangesAsync(ct);
-            _logger.LogInformation("OrderStatus set to completed. OrderId: {OrderId}.", orderId);
-
-            return _mapper.Map<OrderDto>(order);
         }
 
 

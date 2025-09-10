@@ -21,9 +21,6 @@ builder.Services.AddAuthenticationServiceCollection(builder.Configuration);
 // gRPC clients
 builder.Services.AddGrpcClients(builder.Configuration);
 
-//gRPC server
-builder.Services.AddGrpcClients(builder.Configuration);
-
 // MassTransit + RebbitMQ
 builder.Services.AddMassTransitService();
 

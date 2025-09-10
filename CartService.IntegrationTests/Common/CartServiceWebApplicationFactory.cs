@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Linq;
-using CartService.Application.DTOs.External;
 using CartService.Application.Interfaces.External;
 using CartService.Persistence;
 using MassTransit;
@@ -12,6 +11,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using CartService.Application.DTOs.External;
 
 namespace CartService.IntegrationTests.Common
 {
@@ -55,33 +55,18 @@ namespace CartService.IntegrationTests.Common
                 var db = scope.ServiceProvider.GetRequiredService<CartDbContext>();
                 db.Database.EnsureCreated();
 
-                // Mock IOrderReadClient
-                Mock<IOrderReadClient> orderClientMock = new();
-                orderClientMock
-                    .Setup(c => c.CreateOrderAndDeliveryAsync(
-                        It.IsAny<CreateOrderAndDeliveryDto>(),
-                        It.IsAny<CancellationToken>()))
-                    .ReturnsAsync(new CreateOrderFromCartResponseDto
-                    {
-                        OrderId = Guid.NewGuid(),
-                        DeliveryId = Guid.NewGuid()
-                    });
-
-                // Register both Mock and Object
-                services.AddSingleton(orderClientMock);
-                services.AddSingleton<IOrderReadClient>(sp => orderClientMock.Object);
-
-                // Mock IProductReadClient
-                var productClientMock = new Mock<IProductReadClient>();
-                productClientMock
-                    .Setup(c => c.CheckProductAvailabilityAsync(
-                        It.IsAny<List<ProductQuantityCheckRequestDto>>(),
-                        It.IsAny<CancellationToken>()))
-                    .ReturnsAsync([]);
-
-                // Register both Mock and Object
-                services.AddSingleton(productClientMock);
-                services.AddSingleton(sp => productClientMock.Object);
+                // Mock IProductReadClient – necháme jako defaultní (happy path)
+                services.AddScoped(_ =>
+                {
+                    var productClientMock = new Mock<IProductReadClient>();
+                    productClientMock
+                        .Setup(c => c.CheckProductAvailabilityAsync(
+                            It.IsAny<List<ProductQuantityCheckRequestDto>>(),
+                            It.IsAny<CancellationToken>()))
+                        .ReturnsAsync([]);
+                    return productClientMock;
+                });
+                services.AddScoped<IProductReadClient>(sp => sp.GetRequiredService<Mock<IProductReadClient>>().Object);
 
                 // Add MassTransit Test Harness
                 services.AddMassTransitTestHarness();
@@ -96,9 +81,6 @@ namespace CartService.IntegrationTests.Common
                     "Test", options => { });
             });
         }
-
-
-
 
 
     }

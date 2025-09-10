@@ -55,7 +55,8 @@ namespace OrderService.Api.Grpc.GrpcServices
             CreateOrderFromCartResponse response = new()
             {
                 OrderId = createdOrder.OrderId.ToString(),
-                DeliveryId = createdOrder.DeliveryId.ToString() ?? ""
+                DeliveryId = createdOrder.DeliveryId.ToString(),
+                CheckoutUrl = createdOrder.CheckoutUrl ?? "",
             };
 
             return response;

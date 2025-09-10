@@ -9,6 +9,7 @@ using CartService.Domain.Entity;
 using CartService.IntegrationTests.Common;
 using CartService.Persistence;
 using FluentAssertions;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -19,10 +20,10 @@ namespace CartService.IntegrationTests
     {
         private readonly CartServiceWebApplicationFactory _factory = factory;
 
-        private HttpClient CreateAuthenticatedClient(Guid userId)
+        private static HttpClient CreateAuthenticatedClient(WebApplicationFactory<Program> factory, Guid userId)
         {
             TestAuthHandler.FixedUserId = userId;
-            var client = _factory.CreateClient();
+            var client = factory.CreateClient();
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
             return client;
         }
@@ -39,19 +40,28 @@ namespace CartService.IntegrationTests
 
             ProductDto expectedProduct = new() { Title = "iPhone 16", Price = 1299, QuantityInStock = 10 };
 
-            using var scope = _factory.Services.CreateScope();
+            var factory = _factory.WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureServices(services =>
+                {
+                    var productClientMock = new Mock<IProductReadClient>();
+                    productClientMock
+                        .Setup(c => c.GetProductAsync(productId, It.IsAny<CancellationToken>()))
+                        .ReturnsAsync(expectedProduct);
+                    services.AddScoped<IProductReadClient>(_ => productClientMock.Object);
+                });
+            });
+
+            using var scope = factory.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<CartDbContext>();
             db.Carts.Add(new Cart { Id = cartId, UserId = userId, Items = [] });
             db.SaveChanges();
 
-            var productClient = scope.ServiceProvider.GetRequiredService<Mock<IProductReadClient>>();
-            productClient
-                .Setup(c => c.GetProductAsync(productId, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(expectedProduct);
-
-            var client = CreateAuthenticatedClient(userId);
+            var client = CreateAuthenticatedClient(factory, userId);
 
             CreateCartItemDto request = new() { CartId = cartId, ProductId = productId, Quantity = 2 };
+
+
             var response = await client.PostAsJsonAsync("api/CartItem", request);
 
             response.StatusCode.Should().Be(HttpStatusCode.Created);
@@ -61,7 +71,7 @@ namespace CartService.IntegrationTests
             created!.ProductName.Should().Be(expectedProduct.Title);
             created.Quantity.Should().Be(request.Quantity);
 
-            using var verifyScope = _factory.Services.CreateScope();
+            using var verifyScope = factory.Services.CreateScope();
             var dbVerify = verifyScope.ServiceProvider.GetRequiredService<CartDbContext>();
             var item = await dbVerify.CartItems.SingleOrDefaultAsync(i => i.Id == created.Id);
             item.Should().NotBeNull();
@@ -77,18 +87,26 @@ namespace CartService.IntegrationTests
             Guid cartId = Guid.NewGuid();
             Guid productId = Guid.NewGuid();
 
-            using var scope = _factory.Services.CreateScope();
+            var factory = _factory.WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureServices(services =>
+                {
+                    var productClientMock = new Mock<IProductReadClient>();
+                    productClientMock
+                        .Setup(c => c.GetProductAsync(productId, It.IsAny<CancellationToken>()))
+                        .ReturnsAsync((ProductDto?)null);
+                    services.AddScoped<IProductReadClient>(_ => productClientMock.Object);
+                });
+            });
+
+            using var scope = factory.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<CartDbContext>();
             db.Carts.Add(new Cart { Id = cartId, UserId = userId, Items = [] });
             db.SaveChanges();
 
-            var productClient = scope.ServiceProvider.GetRequiredService<Mock<IProductReadClient>>();
-            productClient
-                .Setup(c => c.GetProductAsync(productId, It.IsAny<CancellationToken>()))
-                .ReturnsAsync((ProductDto?)null);
-
-            var client = CreateAuthenticatedClient(userId);
+            var client = CreateAuthenticatedClient(factory, userId);
             CreateCartItemDto request = new() { CartId = cartId, ProductId = productId, Quantity = 2 };
+
 
             var response = await client.PostAsJsonAsync("api/CartItem", request);
 
@@ -111,18 +129,26 @@ namespace CartService.IntegrationTests
 
             ProductDto lowStockProduct = new() { Title = "iPhone 11", Price = 1000, QuantityInStock = 1 };
 
-            using var scope = _factory.Services.CreateScope();
+            var factory = _factory.WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureServices(services =>
+                {
+                    var productClientMock = new Mock<IProductReadClient>();
+                    productClientMock
+                        .Setup(c => c.GetProductAsync(productId, It.IsAny<CancellationToken>()))
+                        .ReturnsAsync(lowStockProduct);
+                    services.AddScoped<IProductReadClient>(_ => productClientMock.Object);
+                });
+            });
+
+            using var scope = factory.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<CartDbContext>();
             db.Carts.Add(new Cart { Id = cartId, UserId = userId, Items = [] });
             db.SaveChanges();
 
-            var productClient = scope.ServiceProvider.GetRequiredService<Mock<IProductReadClient>>();
-            productClient
-                .Setup(c => c.GetProductAsync(productId, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(lowStockProduct);
-
-            var client = CreateAuthenticatedClient(userId);
+            var client = CreateAuthenticatedClient(factory, userId);
             CreateCartItemDto request = new() { CartId = cartId, ProductId = productId, Quantity = 5 };
+
 
             var response = await client.PostAsJsonAsync("api/CartItem", request);
 
@@ -144,21 +170,28 @@ namespace CartService.IntegrationTests
             Guid productId = Guid.NewGuid();
 
             CartItem existingItem = new() { Id = Guid.NewGuid(), CartId = cartId, ProductId = productId, Quantity = 2, UnitPrice = 1200, ProductName = "iPhone 16" };
-
             ProductDto existingProduct = new() { Title = "iPhone 16", Price = 1200, QuantityInStock = 10 };
 
-            using var scope = _factory.Services.CreateScope();
+            var factory = _factory.WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureServices(services =>
+                {
+                    var productClientMock = new Mock<IProductReadClient>();
+                    productClientMock
+                        .Setup(c => c.GetProductAsync(productId, It.IsAny<CancellationToken>()))
+                        .ReturnsAsync(existingProduct);
+                    services.AddScoped<IProductReadClient>(_ => productClientMock.Object);
+                });
+            });
+
+            using var scope = factory.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<CartDbContext>();
             db.Carts.Add(new Cart { Id = cartId, UserId = userId, Items = { existingItem } });
             db.SaveChanges();
 
-            var productClient = scope.ServiceProvider.GetRequiredService<Mock<IProductReadClient>>();
-            productClient
-                .Setup(c => c.GetProductAsync(productId, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(existingProduct);
-
-            var client = CreateAuthenticatedClient(userId);
+            var client = CreateAuthenticatedClient(factory, userId);
             CreateCartItemDto request = new() { CartId = cartId, ProductId = productId, Quantity = 3 };
+
 
             var response = await client.PostAsJsonAsync("api/CartItem", request);
 
@@ -169,7 +202,6 @@ namespace CartService.IntegrationTests
             updated!.Id.Should().Be(existingItem.Id);
             updated.Quantity.Should().Be(5); // 2 + 3
         }
-
 
 
     }

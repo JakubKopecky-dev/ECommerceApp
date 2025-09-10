@@ -7,8 +7,5 @@ namespace NotificationService.Persistence
     {
         public DbSet<Notification> Notifications { get; set; }
 
-
-
-
     }
 }

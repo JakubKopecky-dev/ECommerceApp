@@ -38,8 +38,6 @@ namespace DeliveryService.Persistence
             foreach (IMutableForeignKey foreignKey in cascadeFKs)
                 foreignKey.DeleteBehavior = DeleteBehavior.Restrict;
 
-
-
         }
 
 

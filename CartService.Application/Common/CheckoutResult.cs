@@ -7,6 +7,6 @@ using CartService.Application.DTOs.External;
 
 namespace CartService.Application.Common
 {
-    public readonly record struct CheckoutResult(bool Success, IReadOnlyList<ProductQuantityCheckResponseDto> BadProducts);
+    public readonly record struct CheckoutResult(bool Success, IReadOnlyList<ProductQuantityCheckResponseDto> BadProducts, string? CheckoutUrl);
   
 }

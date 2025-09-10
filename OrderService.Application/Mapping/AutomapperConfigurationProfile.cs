@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using OrderService.Application.DTOs.External;
 using OrderService.Application.DTOs.Order;
 using OrderService.Application.DTOs.OrderItem;
 using OrderService.Domain.Entity;
@@ -13,6 +14,8 @@ namespace OrderService.Application.Mapping
             CreateMap<CreateOrderDto, Order>();
             CreateMap<Order, OrderDto>();
             CreateMap<Order, OrderExtendedDto>();
+            CreateMap<Order, CreateCheckoutSessionRequestDto>();
+
 
             CreateMap<ExternalCreateOrderItemDto, OrderItem>()
                 .ForMember(dest => dest.Id, opt => opt.Ignore()) 
@@ -23,6 +26,10 @@ namespace OrderService.Application.Mapping
             CreateMap<CreateOrderItemDto, OrderItem>();
             CreateMap<OrderItem, OrderItemDto>();
             CreateMap<OrderItem, OrderItemForExtendedDto>();
+            CreateMap<OrderItem, OrderItemForCreateCheckoutSessionRequestDto>();
+
+
+
 
 
 

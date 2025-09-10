@@ -1,7 +1,9 @@
 ﻿using MassTransit;
 using Microsoft.AspNetCore.SignalR;
+using OrderService.Application.DTOs.Order;
 using OrderService.Application.Interfaces.Services;
 using Shared.Contracts.Events;
+using OrderService.Domain.Enum;
 
 namespace OrderService.Api.Consumers
 {
@@ -19,7 +21,8 @@ namespace OrderService.Api.Consumers
             DeliveryDeliveredEvent message = context.Message;
             _logger.LogInformation("Received DeliveryDeliveredEvent. OrderId: {OrderId}", message.OrderId);
 
-            await _orderService.SetOrderStatusCompletedFromDelivery(message.OrderId,ct);
+            ChangeOrderStatusDto changeDto = new() { Status = OrderStatus.Completed };
+            await _orderService.ChangeOrderStatusAsync(message.OrderId,changeDto,ct);
         }
 
 

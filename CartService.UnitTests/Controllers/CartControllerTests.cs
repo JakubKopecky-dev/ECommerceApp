@@ -169,7 +169,7 @@ namespace CartService.UnitTests.Controllers
         {
             Guid userId = Guid.NewGuid();
 
-            CheckoutResult okResult = new(true, []);
+            CheckoutResult okResult = new(true, [],"www.url.com");
             Result<CheckoutResult, CartError> serviceResult = Result<CheckoutResult, CartError>.Ok(okResult);
 
             Mock<ICartService> cartServiceMock = new();

@@ -11,5 +11,7 @@ namespace OrderService.Application.DTOs.Order
         public Guid OrderId { get; set; }
 
         public Guid? DeliveryId { get; set; }
+
+        public string? CheckoutUrl { get; set; } = "";
     }
 }

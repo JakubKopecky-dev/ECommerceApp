@@ -103,7 +103,7 @@ namespace OrderService.Api.Controllers
 
 
         [Authorize(Roles = UserRoles.Admin)]
-        [HttpGet("internal-status/delivery-faild")]
+        [HttpGet("internal-status/delivery-failed")]
         public async Task<IReadOnlyList<OrderDto>> GetAllOrdersWithDeliveryFaildInternalStatus(CancellationToken ct) => await _orderService.GetAllOrdersWithDeliveryFaildInternalStatusAsync(ct);
 
 

@@ -30,5 +30,7 @@ namespace DeliveryService.Domain.Entity
 
         public string State { get; set; } = "";
 
+        public string? TrackingNumber { get; set; }
+
     }
 }

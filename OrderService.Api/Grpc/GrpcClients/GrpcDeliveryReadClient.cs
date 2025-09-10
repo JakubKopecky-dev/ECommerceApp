@@ -2,7 +2,6 @@
 using Grpc.Core;
 using OrderService.Application.DTOs.External;
 using OrderService.Application.Interfaces.External;
-using Shared.Contracts.Enums;
 using GrpcDeliveryClient = DeliveryService.Grpc.DeliveryService.DeliveryServiceClient;
 using DeliveryStatusShared = Shared.Contracts.Enums.DeliveryStatus;
 

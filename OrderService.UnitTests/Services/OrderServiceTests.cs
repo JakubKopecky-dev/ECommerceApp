@@ -50,11 +50,11 @@ namespace OrderService.UnitTests.Services
 
             OrderServiceService service = new(
                 orderRepositoryMock.Object,
-                orderItemRepositoryMock.Object,
                 mapperMock.Object,
                 new Mock<ILogger<OrderServiceService>>().Object,
                 new Mock<IPublishEndpoint>().Object,
-                new Mock<IDeliveryReadClient>().Object
+                new Mock<IDeliveryReadClient>().Object,
+                new Mock<IPaymentReadClient>().Object
             );
 
 
@@ -78,7 +78,6 @@ namespace OrderService.UnitTests.Services
             List<OrderDto> expectedDto = [];
 
             Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IOrderItemRepository> orderItemRepositoryMock = new();
             Mock<IMapper> mapperMock = new();
 
             orderRepositoryMock
@@ -91,11 +90,11 @@ namespace OrderService.UnitTests.Services
 
             OrderServiceService service = new(
                 orderRepositoryMock.Object,
-                orderItemRepositoryMock.Object,
                 mapperMock.Object,
                 new Mock<ILogger<OrderServiceService>>().Object,
                 new Mock<IPublishEndpoint>().Object,
-                new Mock<IDeliveryReadClient>().Object
+                new Mock<IDeliveryReadClient>().Object,
+                new Mock<IPaymentReadClient>().Object
             );
 
 
@@ -126,7 +125,6 @@ namespace OrderService.UnitTests.Services
             ];
 
             Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IOrderItemRepository> orderItemRepositoryMock = new();
             Mock<IMapper> mapperMock = new();
 
             orderRepositoryMock
@@ -139,11 +137,11 @@ namespace OrderService.UnitTests.Services
 
             OrderServiceService service = new(
                 orderRepositoryMock.Object,
-                orderItemRepositoryMock.Object,
                 mapperMock.Object,
                 new Mock<ILogger<OrderServiceService>>().Object,
                 new Mock<IPublishEndpoint>().Object,
-                new Mock<IDeliveryReadClient>().Object
+                new Mock<IDeliveryReadClient>().Object,
+                new Mock<IPaymentReadClient>().Object
             );
 
 
@@ -165,7 +163,6 @@ namespace OrderService.UnitTests.Services
             List<OrderDto> expectedDto = [];
 
             Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IOrderItemRepository> orderItemRepositoryMock = new();
             Mock<IMapper> mapperMock = new();
 
             orderRepositoryMock
@@ -178,11 +175,11 @@ namespace OrderService.UnitTests.Services
 
             OrderServiceService service = new(
                 orderRepositoryMock.Object,
-                orderItemRepositoryMock.Object,
                 mapperMock.Object,
                 new Mock<ILogger<OrderServiceService>>().Object,
                 new Mock<IPublishEndpoint>().Object,
-                new Mock<IDeliveryReadClient>().Object
+                new Mock<IDeliveryReadClient>().Object,
+                new Mock<IPaymentReadClient>().Object
             );
 
 
@@ -219,11 +216,11 @@ namespace OrderService.UnitTests.Services
 
             OrderServiceService service = new(
                 orderRepositoryMock.Object,
-                orderItemRepositoryMock.Object,
                 mapperMock.Object,
                 new Mock<ILogger<OrderServiceService>>().Object,
                 new Mock<IPublishEndpoint>().Object,
-                new Mock<IDeliveryReadClient>().Object
+                new Mock<IDeliveryReadClient>().Object,
+                new Mock<IPaymentReadClient>().Object
             );
 
 
@@ -244,7 +241,6 @@ namespace OrderService.UnitTests.Services
             Guid orderId = Guid.NewGuid();
 
             Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IOrderItemRepository> orderItemRepositoryMock = new();
             Mock<IMapper> mapperMock = new();
 
             orderRepositoryMock
@@ -253,11 +249,11 @@ namespace OrderService.UnitTests.Services
 
             OrderServiceService service = new(
                 orderRepositoryMock.Object,
-                orderItemRepositoryMock.Object,
                 mapperMock.Object,
                 new Mock<ILogger<OrderServiceService>>().Object,
                 new Mock<IPublishEndpoint>().Object,
-                new Mock<IDeliveryReadClient>().Object
+                new Mock<IDeliveryReadClient>().Object,
+                new Mock<IPaymentReadClient>().Object
             );
 
 
@@ -282,7 +278,6 @@ namespace OrderService.UnitTests.Services
             OrderDto expectedDto = new() { Id = createdOrder.Id, UserId = createDto.UserId, Status = OrderStatus.Created, CreatedAt = createdOrder.CreatedAt };
 
             Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IOrderItemRepository> orderItemRepositoryMock = new();
             Mock<IMapper> mapperMock = new();
 
             mapperMock
@@ -299,11 +294,11 @@ namespace OrderService.UnitTests.Services
 
             OrderServiceService service = new(
                 orderRepositoryMock.Object,
-                orderItemRepositoryMock.Object,
                 mapperMock.Object,
                 new Mock<ILogger<OrderServiceService>>().Object,
                 new Mock<IPublishEndpoint>().Object,
-                new Mock<IDeliveryReadClient>().Object
+                new Mock<IDeliveryReadClient>().Object,
+                new Mock<IPaymentReadClient>().Object
             );
 
 
@@ -329,7 +324,6 @@ namespace OrderService.UnitTests.Services
             OrderDto expectedDto = new() { Id = orderId, Note = updateDto.Note, UpdatedAt = order.UpdatedAt };
 
             Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IOrderItemRepository> orderItemRepositoryMock = new();
             Mock<IMapper> mapperMock = new();
 
             orderRepositoryMock
@@ -346,11 +340,11 @@ namespace OrderService.UnitTests.Services
 
             OrderServiceService service = new(
                 orderRepositoryMock.Object,
-                orderItemRepositoryMock.Object,
                 mapperMock.Object,
                 new Mock<ILogger<OrderServiceService>>().Object,
                 new Mock<IPublishEndpoint>().Object,
-                new Mock<IDeliveryReadClient>().Object
+                new Mock<IDeliveryReadClient>().Object,
+                new Mock<IPaymentReadClient>().Object
             );
 
 
@@ -373,7 +367,6 @@ namespace OrderService.UnitTests.Services
             UpdateOrderNoteDto updateDto = new() { Note = "Note" };
 
             Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IOrderItemRepository> orderItemRepositoryMock = new();
             Mock<IMapper> mapperMock = new();
 
             orderRepositoryMock
@@ -382,11 +375,11 @@ namespace OrderService.UnitTests.Services
 
             OrderServiceService service = new(
                 orderRepositoryMock.Object,
-                orderItemRepositoryMock.Object,
                 mapperMock.Object,
                 new Mock<ILogger<OrderServiceService>>().Object,
                 new Mock<IPublishEndpoint>().Object,
-                new Mock<IDeliveryReadClient>().Object
+                new Mock<IDeliveryReadClient>().Object,
+                new Mock<IPaymentReadClient>().Object
             );
 
 
@@ -411,7 +404,6 @@ namespace OrderService.UnitTests.Services
             OrderDto expectedDto = new() { Id = orderId };
 
             Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IOrderItemRepository> orderItemRepositoryMock = new();
             Mock<IMapper> mapperMock = new();
 
             orderRepositoryMock
@@ -428,11 +420,11 @@ namespace OrderService.UnitTests.Services
 
             OrderServiceService service = new(
                 orderRepositoryMock.Object,
-                orderItemRepositoryMock.Object,
                 mapperMock.Object,
                 new Mock<ILogger<OrderServiceService>>().Object,
                 new Mock<IPublishEndpoint>().Object,
-                new Mock<IDeliveryReadClient>().Object
+                new Mock<IDeliveryReadClient>().Object,
+                new Mock<IPaymentReadClient>().Object
             );
 
 
@@ -455,7 +447,6 @@ namespace OrderService.UnitTests.Services
             Guid orderId = Guid.NewGuid();
 
             Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IOrderItemRepository> orderItemRepositoryMock = new();
             Mock<IMapper> mapperMock = new();
 
             orderRepositoryMock
@@ -464,11 +455,11 @@ namespace OrderService.UnitTests.Services
 
             OrderServiceService service = new(
                 orderRepositoryMock.Object,
-                orderItemRepositoryMock.Object,
                 mapperMock.Object,
                 new Mock<ILogger<OrderServiceService>>().Object,
                 new Mock<IPublishEndpoint>().Object,
-                new Mock<IDeliveryReadClient>().Object
+                new Mock<IDeliveryReadClient>().Object,
+                new Mock<IPaymentReadClient>().Object
             );
 
 
@@ -495,7 +486,6 @@ namespace OrderService.UnitTests.Services
             OrderDto expectedDto = new() { Id = orderId, Status = OrderStatus.Paid };
 
             Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IOrderItemRepository> orderItemRepositoryMock = new();
             Mock<IPublishEndpoint> publishEndpointMock = new();
             Mock<IMapper> mapperMock = new();
             Mock<IDeliveryReadClient> deliveryReadClientMock = new();
@@ -514,11 +504,11 @@ namespace OrderService.UnitTests.Services
 
             OrderServiceService service = new(
                 orderRepositoryMock.Object,
-                orderItemRepositoryMock.Object,
                 mapperMock.Object,
                 new Mock<ILogger<OrderServiceService>>().Object,
                 publishEndpointMock.Object,
-                deliveryReadClientMock.Object
+                deliveryReadClientMock.Object,
+                new Mock<IPaymentReadClient>().Object
             );
 
 
@@ -545,7 +535,6 @@ namespace OrderService.UnitTests.Services
             OrderDto expectedDto = new() { Id = orderId, Status = OrderStatus.Accepted };
 
             Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IOrderItemRepository> orderItemRepositoryMock = new();
             Mock<IPublishEndpoint> publishEndpointMock = new();
             Mock<IMapper> mapperMock = new();
             Mock<IDeliveryReadClient> deliveryReadClientMock = new();
@@ -564,11 +553,11 @@ namespace OrderService.UnitTests.Services
 
             OrderServiceService service = new(
                 orderRepositoryMock.Object,
-                orderItemRepositoryMock.Object,
                 mapperMock.Object,
                 new Mock<ILogger<OrderServiceService>>().Object,
                 publishEndpointMock.Object,
-                deliveryReadClientMock.Object
+                deliveryReadClientMock.Object,
+                new Mock<IPaymentReadClient>().Object
             );
 
 
@@ -593,7 +582,6 @@ namespace OrderService.UnitTests.Services
             OrderDto expectedDto = new() { Id = orderId, Status = OrderStatus.Shipped };
 
             Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IOrderItemRepository> orderItemRepositoryMock = new();
             Mock<IPublishEndpoint> publishEndpointMock = new();
             Mock<IMapper> mapperMock = new();
             Mock<IDeliveryReadClient> deliveryReadClientMock = new();
@@ -612,11 +600,11 @@ namespace OrderService.UnitTests.Services
 
             OrderServiceService service = new(
                 orderRepositoryMock.Object,
-                orderItemRepositoryMock.Object,
                 mapperMock.Object,
                 new Mock<ILogger<OrderServiceService>>().Object,
                 publishEndpointMock.Object,
-                deliveryReadClientMock.Object
+                deliveryReadClientMock.Object,
+                new Mock<IPaymentReadClient>().Object
             );
 
 
@@ -641,7 +629,6 @@ namespace OrderService.UnitTests.Services
             OrderDto expectedDto = new() { Id = orderId, Status = OrderStatus.Completed };
 
             Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IOrderItemRepository> orderItemRepositoryMock = new();
             Mock<IPublishEndpoint> publishEndpointMock = new();
             Mock<IMapper> mapperMock = new();
             Mock<IDeliveryReadClient> deliveryReadClientMock = new();
@@ -664,11 +651,11 @@ namespace OrderService.UnitTests.Services
 
             OrderServiceService service = new(
                 orderRepositoryMock.Object,
-                orderItemRepositoryMock.Object,
                 mapperMock.Object,
                 new Mock<ILogger<OrderServiceService>>().Object,
                 publishEndpointMock.Object,
-                deliveryReadClientMock.Object
+                deliveryReadClientMock.Object,
+                new Mock<IPaymentReadClient>().Object
             );
 
 
@@ -695,7 +682,6 @@ namespace OrderService.UnitTests.Services
             OrderDto expectedDto = new() { Id = orderId, Status = OrderStatus.Cancelled };
 
             Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IOrderItemRepository> orderItemRepositoryMock = new();
             Mock<IPublishEndpoint> publishEndpointMock = new();
             Mock<IMapper> mapperMock = new();
             Mock<IDeliveryReadClient> deliveryReadClientMock = new();
@@ -714,11 +700,11 @@ namespace OrderService.UnitTests.Services
 
             OrderServiceService service = new(
                 orderRepositoryMock.Object,
-                orderItemRepositoryMock.Object,
                 mapperMock.Object,
                 new Mock<ILogger<OrderServiceService>>().Object,
                 publishEndpointMock.Object,
-                deliveryReadClientMock.Object
+                deliveryReadClientMock.Object,
+                new Mock<IPaymentReadClient>().Object
             );
 
 
@@ -743,7 +729,6 @@ namespace OrderService.UnitTests.Services
             OrderDto expectedDto = new() { Id = orderId, Status = OrderStatus.Rejected };
 
             Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IOrderItemRepository> orderItemRepositoryMock = new();
             Mock<IPublishEndpoint> publishEndpointMock = new();
             Mock<IMapper> mapperMock = new();
             Mock<IDeliveryReadClient> deliveryReadClientMock = new();
@@ -762,11 +747,11 @@ namespace OrderService.UnitTests.Services
 
             OrderServiceService service = new(
                 orderRepositoryMock.Object,
-                orderItemRepositoryMock.Object,
                 mapperMock.Object,
                 new Mock<ILogger<OrderServiceService>>().Object,
                 publishEndpointMock.Object,
-                deliveryReadClientMock.Object
+                deliveryReadClientMock.Object,
+                new Mock<IPaymentReadClient>().Object
             );
 
 
@@ -788,7 +773,6 @@ namespace OrderService.UnitTests.Services
             ChangeOrderStatusDto changeDto = new() { Status = OrderStatus.Paid };
 
             Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IOrderItemRepository> orderItemRepositoryMock = new();
             Mock<IPublishEndpoint> publishEndpointMock = new();
             Mock<IMapper> mapperMock = new();
             Mock<IDeliveryReadClient> deliveryReadClientMock = new();
@@ -799,11 +783,11 @@ namespace OrderService.UnitTests.Services
 
             OrderServiceService service = new(
                 orderRepositoryMock.Object,
-                orderItemRepositoryMock.Object,
                 mapperMock.Object,
                 new Mock<ILogger<OrderServiceService>>().Object,
                 publishEndpointMock.Object,
-                deliveryReadClientMock.Object
+                deliveryReadClientMock.Object,
+                new Mock<IPaymentReadClient>().Object
             );
 
 
@@ -829,7 +813,6 @@ namespace OrderService.UnitTests.Services
             Order order = new() { Id = orderId, Status = OrderStatus.Created, UserId = Guid.NewGuid() };
 
             Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IOrderItemRepository> orderItemRepositoryMock = new();
             Mock<IPublishEndpoint> publishEndpointMock = new();
             Mock<IMapper> mapperMock = new();
             Mock<IDeliveryReadClient> deliveryReadClientMock = new();
@@ -840,11 +823,11 @@ namespace OrderService.UnitTests.Services
 
             OrderServiceService service = new(
                 orderRepositoryMock.Object,
-                orderItemRepositoryMock.Object,
                 mapperMock.Object,
                 new Mock<ILogger<OrderServiceService>>().Object,
                 publishEndpointMock.Object,
-                deliveryReadClientMock.Object
+                deliveryReadClientMock.Object,
+                new Mock<IPaymentReadClient>().Object
             );
 
 
@@ -870,7 +853,6 @@ namespace OrderService.UnitTests.Services
             Order order = new() { Id = orderId, Status = OrderStatus.Shipped, UserId = Guid.NewGuid() };
 
             Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IOrderItemRepository> orderItemRepositoryMock = new();
             Mock<IPublishEndpoint> publishEndpointMock = new();
             Mock<IMapper> mapperMock = new();
             Mock<IDeliveryReadClient> deliveryReadClientMock = new();
@@ -885,11 +867,11 @@ namespace OrderService.UnitTests.Services
 
             OrderServiceService service = new(
                 orderRepositoryMock.Object,
-                orderItemRepositoryMock.Object,
                 mapperMock.Object,
                 new Mock<ILogger<OrderServiceService>>().Object,
                 publishEndpointMock.Object,
-                deliveryReadClientMock.Object
+                deliveryReadClientMock.Object,
+                new Mock<IPaymentReadClient>().Object
             );
 
 
@@ -914,7 +896,6 @@ namespace OrderService.UnitTests.Services
             Order order = new() { Id = orderId, Status = OrderStatus.Shipped, UserId = Guid.NewGuid() };
 
             Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IOrderItemRepository> orderItemRepositoryMock = new();
             Mock<IPublishEndpoint> publishEndpointMock = new();
             Mock<IMapper> mapperMock = new();
             Mock<IDeliveryReadClient> deliveryReadClientMock = new();
@@ -929,11 +910,11 @@ namespace OrderService.UnitTests.Services
 
             OrderServiceService service = new(
                 orderRepositoryMock.Object,
-                orderItemRepositoryMock.Object,
                 mapperMock.Object,
                 new Mock<ILogger<OrderServiceService>>().Object,
                 publishEndpointMock.Object,
-                deliveryReadClientMock.Object
+                deliveryReadClientMock.Object,
+                new Mock<IPaymentReadClient>().Object
             );
 
 
@@ -986,10 +967,10 @@ namespace OrderService.UnitTests.Services
             Guid createdDeliveryId = Guid.NewGuid();
 
             Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IOrderItemRepository> orderItemRepositoryMock = new();
             Mock<IMapper> mapperMock = new();
             Mock<IPublishEndpoint> publishEndpointMock = new();
             Mock<IDeliveryReadClient> deliveryReadClientMock = new();
+            Mock<IPaymentReadClient> paymentReadClientMock = new();
 
             mapperMock
                 .Setup(m => m.Map<List<OrderItem>>(createDto.Items))
@@ -1003,13 +984,18 @@ namespace OrderService.UnitTests.Services
                 .Setup(d => d.CreateDeliveryAsync(It.IsAny<CreateDeliveryDto>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(createdDeliveryId);
 
+            paymentReadClientMock
+                .Setup(p => p.CreateCheckoutSessionAsync(It.IsAny<CreateCheckoutSessionRequestDto>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(It.IsAny<CreateCheckoutSessionResponseDto?>());
+
+
             OrderServiceService service = new(
                 orderRepositoryMock.Object,
-                orderItemRepositoryMock.Object,
                 mapperMock.Object,
                 new Mock<ILogger<OrderServiceService>>().Object,
                 publishEndpointMock.Object,
-                deliveryReadClientMock.Object
+                deliveryReadClientMock.Object,
+                paymentReadClientMock.Object
             );
 
 
@@ -1020,9 +1006,10 @@ namespace OrderService.UnitTests.Services
 
             mapperMock.Verify(m => m.Map<List<OrderItem>>(createDto.Items), Times.Once);
             orderRepositoryMock.Verify(o => o.InsertAsync(It.IsAny<Order>(), It.IsAny<CancellationToken>()), Times.Once);
+            deliveryReadClientMock.Verify(d => d.CreateDeliveryAsync(It.IsAny<CreateDeliveryDto>(), It.IsAny<CancellationToken>()), Times.Once);
             publishEndpointMock.Verify(p => p.Publish(It.IsAny<OrderCreatedEvent>(), It.IsAny<CancellationToken>()), Times.Once);
             publishEndpointMock.Verify(p => p.Publish(It.IsAny<OrderItemsReservedEvent>(), It.IsAny<CancellationToken>()), Times.Once);
-            deliveryReadClientMock.Verify(d => d.CreateDeliveryAsync(It.IsAny<CreateDeliveryDto>(), It.IsAny<CancellationToken>()), Times.Once);
+            paymentReadClientMock.Verify(p => p.CreateCheckoutSessionAsync(It.IsAny<CreateCheckoutSessionRequestDto>(), It.IsAny<CancellationToken>()), Times.Once);
             orderRepositoryMock.Verify(o => o.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
         }
 
@@ -1064,10 +1051,11 @@ namespace OrderService.UnitTests.Services
             createdOrder.Items = mappedItems;
 
             Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IOrderItemRepository> orderItemRepositoryMock = new();
             Mock<IMapper> mapperMock = new();
             Mock<IPublishEndpoint> publishEndpointMock = new();
             Mock<IDeliveryReadClient> deliveryReadClientMock = new();
+            Mock<IPaymentReadClient> paymentReadClientMock = new();
+
 
             mapperMock
                 .Setup(m => m.Map<List<OrderItem>>(createDto.Items))
@@ -1085,13 +1073,17 @@ namespace OrderService.UnitTests.Services
                 .Setup(d => d.CreateDeliveryAsync(It.IsAny<CreateDeliveryDto>(), It.IsAny<CancellationToken>()))
                 .ThrowsAsync(new RpcException(new Status(StatusCode.Internal, "error")));
 
+            paymentReadClientMock
+                .Setup(p => p.CreateCheckoutSessionAsync(It.IsAny<CreateCheckoutSessionRequestDto>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(It.IsAny<CreateCheckoutSessionResponseDto?>());
+
             OrderServiceService service = new(
                 orderRepositoryMock.Object,
-                orderItemRepositoryMock.Object,
                 mapperMock.Object,
                 new Mock<ILogger<OrderServiceService>>().Object,
                 publishEndpointMock.Object,
-                deliveryReadClientMock.Object
+                deliveryReadClientMock.Object,
+                paymentReadClientMock.Object
             );
 
 
@@ -1105,87 +1097,7 @@ namespace OrderService.UnitTests.Services
             publishEndpointMock.Verify(p => p.Publish(It.IsAny<OrderCreatedEvent>(), It.IsAny<CancellationToken>()), Times.Once);
             publishEndpointMock.Verify(p => p.Publish(It.IsAny<OrderItemsReservedEvent>(), It.IsAny<CancellationToken>()), Times.Once);
             deliveryReadClientMock.Verify(d => d.CreateDeliveryAsync(It.IsAny<CreateDeliveryDto>(), It.IsAny<CancellationToken>()), Times.Once);
-        }
-
-
-
-        [Fact]
-        [Trait("Category", "Unit")]
-        public async Task SetOrderStatusCompletedFromDelivery_ReturnsOrderDto_WhenExists()
-        {
-            Guid orderId = Guid.NewGuid();
-
-            Order order = new() { Id = orderId, Status = OrderStatus.Shipped, UpdatedAt = DateTime.UtcNow };
-            OrderDto expectedDto = new() { Id = orderId, Status = OrderStatus.Completed, UpdatedAt = order.UpdatedAt };
-
-            Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IOrderItemRepository> orderItemRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
-
-            orderRepositoryMock
-                .Setup(o => o.FindByIdAsync(orderId, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(order);
-
-            orderRepositoryMock
-                .Setup(o => o.SaveChangesAsync(It.IsAny<CancellationToken>()))
-                .Returns(Task.CompletedTask);
-
-            mapperMock
-                .Setup(m => m.Map<OrderDto>(order))
-                .Returns(expectedDto);
-
-            OrderServiceService service = new(
-                orderRepositoryMock.Object,
-                orderItemRepositoryMock.Object,
-                mapperMock.Object,
-                new Mock<ILogger<OrderServiceService>>().Object,
-                new Mock<IPublishEndpoint>().Object,
-                new Mock<IDeliveryReadClient>().Object
-            );
-
-
-            OrderDto? result = await service.SetOrderStatusCompletedFromDelivery(orderId, It.IsAny<CancellationToken>());
-
-            result.Should().BeEquivalentTo(expectedDto);
-
-            orderRepositoryMock.Verify(o => o.FindByIdAsync(orderId, It.IsAny<CancellationToken>()), Times.Once);
-            orderRepositoryMock.Verify(o => o.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<OrderDto>(order), Times.Once);
-        }
-
-
-
-        [Fact]
-        [Trait("Category", "Unit")]
-        public async Task SetOrderStatusCompletedFromDelivery_ReturnsNull_WhenNotExists()
-        {
-            Guid orderId = Guid.NewGuid();
-
-            Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IOrderItemRepository> orderItemRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
-
-            orderRepositoryMock
-                .Setup(o => o.FindByIdAsync(orderId, It.IsAny<CancellationToken>()))
-                .ReturnsAsync((Order?)null);
-
-            OrderServiceService service = new(
-                orderRepositoryMock.Object,
-                orderItemRepositoryMock.Object,
-                mapperMock.Object,
-                new Mock<ILogger<OrderServiceService>>().Object,
-                new Mock<IPublishEndpoint>().Object,
-                new Mock<IDeliveryReadClient>().Object
-            );
-
-
-            OrderDto? result = await service.SetOrderStatusCompletedFromDelivery(orderId, It.IsAny<CancellationToken>());
-
-            result.Should().BeNull();
-
-            orderRepositoryMock.Verify(o => o.FindByIdAsync(orderId, It.IsAny<CancellationToken>()), Times.Once);
-            orderRepositoryMock.Verify(o => o.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
-            mapperMock.Verify(m => m.Map<OrderDto>(It.IsAny<Order>()), Times.Never);
+            paymentReadClientMock.Verify(p => p.CreateCheckoutSessionAsync(It.IsAny<CreateCheckoutSessionRequestDto>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
 
@@ -1201,7 +1113,6 @@ namespace OrderService.UnitTests.Services
             OrderDto expectedDto = new() { Id = orderId, UpdatedAt = order.UpdatedAt };
 
             Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IOrderItemRepository> orderItemRepositoryMock = new();
             Mock<IMapper> mapperMock = new();
 
             orderRepositoryMock
@@ -1218,11 +1129,11 @@ namespace OrderService.UnitTests.Services
 
             OrderServiceService service = new(
                 orderRepositoryMock.Object,
-                orderItemRepositoryMock.Object,
                 mapperMock.Object,
                 new Mock<ILogger<OrderServiceService>>().Object,
                 new Mock<IPublishEndpoint>().Object,
-                new Mock<IDeliveryReadClient>().Object
+                new Mock<IDeliveryReadClient>().Object,
+                new Mock<IPaymentReadClient>().Object
             );
 
 
@@ -1245,7 +1156,6 @@ namespace OrderService.UnitTests.Services
             ChangeInternalOrderStatusDto changeDto = new() { InternalStatus = InternalOrderStatus.DeliveryFaild };
 
             Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IOrderItemRepository> orderItemRepositoryMock = new();
             Mock<IMapper> mapperMock = new();
 
             orderRepositoryMock
@@ -1254,11 +1164,11 @@ namespace OrderService.UnitTests.Services
 
             OrderServiceService service = new(
                 orderRepositoryMock.Object,
-                orderItemRepositoryMock.Object,
                 mapperMock.Object,
                 new Mock<ILogger<OrderServiceService>>().Object,
                 new Mock<IPublishEndpoint>().Object,
-                new Mock<IDeliveryReadClient>().Object
+                new Mock<IDeliveryReadClient>().Object,
+                new Mock<IPaymentReadClient>().Object
             );
 
 
@@ -1290,7 +1200,6 @@ namespace OrderService.UnitTests.Services
             ];
 
             Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IOrderItemRepository> orderItemRepositoryMock = new();
             Mock<IMapper> mapperMock = new();
 
             orderRepositoryMock
@@ -1303,11 +1212,11 @@ namespace OrderService.UnitTests.Services
 
             OrderServiceService service = new(
                 orderRepositoryMock.Object,
-                orderItemRepositoryMock.Object,
                 mapperMock.Object,
                 new Mock<ILogger<OrderServiceService>>().Object,
                 new Mock<IPublishEndpoint>().Object,
-                new Mock<IDeliveryReadClient>().Object
+                new Mock<IDeliveryReadClient>().Object,
+                new Mock<IPaymentReadClient>().Object
             );
 
 
@@ -1329,7 +1238,6 @@ namespace OrderService.UnitTests.Services
             List<OrderDto> expectedDto = [];
 
             Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IOrderItemRepository> orderItemRepositoryMock = new();
             Mock<IMapper> mapperMock = new();
 
             orderRepositoryMock
@@ -1342,11 +1250,11 @@ namespace OrderService.UnitTests.Services
 
             OrderServiceService service = new(
                 orderRepositoryMock.Object,
-                orderItemRepositoryMock.Object,
                 mapperMock.Object,
                 new Mock<ILogger<OrderServiceService>>().Object,
                 new Mock<IPublishEndpoint>().Object,
-                new Mock<IDeliveryReadClient>().Object
+                new Mock<IDeliveryReadClient>().Object,
+                new Mock<IPaymentReadClient>().Object
             );
 
 

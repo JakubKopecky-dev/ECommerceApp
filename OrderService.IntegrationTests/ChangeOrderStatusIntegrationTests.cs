@@ -97,8 +97,8 @@ namespace OrderService.IntegrationTests
             // Arrange: Completed -> Accepted (downgrade)
             Guid orderId;
             using var scope = _factory.Services.CreateScope();
-                var db = scope.ServiceProvider.GetRequiredService<OrderDbContext>();
-                orderId = await SeedOrderAsync(db, OrderStatus.Completed);
+            var db = scope.ServiceProvider.GetRequiredService<OrderDbContext>();
+            orderId = await SeedOrderAsync(db, OrderStatus.Completed);
 
             var client = CreateAdminClient();
             var payload = new { status = (int)OrderStatus.Accepted };
@@ -117,13 +117,13 @@ namespace OrderService.IntegrationTests
             // Arrange: Shipped -> Completed, ale delivery vrátí null
             Guid orderId;
             using var scope = _factory.Services.CreateScope();
-                var db = scope.ServiceProvider.GetRequiredService<OrderDbContext>();
-                orderId = await SeedOrderAsync(db, OrderStatus.Shipped);
+            var db = scope.ServiceProvider.GetRequiredService<OrderDbContext>();
+            orderId = await SeedOrderAsync(db, OrderStatus.Shipped);
 
-                var deliveryMock = scope.ServiceProvider.GetRequiredService<Mock<IDeliveryReadClient>>();
-                deliveryMock
-                    .Setup(c => c.GetDeliveryStatusByOrderIdAsync(orderId, It.IsAny<CancellationToken>()))
-                    .ReturnsAsync((Shared.Contracts.Enums.DeliveryStatus?)null);
+            var deliveryMock = scope.ServiceProvider.GetRequiredService<Mock<IDeliveryReadClient>>();
+            deliveryMock
+                .Setup(c => c.GetDeliveryStatusByOrderIdAsync(orderId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync((Shared.Contracts.Enums.DeliveryStatus?)null);
 
 
             var client = CreateAdminClient();
@@ -144,13 +144,13 @@ namespace OrderService.IntegrationTests
             Guid orderId;
             using var scope = _factory.Services.CreateScope();
 
-                var db = scope.ServiceProvider.GetRequiredService<OrderDbContext>();
-                orderId = await SeedOrderAsync(db, OrderStatus.Shipped);
+            var db = scope.ServiceProvider.GetRequiredService<OrderDbContext>();
+            orderId = await SeedOrderAsync(db, OrderStatus.Shipped);
 
-                var deliveryMock = scope.ServiceProvider.GetRequiredService<Mock<IDeliveryReadClient>>();
-                deliveryMock
-                    .Setup(c => c.GetDeliveryStatusByOrderIdAsync(orderId, It.IsAny<CancellationToken>()))
-                    .ReturnsAsync(Shared.Contracts.Enums.DeliveryStatus.InProgress);
+            var deliveryMock = scope.ServiceProvider.GetRequiredService<Mock<IDeliveryReadClient>>();
+            deliveryMock
+                .Setup(c => c.GetDeliveryStatusByOrderIdAsync(orderId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Shared.Contracts.Enums.DeliveryStatus.InProgress);
 
             var client = CreateAdminClient();
             var payload = new { status = (int)OrderStatus.Completed };
@@ -168,13 +168,13 @@ namespace OrderService.IntegrationTests
         {
             Guid orderId;
             using var scope = _factory.Services.CreateScope();
-                var db = scope.ServiceProvider.GetRequiredService<OrderDbContext>();
-                orderId = await SeedOrderAsync(db, OrderStatus.Shipped);
+            var db = scope.ServiceProvider.GetRequiredService<OrderDbContext>();
+            orderId = await SeedOrderAsync(db, OrderStatus.Shipped);
 
-                var deliveryMock = scope.ServiceProvider.GetRequiredService<Mock<IDeliveryReadClient>>();
-                deliveryMock
-                    .Setup(c => c.GetDeliveryStatusByOrderIdAsync(orderId, It.IsAny<CancellationToken>()))
-                    .ReturnsAsync(Shared.Contracts.Enums.DeliveryStatus.Delivered);
+            var deliveryMock = scope.ServiceProvider.GetRequiredService<Mock<IDeliveryReadClient>>();
+            deliveryMock
+                .Setup(c => c.GetDeliveryStatusByOrderIdAsync(orderId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(Shared.Contracts.Enums.DeliveryStatus.Delivered);
 
             var client = CreateAdminClient();
             var payload = new { status = (int)OrderStatus.Completed };

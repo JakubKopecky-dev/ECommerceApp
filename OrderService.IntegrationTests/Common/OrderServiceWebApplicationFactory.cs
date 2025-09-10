@@ -9,7 +9,9 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using OrderService.Application.DTOs.External;
 using OrderService.Application.Interfaces.External;
+using OrderService.Application.Interfaces.Services;
 using OrderService.Persistence;
 
 namespace OrderService.IntegrationTests.Common
@@ -66,6 +68,23 @@ namespace OrderService.IntegrationTests.Common
                 // Register both Mock and Object
                 services.AddSingleton(deliveryClientMock);
                 services.AddSingleton(sp => deliveryClientMock.Object);
+
+
+                // Mock IPaymentReadClient
+                var paymentClientMock = new Mock<IPaymentReadClient>();
+                paymentClientMock
+                    .Setup(c => c.CreateCheckoutSessionAsync(
+                        It.IsAny<CreateCheckoutSessionRequestDto>(),
+                        It.IsAny<CancellationToken>()))
+                    .ReturnsAsync(new CreateCheckoutSessionResponseDto
+                    {
+                        CheckoutUrl = "https://test-url"
+                    });
+
+                // Register both Mock and Object
+                services.AddSingleton(paymentClientMock);
+                services.AddSingleton(sp => paymentClientMock.Object);
+
 
                 // Add MassTransit Test Harness
                 services.AddMassTransitTestHarness();

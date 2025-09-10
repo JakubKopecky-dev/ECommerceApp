@@ -10,7 +10,6 @@ namespace OrderService.Application.Interfaces.Services
         Task<IReadOnlyList<OrderDto>> GetAllOrdersAsync(CancellationToken ct = default);
         Task<IReadOnlyList<OrderDto>> GetAllOrdersByUserIdAsync(Guid userId, CancellationToken ct = default);
         Task<OrderExtendedDto?> GetOrderByIdAsync(Guid orderId, CancellationToken ct = default);
-        Task<OrderDto?> SetOrderStatusCompletedFromDelivery(Guid orderId, CancellationToken ct = default);
         Task<OrderDto?> UpdateOrderNoteAsync(Guid orderId, UpdateOrderNoteDto updateDto, CancellationToken ct = default);
         Task<CreateOrderFromCartResponseDto> CreateOrderAndDeliveryFromCartAsync(ExternalCreateOrderDto createDto, CancellationToken ct = default);
         Task<OrderDto?> ChangeInternalOrderStatusAsync(Guid orderId, ChangeInternalOrderStatusDto changeDto, CancellationToken ct = default);

@@ -12,6 +12,7 @@ namespace OrderService.Api.DependencyInjection
                 x.SetKebabCaseEndpointNameFormatter();
 
                 x.AddConsumer<DeliveryDeliveredConsumer>();
+                x.AddConsumer<OrderSuccessfullyPaidAndOrderStatusChangeToPaidConsumer>();
 
                 x.UsingRabbitMq((context, cfg) =>
                 {

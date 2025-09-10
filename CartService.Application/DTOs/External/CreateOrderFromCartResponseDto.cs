@@ -9,6 +9,9 @@ namespace CartService.Application.DTOs.External
     public sealed record CreateOrderFromCartResponseDto
     {
         public Guid OrderId { get; set; }
+
         public Guid? DeliveryId { get; set; }
+
+        public string? CheckoutUrl { get; set; }
     }
 }

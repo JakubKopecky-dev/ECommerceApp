@@ -10,5 +10,7 @@ namespace CartService.Application.Common
     {
         CartNotFound,
         DeliveryNotCreated,
+        PaymentCheckoutUrlNotCreated,
+        DeliveryAndPaymentCheckoutNotCreated
     }
 }

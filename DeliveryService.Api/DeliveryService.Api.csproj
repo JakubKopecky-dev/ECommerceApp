@@ -9,6 +9,7 @@
   <ItemGroup>
     <PackageReference Include="Grpc.AspNetCore" Version="2.71.0" />
     <PackageReference Include="Grpc.Net.Client" Version="2.71.0" />
+    <PackageReference Include="Grpc.Net.ClientFactory" Version="2.71.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.8" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.8">
       <PrivateAssets>all</PrivateAssets>
@@ -20,6 +21,7 @@
   <ItemGroup>
     <ProjectReference Include="..\DeliveryService.Application\DeliveryService.Application.csproj" />
     <ProjectReference Include="..\DeliveryService.Domain\DeliveryService.Domain.csproj" />
+    <ProjectReference Include="..\DeliveryService.Infrastructure\DeliveryService.Infrastructure.csproj" />
     <ProjectReference Include="..\DeliveryService.Persistence\DeliveryService.Persistence.csproj" />
     <ProjectReference Include="..\Shared.Contracts\Shared.Contracts.csproj" />
   </ItemGroup>

@@ -44,7 +44,8 @@ namespace CartService.Api.Grpc.GrpcClients
             CreateOrderFromCartResponseDto responsedto = new()
             {
                 OrderId = Guid.Parse(response.OrderId),
-                DeliveryId = string.IsNullOrEmpty(response.DeliveryId) ? null : Guid.Parse(response.DeliveryId)
+                DeliveryId = string.IsNullOrEmpty(response.DeliveryId) ? null : Guid.Parse(response.DeliveryId),
+                CheckoutUrl = string.IsNullOrEmpty(response.CheckoutUrl) ? null : response.CheckoutUrl,
             };
 
             return responsedto;

@@ -28,7 +28,7 @@ namespace CartService.Api.Extensions
                 return controller.CreatedAtAction(actionName, routeValues, result.Value);
 
             return result.ToActionResult(controller);
-        
+
         }
 
 
@@ -41,17 +41,20 @@ namespace CartService.Api.Extensions
                 {
                     return controller.BadRequest(new
                     {
-                        Message = "Some products are out of stock.",
+                        Message = "Some items in your cart are out of stock.",
                         Products = checkout.BadProducts
                     });
                 }
 
                 return controller.Ok(result.Value);
+
             }
             return result.Error switch
             {
                 CartError.CartNotFound => controller.NotFound(new { Message = "Cart not found." }),
                 CartError.DeliveryNotCreated => controller.BadRequest(new { Message = "Order created but its delivery not created." }),
+                CartError.PaymentCheckoutUrlNotCreated => controller.BadRequest(new { Message = "Order and delivery created but its payment checkout url not created." }),
+                CartError.DeliveryAndPaymentCheckoutNotCreated => controller.BadRequest(new { Message = "Order created but its delivery and payment checkout url not created. " }),
                 _ => controller.StatusCode(StatusCodes.Status500InternalServerError, new { Message = "An unexpected error occurred." })
             };
         }

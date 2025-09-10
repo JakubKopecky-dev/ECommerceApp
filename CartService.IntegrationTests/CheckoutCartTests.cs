@@ -20,14 +20,6 @@ namespace CartService.IntegrationTests
     {
         private readonly CartServiceWebApplicationFactory _factory = factory;
 
-        private HttpClient CreateAuthenticatedClient(Guid userId)
-        {
-            TestAuthHandler.FixedUserId = userId;
-            var client = _factory.CreateClient();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
-            return client;
-        }
-
         private static CartCheckoutRequestDto CreateValidRequest() =>
             new()
             {
@@ -51,8 +43,26 @@ namespace CartService.IntegrationTests
         {
             Guid userId = Guid.NewGuid();
 
-            using var scope = _factory.Services.CreateScope();
+            var factory = _factory.WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureServices(services =>
+                {
+                    var orderClientMock = new Mock<IOrderReadClient>();
+                    orderClientMock
+                        .Setup(c => c.CreateOrderAndDeliveryAsync(
+                            It.IsAny<CreateOrderAndDeliveryDto>(),
+                            It.IsAny<CancellationToken>()))
+                        .ReturnsAsync(new CreateOrderFromCartResponseDto
+                        {
+                            OrderId = Guid.NewGuid(),
+                            DeliveryId = Guid.NewGuid(),
+                            CheckoutUrl = "www.url.cz"
+                        });
+                    services.AddScoped<IOrderReadClient>(_ => orderClientMock.Object);
+                });
+            });
 
+            using var scope = factory.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<CartDbContext>();
             db.Carts.Add(new Cart
             {
@@ -62,17 +72,20 @@ namespace CartService.IntegrationTests
             });
             db.SaveChanges();
 
+            var client = factory.CreateClient();
+            TestAuthHandler.FixedUserId = userId;
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
 
-            var client = CreateAuthenticatedClient(userId);
 
             var response = await client.PostAsJsonAsync("api/Cart/checkout", CreateValidRequest());
 
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             var result = await response.Content.ReadFromJsonAsync<CheckoutResult>();
             result!.Success.Should().BeTrue();
+            result.CheckoutUrl.Should().NotBeNull();
             result.BadProducts.Should().BeEmpty();
 
-            using var scope2 = _factory.Services.CreateScope();
+            using var scope2 = factory.Services.CreateScope();
             var db2 = scope2.ServiceProvider.GetRequiredService<CartDbContext>();
             var deletedCart = await db2.Carts.SingleOrDefaultAsync(c => c.UserId == userId);
             deletedCart.Should().BeNull();
@@ -85,7 +98,22 @@ namespace CartService.IntegrationTests
         public async Task CheckoutCart_ReturnsCartNotFound_WhenCartMissing()
         {
             Guid userId = Guid.NewGuid();
-            var client = CreateAuthenticatedClient(userId);
+
+            var factory = _factory.WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureServices(services =>
+                {
+                    var orderClientMock = new Mock<IOrderReadClient>();
+                    orderClientMock
+                        .Setup(c => c.CreateOrderAndDeliveryAsync(It.IsAny<CreateOrderAndDeliveryDto>(), It.IsAny<CancellationToken>()))
+                        .ReturnsAsync(new CreateOrderFromCartResponseDto { OrderId = Guid.NewGuid(), DeliveryId = Guid.NewGuid(), CheckoutUrl = "www.url.cz" });
+                    services.AddScoped<IOrderReadClient>(_ => orderClientMock.Object);
+                });
+            });
+
+            var client = factory.CreateClient();
+            TestAuthHandler.FixedUserId = userId;
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
 
             var response = await client.PostAsJsonAsync("api/Cart/checkout", CreateValidRequest());
 
@@ -100,14 +128,27 @@ namespace CartService.IntegrationTests
         {
             Guid userId = Guid.NewGuid();
 
-            using var scope = _factory.Services.CreateScope();
+            var factory = _factory.WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureServices(services =>
+                {
+                    var orderClientMock = new Mock<IOrderReadClient>();
+                    orderClientMock
+                        .Setup(c => c.CreateOrderAndDeliveryAsync(It.IsAny<CreateOrderAndDeliveryDto>(), It.IsAny<CancellationToken>()))
+                        .ReturnsAsync(new CreateOrderFromCartResponseDto { OrderId = Guid.NewGuid(), DeliveryId = Guid.NewGuid(), CheckoutUrl = "www.url.cz" });
+                    services.AddScoped<IOrderReadClient>(_ => orderClientMock.Object);
+                });
+            });
 
+            using var scope = factory.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<CartDbContext>();
             db.Carts.Add(new Cart { Id = Guid.NewGuid(), UserId = userId, Items = [] });
             db.SaveChanges();
 
+            var client = factory.CreateClient();
+            TestAuthHandler.FixedUserId = userId;
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
 
-            var client = CreateAuthenticatedClient(userId);
 
             var response = await client.PostAsJsonAsync("api/Cart/checkout", CreateValidRequest());
 
@@ -123,24 +164,49 @@ namespace CartService.IntegrationTests
             Guid userId = Guid.NewGuid();
             var productId = Guid.NewGuid();
 
-            using var scope = _factory.Services.CreateScope();
+            var factory = _factory.WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureServices(services =>
+                {
+                    // Order client – happy path (všechno se vytvoří)
+                    var orderClientMock = new Mock<IOrderReadClient>();
+                    orderClientMock
+                        .Setup(c => c.CreateOrderAndDeliveryAsync(
+                            It.IsAny<CreateOrderAndDeliveryDto>(),
+                            It.IsAny<CancellationToken>()))
+                        .ReturnsAsync(new CreateOrderFromCartResponseDto
+                        {
+                            OrderId = Guid.NewGuid(),
+                            DeliveryId = Guid.NewGuid(),
+                            CheckoutUrl = "www.url.cz"
+                        });
+                    services.AddScoped<IOrderReadClient>(_ => orderClientMock.Object);
 
+                    // Product client – simulujeme, že 1 produkt není dostupný
+                    var productClientMock = new Mock<IProductReadClient>();
+                    productClientMock
+                        .Setup(c => c.CheckProductAvailabilityAsync(
+                            It.IsAny<List<ProductQuantityCheckRequestDto>>(),
+                            It.IsAny<CancellationToken>()))
+                        .ReturnsAsync([new() { Id = productId }]);
+                    services.AddScoped<IProductReadClient>(_ => productClientMock.Object);
+                });
+            });
+
+            using var scope = factory.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<CartDbContext>();
             db.Carts.Add(new Cart
             {
                 Id = Guid.NewGuid(),
                 UserId = userId,
-                Items = [new() { Id = Guid.NewGuid(), ProductId = Guid.NewGuid(), Quantity = 2, UnitPrice = 999 }]
+                Items = [new() { Id = Guid.NewGuid(), ProductId = productId, Quantity = 2, UnitPrice = 999 }]
             });
             db.SaveChanges();
 
-            var productClient = scope.ServiceProvider.GetRequiredService<Mock<IProductReadClient>>();
-            productClient
-                .Setup(c => c.CheckProductAvailabilityAsync(It.IsAny<List<ProductQuantityCheckRequestDto>>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync([new(){ Id = productId }]);
+            var client = factory.CreateClient();
+            TestAuthHandler.FixedUserId = userId;
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
 
-
-            var client = CreateAuthenticatedClient(userId);
 
             var response = await client.PostAsJsonAsync("api/Cart/checkout", CreateValidRequest());
 
@@ -150,13 +216,8 @@ namespace CartService.IntegrationTests
             json.Should().NotBeNull();
 
             var root = json!.RootElement;
-
-            root.TryGetProperty("message", out var message).Should().BeTrue();
-            message.GetString().Should().Be("Some products are out of stock.");
-
-            root.TryGetProperty("products", out var products).Should().BeTrue();
-            products.ValueKind.Should().Be(JsonValueKind.Array);
-            products.EnumerateArray().Should().NotBeEmpty();
+            root.GetProperty("message").GetString().Should().Be("Some items in your cart are out of stock.");
+            root.GetProperty("products").EnumerateArray().Should().NotBeEmpty();
         }
 
 
@@ -167,8 +228,19 @@ namespace CartService.IntegrationTests
         {
             Guid userId = Guid.NewGuid();
 
-            using var scope = _factory.Services.CreateScope();
+            var factory = _factory.WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureServices(services =>
+                {
+                    var orderClientMock = new Mock<IOrderReadClient>();
+                    orderClientMock
+                        .Setup(c => c.CreateOrderAndDeliveryAsync(It.IsAny<CreateOrderAndDeliveryDto>(), It.IsAny<CancellationToken>()))
+                        .ReturnsAsync(new CreateOrderFromCartResponseDto { OrderId = Guid.NewGuid(), DeliveryId = null, CheckoutUrl = "www.url.cz" });
+                    services.AddScoped<IOrderReadClient>(_ => orderClientMock.Object);
+                });
+            });
 
+            using var scope = factory.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<CartDbContext>();
             db.Carts.Add(new Cart
             {
@@ -178,13 +250,89 @@ namespace CartService.IntegrationTests
             });
             db.SaveChanges();
 
-            var orderClient = scope.ServiceProvider.GetRequiredService<Mock<IOrderReadClient>>();
-            orderClient
-                .Setup(c => c.CreateOrderAndDeliveryAsync(It.IsAny<CreateOrderAndDeliveryDto>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new CreateOrderFromCartResponseDto { OrderId = Guid.NewGuid(), DeliveryId = null });
+            var client = factory.CreateClient();
+            TestAuthHandler.FixedUserId = userId;
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
+
+            var response = await client.PostAsJsonAsync("api/Cart/checkout", CreateValidRequest());
+
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        }
 
 
-            var client = CreateAuthenticatedClient(userId);
+
+        [Fact]
+        [Trait("Category", "Integration")]
+        public async Task CheckoutCart_ReturnsFail_WhenDeliveryAndCheckoutNotCreated()
+        {
+            Guid userId = Guid.NewGuid();
+
+            var factory = _factory.WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureServices(services =>
+                {
+                    var orderClientMock = new Mock<IOrderReadClient>();
+                    orderClientMock
+                        .Setup(c => c.CreateOrderAndDeliveryAsync(It.IsAny<CreateOrderAndDeliveryDto>(), It.IsAny<CancellationToken>()))
+                        .ReturnsAsync(new CreateOrderFromCartResponseDto { OrderId = Guid.NewGuid(), DeliveryId = null, CheckoutUrl = null });
+                    services.AddScoped<IOrderReadClient>(_ => orderClientMock.Object);
+                });
+            });
+
+            using var scope = factory.Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<CartDbContext>();
+            db.Carts.Add(new Cart
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                Items = [new() { Id = Guid.NewGuid(), ProductId = Guid.NewGuid(), Quantity = 1, UnitPrice = 100 }]
+            });
+            db.SaveChanges();
+
+            var client = factory.CreateClient();
+            TestAuthHandler.FixedUserId = userId;
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
+
+
+            var response = await client.PostAsJsonAsync("api/Cart/checkout", CreateValidRequest());
+
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        }
+
+
+
+        [Fact]
+        [Trait("Category", "Integration")]
+        public async Task CheckoutCart_ReturnsFail_WhenCheckoutUrlMissing()
+        {
+            Guid userId = Guid.NewGuid();
+
+            var factory = _factory.WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureServices(services =>
+                {
+                    var orderClientMock = new Mock<IOrderReadClient>();
+                    orderClientMock
+                        .Setup(c => c.CreateOrderAndDeliveryAsync(It.IsAny<CreateOrderAndDeliveryDto>(), It.IsAny<CancellationToken>()))
+                        .ReturnsAsync(new CreateOrderFromCartResponseDto { OrderId = Guid.NewGuid(), DeliveryId = Guid.NewGuid(), CheckoutUrl = null });
+                    services.AddScoped<IOrderReadClient>(_ => orderClientMock.Object);
+                });
+            });
+
+            using var scope = factory.Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<CartDbContext>();
+            db.Carts.Add(new Cart
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                Items = [new() { Id = Guid.NewGuid(), ProductId = Guid.NewGuid(), Quantity = 1, UnitPrice = 100 }]
+            });
+            db.SaveChanges();
+
+            var client = factory.CreateClient();
+            TestAuthHandler.FixedUserId = userId;
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
+
 
             var response = await client.PostAsJsonAsync("api/Cart/checkout", CreateValidRequest());
 

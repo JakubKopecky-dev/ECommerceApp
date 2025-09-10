@@ -12,7 +12,13 @@ namespace OrderService.Api.DependencyInjection
                 o.Address = new Uri(configuration["DeliveryService:GrpcAddress"]!);
             });
 
+            services.AddGrpcClient<PaymentService.Grpc.PaymentService.PaymentServiceClient>(o =>
+            {
+                o.Address = new Uri(configuration["PaymentService:GrpcAddress"]!);         
+            });
+
             services.AddScoped<IDeliveryReadClient, GrpcDeliveryReadClient>();
+            services.AddScoped<IPaymentReadClient, GrpcPaymentReadClient>();
 
 
             return services;

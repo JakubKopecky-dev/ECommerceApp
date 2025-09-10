@@ -40,6 +40,7 @@ message CreateOrderFromCartRequest{
 message CreateOrderFromCartResponse{
 	string order_id = 1;
 	string delivery_id = 2;
+	string checkout_url=3;
 }
 
 
