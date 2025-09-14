@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: paymentservice
+    labels:
+        app: paymentservice
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            app: paymentservice
+    template:
+        metadata:
+            labels:
+                app: paymentservice
+        spec:
+            containers:
+                - name: paymentservice
+                  image: ghcr.io/<tvuj-username>/paymentservice:latest
+                  ports:
+                      - containerPort: 8080
+                  env:
+                      - name: ASPNETCORE_ENVIRONMENT
+                        value: "Production"
+                      - name: Stripe__SuccessUrl
+                        value: "http://localhost:7129/api/Payment/success"
+                      - name: Stripe__CancelUrl
+                        value: "http://localhost:7129/api/Payment/cancel"
+                      - name: EnableSwagger
+                        value: "true"
+
+                      - name: Jwt__Key
+                        valueFrom:
+                            secretKeyRef:
+                                name: ecommerce-secrets
+                                key: Jwt__Key
+                      - name: Jwt__Issuer
+                        valueFrom:
+                            secretKeyRef:
+                                name: ecommerce-secrets
+                                key: Jwt__Issuer
+                      - name: Jwt__Audience
+                        valueFrom:
+                            secretKeyRef:
+                                name: ecommerce-secrets
+                                key: Jwt__Audience
+                      - name: RabbitMq__Username
+                        valueFrom:
+                            secretKeyRef:
+                                name: ecommerce-secrets
+                                key: RabbitMq__Username
+                      - name: RabbitMq__Password
+                        valueFrom:
+                            secretKeyRef:
+                                name: ecommerce-secrets
+                                key: RabbitMq__Password
+                      - name: Stripe__SecretKey
+                        valueFrom:
+                            secretKeyRef:
+                                name: ecommerce-secrets
+                                key: Stripe__SecretKey
+                      - name: Stripe__WebHookSecret
+                        valueFrom:
+                            secretKeyRef:
+                                name: ecommerce-secrets
+                                key: Stripe__WebHookSecret
+
+                      - name: RabbitMq__Host
+                        value: "rabbitmq"
+                      - name: RabbitMq__VirtualHost
+                        value: "/"
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+    name: paymentservice
+    labels:
+        app: paymentservice
+spec:
+    selector:
+        app: paymentservice
+    ports:
+        - protocol: TCP
+          port: 8080
+          targetPort: 8080
+    type: ClusterIP
