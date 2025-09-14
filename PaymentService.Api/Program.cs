@@ -19,7 +19,7 @@ StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
 builder.Services.AddScoped<IPaymentService, PaymentServiceService>();
 
 // MassTransit + RebbitMQ
-builder.Services.AddMassTransitService();
+builder.Services.AddMassTransitService(builder.Configuration);
 
 //gRPC server
 builder.Services.AddGrpc();
@@ -38,13 +38,13 @@ var app = builder.Build();
 #region Middleware pipeline
 
 
-// Swagger in DEV solution
-if (app.Environment.IsDevelopment())
+// Swagger
+if (builder.Configuration.GetValue<bool>("EnableSwagger"))
 {
     app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("PaymentService/swagger.json", "PaymentService - v1");
+        options.SwaggerEndpoint("/swagger/PaymentService/swagger.json", "PaymentService - v1");
     });
 }
 
@@ -53,9 +53,6 @@ app.UseGlobalExceptionHandling();
 
 // Client cancellation logging
 app.UseClientCancellationLogging();
-
-// HTTPS Redirect
-//app.UseHttpsRedirection(); v produkci https
 
 // Authentitaction and Authorization
 app.UseAuthentication();

@@ -19,7 +19,7 @@ builder.Services.AddApplicationServices();
 builder.Services.AddAuthenticationServiceCollection(builder.Configuration);
 
 // MassTransit + RebbitMQ
-builder.Services.AddMassTransitService();
+builder.Services.AddMassTransitService(builder.Configuration);
 
 // Controllers & JSON setting
 builder.Services.AddControllers().AddJsonOptions(options =>
@@ -38,12 +38,16 @@ var app = builder.Build();
 
 #region Middleware pipeline
 
-if (app.Environment.IsDevelopment())
+// Apply migration
+app.ApplyMigrations();
+
+// Swagger
+if (builder.Configuration.GetValue<bool>("EnableSwagger"))
 {
     app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("NotificationService/swagger.json", "NotificationService - v1");
+        options.SwaggerEndpoint("/swagger/NotificationService/swagger.json", "NotificationService - v1");
     });
 }
 
@@ -52,10 +56,6 @@ app.UseGlobalExceptionHandling();
 
 // Client cancellation logging
 app.UseClientCancellationLogging();
-
-// HTTPS Redirect
-app.UseHttpsRedirection();
-
 
 // Authentitaction and Authorization
 app.UseAuthentication();
@@ -75,19 +75,3 @@ app.Run();
 
 public partial class Program { };
 
-
-
-
-
-
-/*
- 
-
-
-
-
-
-
-1315e35c-0d2c-42c0-6908-08ddd6a13a94
-
-*/

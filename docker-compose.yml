@@ -1,12 +1,174 @@
-version: '3.8'
+x-jwt: &jwt-env
+    Jwt__Key: "a851091109b0dad8b3834341577e990f"
+    Jwt__Issuer: "ECommerceApp.AuthService"
+    Jwt__Audience: "ECommerceApp.Frontend"
+
+x-rabbit: &rabbit-env
+    RabbitMq__Host: "rabbitmq"
+    RabbitMq__VirtualHost: "/"
+    RabbitMq__Username: "guest"
+    RabbitMq__Password: "guest"
 
 services:
-  rabbitmq:
-    image: rabbitmq:3-management
-    container_name: rabbitmq
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
+  # RabbitMQ broker
+    rabbitmq:
+        image: rabbitmq:3-management
+        container_name: rabbitmq
+        ports:
+          - "5672:5672"   # pro MassTransit
+          - "15672:15672" # web UI http://localhost:15672
+        environment:
+          RABBITMQ_DEFAULT_USER: guest
+          RABBITMQ_DEFAULT_PASS: guest
+
+  # SQL Server (for all microservices)
+    sqldb:
+        image: mcr.microsoft.com/mssql/server:2022-latest
+        container_name: sqldb
+        environment:
+          SA_PASSWORD: "ECom2025!Pass"
+          ACCEPT_EULA: "Y"
+        ports:
+          - "1433:1433"
+
+    # CartService
+    cartservice:
+        build:
+            context: .
+            dockerfile: CartService.Api/Dockerfile
+        container_name: cartservice
+        ports:
+            - "7125:8080"
+        environment:
+            <<: [*jwt-env, *rabbit-env]
+            ASPNETCORE_ENVIRONMENT: "Production"
+            # Connection striong to MSSQL conteiner
+            ConnectionStrings__DefaultConnection: "Server=sqldb;Database=ECommerceApp_CartDb;User Id=sa;Password=ECom2025!Pass;TrustServerCertificate=True;"
+            # gRPC address for other microservices
+            OrderService__GrpcAddress: "http://orderservice:8080"
+            ProductService__GrpcAddress: "http://productservice:8080"
+            # Swagger
+            EnableSwagger: true
+        depends_on:
+            - sqldb
+            - rabbitmq
+    
+    # DeliveryService
+    deliveryservice:
+        build:
+            context: .
+            dockerfile: DeliveryService.Api/Dockerfile
+        container_name: deliveryservice
+        ports:
+            - "7126:8080"
+        environment:
+            <<: [*jwt-env, *rabbit-env]
+            ASPNETCORE_ENVIRONMENT: "Production"
+            # Connection string to MSSQL conteiner
+            ConnectionStrings__DefaultConnection: "Server=sqldb;Database=ECommerceApp_DeliveryDb;User Id=sa;Password=ECom2025!Pass;TrustServerCertificate=True;"
+            # gRPC address for other microservices
+            OrderService__GrpcAddress: "http://orderservice:8080"
+            # Swagger
+            EnableSwagger: true
+        depends_on:
+            - sqldb
+            - rabbitmq
+
+    # NotificationService
+    notificationservice:
+        build:
+            context: .
+            dockerfile: NotificationService.Api/Dockerfile
+        container_name: notificationservice
+        ports:
+            - "7127:8080"
+        environment:
+            <<: [*jwt-env, *rabbit-env]
+            ASPNETCORE_ENVIRONMENT: "Production"
+            # Connection string to MSSQL conteiner
+            ConnectionStrings__DefaultConnection: "Server=sqldb;Database=ECommerceApp_NotificationDb;User Id=sa;Password=ECom2025!Pass;TrustServerCertificate=True;"
+            # Swagger
+            EnableSwagger: true
+        depends_on: 
+            - sqldb
+            - rabbitmq
+
+    # OrderService
+    orderservice:
+        build: 
+            context: .
+            dockerfile: OrderService.Api/Dockerfile
+        container_name: orderservice
+        ports:
+            - "7128:8080"
+        environment:
+            <<: [*jwt-env, *rabbit-env]
+            ASPNETCORE_ENVIRONMENT: "Production"
+            # Connection string to MSSQL conteiner
+            ConnectionStrings__DefaultConnection: "Server=sqldb;Database=ECommerceApp_OrderDb;User Id=sa;Password=ECom2025!Pass;TrustServerCertificate=True;"
+            # gRPC address for other microservices
+            DeliveryService__GrpcAddress: "http://deliveryservice:8080"
+            PaymentService__GrpcAddress: "http://paymentservice:8080"
+            # Swagger
+            EnableSwagger: true
+        depends_on:
+            - sqldb
+            - rabbitmq
+
+    # PaymentService
+    paymentservice:
+        build:
+            context: .
+            dockerfile: PaymentService.Api/Dockerfile
+        container_name: paymentservice
+        ports:
+            - "7129:8080"
+        environment:
+            <<: [*jwt-env, *rabbit-env]
+            ASPNETCORE_ENVIRONMENT: "Production"
+            # Striper configuration
+            Stripe__SecretKey: "sk_test_51S3KcYFzAPsvRxZYNAeAVNsDoNVIPh7ZGa0FuHzvF8NC52FxfNlmbzhsYQw5FYZb81WqG5ZMq5wzyIUZji7nnrxj00qaSyPz5D"
+            Stripe__WebHookSecret: "whsec_915baf41d3cb0adcaebd3029758b2d0b7b06ecb5a6891086ffc74ffd94c5c3cf"
+            Stripe__SuccessUrl: "http://localhost:7129/api/Payment/success"
+            Stripe__CancelUrl: "http://localhost:7129/api/Payment/cancel"
+            # Swagger
+            EnableSwagger: true
+        depends_on:
+            - rabbitmq
+
+    # ProductService
+    productservice:
+        build:
+            context: .
+            dockerfile: ProductService.Api/Dockerfile
+        container_name: productservice
+        ports:
+            - "7130:8080"
+        environment:
+            <<: [*jwt-env, *rabbit-env]
+            ASPNETCORE_ENVIRONMENT: "Production"
+            # Connection string to MSSQL conteiner
+            ConnectionStrings__DefaultConnection: "Server=sqldb;Database=ECommerceApp_ProductDb;User Id=sa;Password=ECom2025!Pass;TrustServerCertificate=True;"
+            # Swagger
+            EnableSwagger: true
+        depends_on:
+            - sqldb
+            - rabbitmq
+
+    # UserService
+    userservice:
+        build:
+            context: .
+            dockerfile: "UserService.Api/Dockerfile"
+        container_name: userservice
+        ports:
+           - "7131:8080"
+        environment:
+            <<: *jwt-env
+            Jwt_ExpiresInMinutes: 600
+            # ConnectionString
+            ConnectionStrings__DefaultConnection: "Server=sqldb;Database=ECommerceApp_UserDb;User Id=sa;Password=ECom2025!Pass;TrustServerCertificate=True;"
+            # Swagger
+            EnableSwagger: true
+        depends_on:
+            - sqldb

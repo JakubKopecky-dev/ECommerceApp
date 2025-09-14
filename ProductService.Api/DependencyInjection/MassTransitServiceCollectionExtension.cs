@@ -5,8 +5,13 @@ namespace ProductService.Api.DependencyInjection
 {
     public static class MassTransitServiceCollectionExtension
     {
-        public static IServiceCollection AddMassTransitService(this IServiceCollection services)
+        public static IServiceCollection AddMassTransitService(this IServiceCollection services, IConfiguration configuration)
         {
+            var host = configuration["RabbitMq:Host"];
+            var virtualHost = configuration["RabbitMq:VirtualHost"];
+            var userName = configuration["RabbitMq:Username"]!;
+            var password = configuration["RabbitMq:Password"]!;
+
             services.AddMassTransit(x =>
             {
                 x.SetKebabCaseEndpointNameFormatter();
@@ -15,10 +20,11 @@ namespace ProductService.Api.DependencyInjection
 
                 x.UsingRabbitMq((context, cfg) =>
                 {
-                    cfg.Host("localhost", "/", h =>
+                    cfg.Host(host, virtualHost, h =>
                     {
-                        h.Username("guest");
-                        h.Password("guest");
+                        h.Username(userName);
+                        h.Password(password);
+
                     });
 
                     cfg.ConfigureEndpoints(context);

@@ -26,6 +26,19 @@ namespace PaymentService.Api.Controllers
 
 
 
+        [HttpGet("success")]
+        public IActionResult PaymentSuccess()
+        {
+            return Ok("Your payment was successful");
+        }
+
+
+
+        [HttpGet("cancel")]
+        public IActionResult PaymentCancel()
+        {
+            return Ok("Your payment was canceled");
+        }
 
 
     }

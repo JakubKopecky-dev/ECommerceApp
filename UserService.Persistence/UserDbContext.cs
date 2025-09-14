@@ -16,27 +16,6 @@ namespace UserService.Persistence
 
 
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            base.OnModelCreating(modelBuilder);
-
-
-            //from cascade to restrict
-            IEnumerable<IMutableForeignKey> cascadeFKs = modelBuilder.Model.GetEntityTypes()
-                .SelectMany(type => type.GetForeignKeys())
-                .Where(foreignKey => !foreignKey.IsOwnership && foreignKey.DeleteBehavior == DeleteBehavior.Cascade);
-
-            foreach (IMutableForeignKey foreignKey in cascadeFKs)
-                foreignKey.DeleteBehavior = DeleteBehavior.Restrict;
-
-        }
-
-
-
-
-
-
-
         // Audit EF
         public override int SaveChanges()
         {

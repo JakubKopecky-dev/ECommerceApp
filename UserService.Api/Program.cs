@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Microsoft.EntityFrameworkCore;
 using UserService.Api.Auth;
 using UserService.Api.DependencyInjection;
 using UserService.Infrastructure;
@@ -31,19 +32,18 @@ var app = builder.Build();
 
 #region Middleware pipeline
 
-// Swagger in DEV solution
-if (app.Environment.IsDevelopment())
+// Apply migrations
+app.ApplyMigrations();
+
+// Swagger
+if (builder.Configuration.GetValue<bool>("EnableSwagger"))
 {
     app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("UserService/swagger.json", "UserService - v1");
+        options.SwaggerEndpoint("/swagger/UserService/swagger.json", "UserService - v1");
     });
 }
-
-// HTTPS Redirect
-app.UseHttpsRedirection();
-
 
 // Authentitaction and Authorization
 app.UseAuthentication();

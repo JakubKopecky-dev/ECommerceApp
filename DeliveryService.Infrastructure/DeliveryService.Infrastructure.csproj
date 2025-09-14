@@ -10,8 +10,4 @@
     <ProjectReference Include="..\DeliveryService.Application\DeliveryService.Application.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="DependencyInjection\" />
-  </ItemGroup>
-
 </Project>

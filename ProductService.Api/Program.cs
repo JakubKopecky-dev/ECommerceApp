@@ -19,7 +19,7 @@ builder.Services.AddApplicationServices();
 builder.Services.AddAuthenticationServiceCollection(builder.Configuration);
 
 // MassTransit + RebbitMQ
-builder.Services.AddMassTransitService();
+builder.Services.AddMassTransitService(builder.Configuration);
 
 // gRPC server
 builder.Services.AddGrpc();
@@ -38,13 +38,16 @@ var app = builder.Build();
 
 #region Middleware pipeline
 
-// Swagger in DEV solution
-if (app.Environment.IsDevelopment())
+// Apply migration
+app.ApplyMigrations();
+
+// Swagger
+if (builder.Configuration.GetValue<bool>("EnableSwagger"))
 {
     app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("ProductService/swagger.json", "ProductService - v1");
+        options.SwaggerEndpoint("/swagger/ProductService/swagger.json", "ProductService - v1");
     });
 }
 
@@ -53,10 +56,6 @@ app.UseGlobalExceptionHandling();
 
 // Client cancellation logging
 app.UseClientCancellationLogging();
-
-// HTTPS Redirect
-app.UseHttpsRedirection();
-
 
 // Authentitaction and Authorization
 app.UseAuthentication();

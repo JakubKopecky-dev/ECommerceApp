@@ -18,7 +18,7 @@ namespace CartService.Api.Grpc.GrpcClients
                 UserId = checkOutCartDto.UserId.ToString(),
                 CourierId = checkOutCartDto.CourierId.ToString(),
                 TotalPrice = checkOutCartDto.TotalPrice.ToString(),
-                Note = checkOutCartDto.Note,
+                Note = checkOutCartDto.Note ?? "",
                 Email = checkOutCartDto.Email,
                 FirstName = checkOutCartDto.FirstName,
                 LastName = checkOutCartDto.LastName,

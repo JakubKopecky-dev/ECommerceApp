@@ -5,6 +5,7 @@ using CartService.Application;
 using CartService.Application.Interfaces.Services;
 using CartService.Persistence;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 #region Register services (Dependecy Injection)
@@ -36,13 +37,16 @@ var app = builder.Build();
 
 #region Middleware pipeline
 
-// Swagger in a DEV solution
-if (app.Environment.IsDevelopment())
+// Apply migration
+app.ApplyMigrations();
+
+// Swagger
+if (builder.Configuration.GetValue<bool>("EnableSwagger"))
 {
     app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("CartService/swagger.json", "CartService - v1");
+        options.SwaggerEndpoint("/swagger/CartService/swagger.json", "CartService - v1");
     });
 }
 
@@ -51,9 +55,6 @@ app.UseGlobalExceptionHandling();
 
 // Client cancellation logging
 app.UseClientCancellationLogging();
-
-// HTTPS Redirect
-app.UseHttpsRedirection();
 
 // Authentication and Authorization
 app.UseAuthentication();
@@ -67,4 +68,6 @@ app.MapControllers();
 
 app.Run();
 
+
 public partial class Program { };
+
