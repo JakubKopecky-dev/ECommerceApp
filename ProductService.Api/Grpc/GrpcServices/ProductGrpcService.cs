@@ -21,6 +21,8 @@ namespace ProductService.Api.Grpc.GrpcServices
             return product is not null ? new() { Title = product.Title, Price = product.Price.ToString(), QuantityInStock = product.QuantityInStock } : throw new RpcException(new Status(StatusCode.NotFound, "Product not found"));
         }
 
+
+
         public override async Task<ProductsQuantityCheckFromCartResponse> ProductsQuantityCheckFromCart(ProductsQuantityCheckFromCartRequest request, ServerCallContext context)
         {
             List<ProductQuantityCheckRequestDto> productsDto = [.. request.Products.Select(p => new ProductQuantityCheckRequestDto { Id = Guid.Parse(p.Id), Quantity = p.Quantity })];

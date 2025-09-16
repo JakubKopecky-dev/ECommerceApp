@@ -1,13 +1,9 @@
-﻿using System.Net.Http.Headers;
-using System.Net.Http.Json;
-using AutoMapper;
+﻿using AutoMapper;
 using CartService.Application.DTOs.Cart;
 using CartService.Application.Interfaces.Repositories;
 using CartService.Application.Interfaces.Services;
 using CartService.Domain.Entity;
 using Microsoft.Extensions.Logging;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Authentication;
 using CartService.Application.DTOs.External;
 using CartService.Application.DTOs.CartItem;
 using CartService.Application.Common;
@@ -23,7 +19,6 @@ namespace CartService.Application.Services
         private readonly ILogger<CartService> _logger = logger;
         private readonly IProductReadClient _productClient = productClient;
         private readonly IOrderReadClient _orderClient = orderClient;
-
 
 
 

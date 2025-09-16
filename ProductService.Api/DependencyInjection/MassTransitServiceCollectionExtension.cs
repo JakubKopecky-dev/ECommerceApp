@@ -34,9 +34,6 @@ namespace ProductService.Api.DependencyInjection
 
             });
             
-            
-
-
 
 
             return services;
