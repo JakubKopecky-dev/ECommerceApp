@@ -32,9 +32,6 @@ var app = builder.Build();
 
 #region Middleware pipeline
 
-// Apply migrations
-app.ApplyMigrations();
-
 // Swagger
 if (builder.Configuration.GetValue<bool>("EnableSwagger"))
 {

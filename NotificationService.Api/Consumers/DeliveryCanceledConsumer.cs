@@ -33,16 +33,16 @@ namespace NotificationService.Api.Consumers
                 Type = NotificationType.DeliveryStatusChanged
             };
 
-            NotificationDto notification = await _notificationService.CreateNotificationAsync(createNotification,ct);
+            NotificationDto notification = await _notificationService.CreateNotificationAsync(createNotification, ct);
 
             await _hubContext.Clients.User(message.UserId.ToString())
-                .SendAsync("ReceiveNotification", new
+                .SendAsync("ReceiveNotification", new NotificationSiganlRDto
                 {
-                    notification.Id,
-                    notification.Title,
-                    notification.Message,
-                    notification.CreatedAt,
-                },ct);
+                    Id = notification.Id,
+                    Title = notification.Title,
+                    Message = notification.Message,
+                    CreatedAt = notification.CreatedAt,
+                }, ct);
 
             _logger.LogInformation("Notification created and sent via SignalR. NotificationId: {NotificationId}", notification.Id);
         }
