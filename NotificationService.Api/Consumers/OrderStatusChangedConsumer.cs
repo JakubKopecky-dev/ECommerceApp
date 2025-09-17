@@ -35,12 +35,12 @@ namespace NotificationService.Api.Consumers
             NotificationDto notification = await _notificationService.CreateNotificationAsync(createNofiticationDto, ct);
 
             await _hubContext.Clients.User(message.UserId.ToString())
-                .SendAsync("ReceiveNotification", new
+                .SendAsync("ReceiveNotification", new NotificationSiganlRDto
                 {
-                    notification.Id,
-                    notification.Title,
-                    notification.Message,
-                    notification.CreatedAt,
+                    Id = notification.Id,
+                    Title = notification.Title,
+                    Message = notification.Message,
+                    CreatedAt = notification.CreatedAt,
                 }, ct);
 
             _logger.LogInformation("Notification created and sent via SignalR. NotificationId: {NotificationId}", notification.Id);
