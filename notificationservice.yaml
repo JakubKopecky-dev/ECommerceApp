@@ -1,75 +1,86 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-    name: notificationservice
-    labels:
-        app: notificationservice
+  name: notificationservice
+  labels:
+    app: notificationservice
 spec:
-    replicas: 1
-    selector:
-        matchLabels:
-            app: notificationservice
-    template:
-        metadata:
-            labels:
-                app: notificationservice
-        spec:
-            containers:
-                - name: notificationservice
-                  image: ghcr.io/<tvuj-username>/notificationservice:latest
-                  ports:
-                      - containerPort: 8080
-                  env:
-                      - name: ASPNETCORE_ENVIRONMENT
-                        value: "Production"
-                      - name: ConnectionStrings__DefaultConnection
-                        value: "Server=sqldb;Database=ECommerceApp_NotificationDb;User Id=sa;Password=ECom2025!Pass;TrustServerCertificate=True;"
-                      - name: EnableSwagger
-                        value: "true"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notificationservice
+  template:
+    metadata:
+      labels:
+        app: notificationservice
+    spec:
+      containers:
+        - name: notificationservice
+          image: ghcr.io/<your-username>/notificationservice:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          env:
+            - name: ASPNETCORE_ENVIRONMENT
+              value: "Production"
+            - name: MessageBroker__Transport
+              value: "RabbitMq"
 
-                      - name: Jwt__Key
-                        valueFrom:
-                            secretKeyRef:
-                                name: ecommerce-secrets
-                                key: Jwt__Key
-                      - name: Jwt__Issuer
-                        valueFrom:
-                            secretKeyRef:
-                                name: ecommerce-secrets
-                                key: Jwt__Issuer
-                      - name: Jwt__Audience
-                        valueFrom:
-                            secretKeyRef:
-                                name: ecommerce-secrets
-                                key: Jwt__Audience
-                      - name: RabbitMq__Username
-                        valueFrom:
-                            secretKeyRef:
-                                name: ecommerce-secrets
-                                key: RabbitMq__Username
-                      - name: RabbitMq__Password
-                        valueFrom:
-                            secretKeyRef:
-                                name: ecommerce-secrets
-                                key: RabbitMq__Password
-                      - name: RabbitMq__Host
-                        value: "rabbitmq"
-                      - name: RabbitMq__VirtualHost
-                        value: "/"
+            # Database connection (NotificationDb)
+            - name: ConnectionStrings__DefaultConnection
+              valueFrom:
+                secretKeyRef:
+                  name: ecommerce-secrets
+                  key: ConnectionStrings__NotificationDb
 
+            - name: EnableSwagger
+              value: "true"
+
+            # JWT
+            - name: Jwt__Key
+              valueFrom:
+                secretKeyRef:
+                  name: ecommerce-secrets
+                  key: Jwt__Key
+            - name: Jwt__Issuer
+              valueFrom:
+                secretKeyRef:
+                  name: ecommerce-secrets
+                  key: Jwt__Issuer
+            - name: Jwt__Audience
+              valueFrom:
+                secretKeyRef:
+                  name: ecommerce-secrets
+                  key: Jwt__Audience
+
+            # RabbitMQ
+            - name: RabbitMq__Username
+              valueFrom:
+                secretKeyRef:
+                  name: ecommerce-secrets
+                  key: RabbitMq__Username
+            - name: RabbitMq__Password
+              valueFrom:
+                secretKeyRef:
+                  name: ecommerce-secrets
+                  key: RabbitMq__Password
+            - name: RabbitMq__Host
+              value: "rabbitmq"
+            - name: RabbitMq__VirtualHost
+              value: "/"
 
 ---
 apiVersion: v1
 kind: Service
 metadata:
-    name: notificationservice
-    labels:
-        app: notificationservice
+  name: notificationservice
+  labels:
+    app: notificationservice
 spec:
-    selector:
-        app: notificationservice
-    ports:
-        - protocol: TCP
-          port: 8080
-          targetPort: 8080
-    type: ClusterIP
+  selector:
+    app: notificationservice
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+  type: ClusterIP

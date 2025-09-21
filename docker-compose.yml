@@ -8,6 +8,7 @@ x-rabbit: &rabbit-env
     RabbitMq__VirtualHost: "/"
     RabbitMq__Username: "guest"
     RabbitMq__Password: "guest"
+    MessageBroker__Transport: "RabbitMq"
 
 services:
   # RabbitMQ broker

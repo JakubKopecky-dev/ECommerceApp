@@ -38,6 +38,12 @@ var app = builder.Build();
 
 #region Middleware pipeline
 
+var env = app.Services.GetRequiredService<IWebHostEnvironment>();
+
+// Apply migration
+if (!env.IsEnvironment("Test"))
+    app.ApplyMigrations();
+
 // Swagger
 if (builder.Configuration.GetValue<bool>("EnableSwagger"))
 {

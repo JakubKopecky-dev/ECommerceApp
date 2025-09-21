@@ -32,6 +32,12 @@ var app = builder.Build();
 
 #region Middleware pipeline
 
+var env = app.Services.GetRequiredService<IWebHostEnvironment>();
+
+// Apply migration
+if (!env.IsEnvironment("Test"))
+    app.ApplyMigrations();
+
 // Swagger
 if (builder.Configuration.GetValue<bool>("EnableSwagger"))
 {
@@ -50,7 +56,6 @@ app.UseAuthorization();
 app.MapControllers();
 
 // Add roles
-var env = app.Services.GetRequiredService<IWebHostEnvironment>();
 if (!env.IsEnvironment("Test"))
     await RoleSeeder.SeedRolesAsync(app.Services);
 

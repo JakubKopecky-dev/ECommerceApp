@@ -7,32 +7,46 @@ namespace OrderService.Api.DependencyInjection
     {
         public static IServiceCollection AddMassTransitService(this IServiceCollection services, IConfiguration configuration)
         {
-            var host = configuration["RabbitMq:Host"];
-            var virtualHost = configuration["RabbitMq:VirtualHost"];
-            var userName = configuration["RabbitMq:Username"]!;
-            var password = configuration["RabbitMq:Password"]!;
+            var transport = configuration["MessageBroker:Transport"]; // RabbitMq or AzureServiceBus
+
             services.AddMassTransit(x =>
             {
                 x.SetKebabCaseEndpointNameFormatter();
 
+                // register consumers
                 x.AddConsumer<DeliveryDeliveredConsumer>();
                 x.AddConsumer<OrderSuccessfullyPaidAndOrderStatusChangeToPaidConsumer>();
 
-                x.UsingRabbitMq((context, cfg) =>
+                if (transport == "RabbitMq")
                 {
-                    cfg.Host(host, virtualHost, h =>
+                    var host = configuration["RabbitMq:Host"];
+                    var virtualHost = configuration["RabbitMq:VirtualHost"];
+                    var userName = configuration["RabbitMq:Username"]!;
+                    var password = configuration["RabbitMq:Password"]!;
+
+                    x.UsingRabbitMq((context, cfg) =>
                     {
-                        h.Username(userName);
-                        h.Password(password);
+                        cfg.Host(host, virtualHost, h =>
+                        {
+                            h.Username(userName);
+                            h.Password(password);
+                        });
 
+                        cfg.ConfigureEndpoints(context);
                     });
+                }
+                else if (transport == "AzureServiceBus")
+                {
+                    var connectionString = configuration["AzureServiceBus:ConnectionString"];
 
-                    cfg.ConfigureEndpoints(context);
+                    x.UsingAzureServiceBus((context, cfg) =>
+                    {
+                        cfg.Host(connectionString);
 
-                });
+                        cfg.ConfigureEndpoints(context);
+                    });
+                }
             });
-
-
 
             return services;
         }
