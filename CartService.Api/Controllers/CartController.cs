@@ -15,8 +15,14 @@ namespace CartService.Api.Controllers
     {
         private readonly ICartService _cartService = cartService;
 
+        
 
-
+        /// <summary>
+        /// Retrieves the current user's shopping cart or creates a new cart if one does not exist.
+        /// </summary>
+        /// <param name="ct">A cancellation token that can be used to cancel the operation.</param>
+        /// <returns>An <see cref="IActionResult"/> containing the user's cart data if the user is authenticated; otherwise, an
+        /// unauthorized result.</returns>
         [HttpGet]
         public async Task<IActionResult> GetOrCreateCart(CancellationToken ct)
         {
@@ -31,6 +37,13 @@ namespace CartService.Api.Controllers
 
 
 
+        /// <summary>
+        /// Deletes the current user's shopping cart.
+        /// </summary>
+        /// <param name="ct">A cancellation token that can be used to cancel the operation.</param>
+        /// <returns>An <see cref="OkObjectResult"/> containing the deleted cart if the operation succeeds; <see
+        /// cref="NotFoundResult"/> if no cart exists for the user; or <see cref="UnauthorizedResult"/> if the user is
+        /// not authenticated.</returns>
         [HttpDelete]
         public async Task<IActionResult> DeleteCart(CancellationToken ct)
         {
@@ -45,6 +58,16 @@ namespace CartService.Api.Controllers
 
 
 
+
+        /// <summary>
+        /// Processes the checkout operation for the current user's shopping cart.
+        /// </summary>
+        /// <remarks>This method requires the user to be authenticated. The checkout process is performed
+        /// asynchronously and may involve payment processing and order creation.</remarks>
+        /// <param name="cartCheckoutRequestDto">The details of the cart checkout, including payment and shipping information.</param>
+        /// <param name="ct">A cancellation token that can be used to cancel the checkout operation.</param>
+        /// <returns>An <see cref="IActionResult"/> representing the result of the checkout operation. Returns an unauthorized
+        /// result if the user is not authenticated.</returns>
         [HttpPost("checkout")]
         public async Task<IActionResult> CheckoutCart(CartCheckoutRequestDto cartCheckoutRequestDto,CancellationToken ct)
         {

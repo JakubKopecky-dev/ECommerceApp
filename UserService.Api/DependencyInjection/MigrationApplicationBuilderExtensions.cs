@@ -1,14 +1,14 @@
-﻿using OrderService.Persistence;
+﻿using UserService.Persistence;
 using Microsoft.EntityFrameworkCore;
 
-namespace OrderService.Api.DependencyInjection
+namespace UserService.Api.DependencyInjection
 {
-    public static class MigrationCollectionExtensions
+    public static class MigrationApplicationBuilderExtensions
     {
         public static void ApplyMigrations(this IApplicationBuilder app)
         {
             using var scope = app.ApplicationServices.CreateScope();
-            var db = scope.ServiceProvider.GetRequiredService<OrderDbContext>();
+            var db = scope.ServiceProvider.GetRequiredService<UserDbContext>();
             db.Database.Migrate();
         }
     }

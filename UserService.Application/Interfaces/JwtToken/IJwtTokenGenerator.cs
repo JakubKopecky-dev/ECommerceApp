@@ -2,6 +2,6 @@
 {
     public interface IJwtTokenGenerator
     {
-        string GenerateToken(Guid userId, string email, string userName, IList<string> roles);
+        string GenerateToken(Guid userId, string email, string userName, IEnumerable<string> roles);
     }
 }

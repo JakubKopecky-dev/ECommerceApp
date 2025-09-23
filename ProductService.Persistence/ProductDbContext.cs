@@ -82,7 +82,7 @@ namespace ProductService.Persistence
             {
                 object data;
 
-                // Pokud chceš logovat změny při Update, vypiš změněné vlastnosti s hodnotami před/po
+                // For updates, capture only the properties that have changed, including their original and current values
                 if (entry.State == EntityState.Modified)
                 {
                     var changes = new Dictionary<string, object>();
@@ -101,7 +101,7 @@ namespace ProductService.Persistence
                 }
                 else
                 {
-                    // Pro přidání/smazání stačí celá entita
+                    // For inserts and deletes, serialize the entire entity
                     data = entry.Entity;
                 }
 
@@ -115,15 +115,6 @@ namespace ProductService.Persistence
                 AuditEventLogs.Add(auditLog);
             }
         }
-
-
-
-
-
-
-
-
-
 
 
 

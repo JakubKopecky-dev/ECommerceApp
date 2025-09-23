@@ -22,6 +22,17 @@ namespace CartService.Application.Services
 
 
 
+        /// <summary>
+        /// Retrieves the shopping cart associated with the specified user identifier, or creates a new cart if none
+        /// exists.
+        /// </summary>
+        /// <remarks>If a cart does not exist for the specified user, a new cart is created and returned.
+        /// The returned cart includes all associated items. This method is thread-safe with respect to cart creation
+        /// for a given user.</remarks>
+        /// <param name="userId">The unique identifier of the user whose cart is to be retrieved or created.</param>
+        /// <param name="ct">A cancellation token that can be used to cancel the asynchronous operation.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains a <see cref="CartExtendedDto"/>
+        /// representing the user's cart, including its items.</returns>
         public async Task<CartExtendedDto> GetOrCreateCartByUserIdAsync(Guid userId, CancellationToken ct = default)
         {
             _logger.LogInformation("Retrieving cart. UserId: {UserId}.", userId);
@@ -45,6 +56,13 @@ namespace CartService.Application.Services
 
 
 
+        /// <summary>
+        /// Deletes the cart and its items associated with the specified user identifier.
+        /// </summary>
+        /// <param name="userId">The unique identifier of the user whose cart is to be deleted.</param>
+        /// <param name="ct">A cancellation token that can be used to cancel the asynchronous operation.</param>
+        /// <returns>A <see cref="CartDto"/> representing the deleted cart and its items, or <see langword="null"/> if no cart
+        /// exists for the specified user.</returns>
         public async Task<CartDto?> DeleteCartByUserIdAsync(Guid userId, CancellationToken ct = default)
         {
             _logger.LogInformation("Deleting cart. UserId: {UserId}.", userId);
@@ -67,6 +85,21 @@ namespace CartService.Application.Services
 
 
 
+        /// <summary>
+        /// Attempts to check out the shopping cart for the specified user, creating an order and delivery if all items
+        /// are available.
+        /// </summary>
+        /// <remarks>If the cart is empty or does not exist, the operation fails with <see
+        /// cref="CartError.CartNotFound"/>. If product availability checks fail, the result includes the unavailable
+        /// products. The cart is deleted after a successful checkout or if order creation fails at certain stages. This
+        /// method does not throw exceptions for expected business errors; instead, errors are represented in the
+        /// result.</remarks>
+        /// <param name="userId">The unique identifier of the user whose cart is to be checked out.</param>
+        /// <param name="cartCheckoutRequestDto">An object containing checkout details such as courier selection, contact information, and delivery address.</param>
+        /// <param name="ct">A cancellation token that can be used to cancel the checkout operation.</param>
+        /// <returns>A result containing a <see cref="CheckoutResult"/> if the checkout succeeds, or a <see cref="CartError"/>
+        /// indicating the reason for failure. If some products are unavailable, the result indicates failure and lists
+        /// the unavailable products.</returns>
         public async Task<Result<CheckoutResult, CartError>> CheckoutCartByUserIdAsync(Guid userId, CartCheckoutRequestDto cartCheckoutRequestDto, CancellationToken ct = default)
         {
             _logger.LogInformation("Checking out cart. UserId: {UserId}.", userId);

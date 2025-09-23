@@ -1,5 +1,4 @@
 using System.Text.Json.Serialization;
-using Microsoft.EntityFrameworkCore;
 using UserService.Api.Auth;
 using UserService.Api.DependencyInjection;
 using UserService.Infrastructure;

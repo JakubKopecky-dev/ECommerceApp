@@ -69,7 +69,7 @@ namespace UserService.UnitTests.Services
                 .ReturnsAsync([UserRoles.User]);
 
             tokenGenMock
-                .Setup(t => t.GenerateToken(It.IsAny<Guid>(), registerDto.Email, registerDto.Email, It.IsAny<IList<string>>()))
+                .Setup(t => t.GenerateToken(It.IsAny<Guid>(), registerDto.Email, registerDto.Email, It.IsAny<IEnumerable<string>>()))
                 .Returns("jwt-token");
 
             mapperMock
@@ -93,7 +93,7 @@ namespace UserService.UnitTests.Services
             userManagerMock.Verify(u => u.CreateAsync(It.IsAny<ApplicationUser>(), registerDto.Password), Times.Once);
             userManagerMock.Verify(u => u.AddToRoleAsync(It.IsAny<ApplicationUser>(), UserRoles.User), Times.Once);
             userManagerMock.Verify(u => u.GetRolesAsync(It.IsAny<ApplicationUser>()), Times.Once);
-            tokenGenMock.Verify(t => t.GenerateToken(It.IsAny<Guid>(), registerDto.Email, registerDto.Email, It.IsAny<IList<string>>()), Times.Once);
+            tokenGenMock.Verify(t => t.GenerateToken(It.IsAny<Guid>(), registerDto.Email, registerDto.Email, It.IsAny<IEnumerable<string>>()), Times.Once);
             mapperMock.Verify(m => m.Map<UserDto>(It.IsAny<ApplicationUser>()), Times.Once);
         }
 
@@ -126,7 +126,7 @@ namespace UserService.UnitTests.Services
             result.Should().BeNull();
 
             userManagerMock.Verify(u => u.AddToRoleAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()), Times.Never);
-            tokenGenMock.Verify(t => t.GenerateToken(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<IList<string>>()), Times.Never);
+            tokenGenMock.Verify(t => t.GenerateToken(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<IEnumerable<string>>()), Times.Never);
             mapperMock.Verify(m => m.Map<UserDto>(It.IsAny<ApplicationUser>()), Times.Never);
         }
 
@@ -156,7 +156,7 @@ namespace UserService.UnitTests.Services
                 .ReturnsAsync([UserRoles.User]);
 
             tokenGenMock
-                .Setup(t => t.GenerateToken(user.Id, user.Email!, user.UserName!, It.IsAny<IList<string>>()))
+                .Setup(t => t.GenerateToken(user.Id, user.Email!, user.UserName!, It.IsAny<IEnumerable<string>>()))
                 .Returns("jwt-token");
 
             mapperMock
@@ -180,7 +180,7 @@ namespace UserService.UnitTests.Services
             userManagerMock.Verify(u => u.FindByEmailAsync(loginDto.Email), Times.Once);
             userManagerMock.Verify(u => u.CheckPasswordAsync(user, loginDto.Password), Times.Once);
             userManagerMock.Verify(u => u.GetRolesAsync(user), Times.Once);
-            tokenGenMock.Verify(t => t.GenerateToken(user.Id, user.Email!, user.UserName!, It.IsAny<IList<string>>()), Times.Once);
+            tokenGenMock.Verify(t => t.GenerateToken(user.Id, user.Email!, user.UserName!, It.IsAny<IEnumerable<string>>()), Times.Once);
             mapperMock.Verify(m => m.Map<UserDto>(user), Times.Once);
         }
 
@@ -213,7 +213,7 @@ namespace UserService.UnitTests.Services
             result.Should().BeNull();
 
             userManagerMock.Verify(u => u.CheckPasswordAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()), Times.Never);
-            tokenGenMock.Verify(t => t.GenerateToken(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<IList<string>>()), Times.Never);
+            tokenGenMock.Verify(t => t.GenerateToken(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<IEnumerable<string>>()), Times.Never);
             mapperMock.Verify(m => m.Map<UserDto>(It.IsAny<ApplicationUser>()), Times.Never);
         }
 
@@ -250,7 +250,7 @@ namespace UserService.UnitTests.Services
             result.Should().BeNull();
 
             userManagerMock.Verify(u => u.GetRolesAsync(It.IsAny<ApplicationUser>()), Times.Never);
-            tokenGenMock.Verify(t => t.GenerateToken(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<IList<string>>()), Times.Never);
+            tokenGenMock.Verify(t => t.GenerateToken(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<IEnumerable<string>>()), Times.Never);
             mapperMock.Verify(m => m.Map<UserDto>(It.IsAny<ApplicationUser>()), Times.Never);
         }
 

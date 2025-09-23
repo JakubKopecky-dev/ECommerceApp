@@ -42,7 +42,7 @@ namespace UserService.Infrastructure.Services
             {
                 await _userManager.AddToRoleAsync(newUser, UserRoles.User);
 
-                var roles = await _userManager.GetRolesAsync(newUser);
+                IEnumerable<string> roles = await _userManager.GetRolesAsync(newUser);
                 string token = _tokenGenerator.GenerateToken(newUser.Id, newUser.Email, newUser.UserName, roles);
 
                 _logger.LogInformation("User registred. UserEmail: {Email}, UserId: {Id}.", newUser.Email, newUser.Id);
@@ -79,7 +79,7 @@ namespace UserService.Infrastructure.Services
                 return null;
             }
 
-            var roles = await _userManager.GetRolesAsync(user);
+            IEnumerable<string> roles = await _userManager.GetRolesAsync(user);
             string token = _tokenGenerator.GenerateToken(user.Id,user.Email!,user.UserName!,roles);
 
             _logger.LogInformation("User successfully logged in. UserEmail: {Email}.", authLoginDto.Email);

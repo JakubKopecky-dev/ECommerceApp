@@ -11,7 +11,7 @@ namespace UserService.Infrastructure.Auth
     {
         private readonly JwtSettings _jwtSettings = jwtSettings.Value;
 
-        public string GenerateToken(Guid userId, string email, string userName, IList<string> roles)
+        public string GenerateToken(Guid userId, string email, string userName, IEnumerable<string> roles)
         {
             var claims = new List<Claim>
             {

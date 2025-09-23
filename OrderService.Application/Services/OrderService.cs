@@ -217,6 +217,19 @@ namespace OrderService.Application.Services
 
 
 
+        /// <summary>
+        /// Creates a new order and associated delivery based on the specified cart information, and initiates the
+        /// checkout process.
+        /// </summary>
+        /// <remarks>If delivery creation fails, the order is still created but its internal status is
+        /// updated to indicate the delivery failure, and the delivery ID in the response will be null. The method also
+        /// publishes events for order creation and item reservation, and creates a payment session for the
+        /// order.</remarks>
+        /// <param name="createDto">An object containing the details required to create the order and delivery, including user information, cart
+        /// items, delivery address, and contact details. Cannot be null.</param>
+        /// <param name="ct">A cancellation token that can be used to cancel the operation.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains a response object with the
+        /// created order ID, delivery ID (if successful), and the checkout URL for payment.</returns>
         public async Task<CreateOrderFromCartResponseDto> CreateOrderAndDeliveryFromCartAsync(ExternalCreateOrderDto createDto, CancellationToken ct = default)
         {
             _logger.LogInformation("Creating new order from cart. UserId: {UserId}.", createDto.UserId);

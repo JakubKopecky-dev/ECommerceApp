@@ -48,6 +48,19 @@ namespace CartService.Application.Services
 
 
 
+        /// <summary>
+        /// Creates a new cart item or increases the quantity of an existing item in the cart, depending on whether the
+        /// specified product is already present.
+        /// </summary>
+        /// <remarks>If the specified product is already present in the cart, the method increases its
+        /// quantity by the specified amount. If the product is not present, a new cart item is created. The method
+        /// fails if the product does not exist or if there is not enough stock to fulfill the requested
+        /// quantity.</remarks>
+        /// <param name="createDto">The details of the cart item to create or update, including the cart identifier, product identifier, and
+        /// quantity. Must not be null.</param>
+        /// <param name="ct">A cancellation token that can be used to cancel the operation.</param>
+        /// <returns>A result containing the created or updated cart item if successful; otherwise, a failure result with a
+        /// specific cart item error indicating the reason for failure, such as product not found or insufficient stock.</returns>
         public async Task<Result<CartItemDto, CartItemError>> CreateCartItemOrChangeQuantityAsync(CreateCartItemDto createDto, CancellationToken ct = default)
         {
             _logger.LogInformation("Creating new cartItem. CartId: {CartId}, ProductId: {ProductId}.", createDto.CartId, createDto.ProductId);
@@ -120,6 +133,18 @@ namespace CartService.Application.Services
 
 
 
+        /// <summary>
+        /// Changes the quantity of a cart item or removes it from the cart if the quantity is set to zero.
+        /// </summary>
+        /// <remarks>If the specified cart item does not exist, or if the associated product is not found,
+        /// the operation fails with a corresponding error. If the requested quantity exceeds the available stock, the
+        /// operation fails with an out-of-stock error. Setting the quantity to zero removes the item from the
+        /// cart.</remarks>
+        /// <param name="cartItemId">The unique identifier of the cart item to update.</param>
+        /// <param name="changeDto">An object containing the new quantity for the cart item. The quantity must be zero or a positive integer.</param>
+        /// <param name="ct">A cancellation token that can be used to cancel the operation.</param>
+        /// <returns>A result containing the updated cart item if the operation succeeds, or an error indicating why the change
+        /// could not be made. If the quantity is set to zero, the result contains the deleted cart item.</returns>
         public async Task<Result<CartItemDto, CartItemError>> ChangeCartItemQuantityAsync(Guid cartItemId, ChangeQuantityCartItemDto changeDto, CancellationToken ct = default)
         {
             _logger.LogInformation("Changing cartItem quantity. CartItemId: {CartItemId}.", cartItemId);

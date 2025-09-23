@@ -60,19 +60,18 @@ namespace OrderService.Persistence
             var jsonOptions = new JsonSerializerOptions
             {
                 DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-                // ReferenceHandler = ReferenceHandler.IgnoreCycles // už není potřeba
             };
 
             foreach (var entry in entries)
             {
-                object payload;
+                object data;
 
                 if (entry.State == EntityState.Modified)
                 {
                     var changes = new Dictionary<string, object?>();
                     foreach (var p in entry.Properties)
                     {
-                        // jen skalární properties; navigace tady vůbec nejsou
+                        // Only include scalar properties; navigation properties are not tracked here
                         if (!Equals(p.OriginalValue, p.CurrentValue))
                         {
                             changes[p.Metadata.Name] = new
@@ -83,7 +82,7 @@ namespace OrderService.Persistence
                         }
                     }
 
-                    payload = new
+                    data = new
                     {
                         Keys = GetKeys(entry),
                         Changes = changes
@@ -91,7 +90,7 @@ namespace OrderService.Persistence
                 }
                 else if (entry.State == EntityState.Added)
                 {
-                    payload = new
+                    data = new
                     {
                         Keys = GetKeys(entry),
                         Values = GetScalarValues(entry, original: false)
@@ -99,7 +98,7 @@ namespace OrderService.Persistence
                 }
                 else // Deleted
                 {
-                    payload = new
+                    data = new
                     {
                         Keys = GetKeys(entry),
                         Values = GetScalarValues(entry, original: true)
@@ -111,12 +110,12 @@ namespace OrderService.Persistence
                     EntityName = entry.Metadata.ClrType.Name,
                     EventType = entry.State.ToString(),
                     InsertedDate = DateTime.UtcNow,
-                    Data = JsonSerializer.Serialize(payload, jsonOptions)
+                    Data = JsonSerializer.Serialize(data, jsonOptions)
                 });
             }
         }
 
-        // Helpers – jen skalární hodnoty (žádné navigace)
+        // Helpers – extract only scalar values (exclude navigation properties)
         private static Dictionary<string, object?> GetScalarValues(EntityEntry entry, bool original)
         {
             return entry.Properties

@@ -24,20 +24,13 @@ namespace CartService.Persistence
 
 
             modelBuilder.Entity<Cart>()
-                 .HasIndex(c => c.UserId);
-
-          
-
+                 .HasIndex(c => c.UserId)
+                 .IsUnique();
 
 
             modelBuilder.Entity<CartItem>()
                 .Property(i => i.UnitPrice)
                 .HasPrecision(10, 2);
-
-                
-
-
-
         }
 
 
@@ -70,7 +63,7 @@ namespace CartService.Persistence
             {
                 object data;
 
-                // Pokud chceš logovat změny při Update, vypiš změněné vlastnosti s hodnotami před/po
+                // For updates, capture only the properties that have changed, including their original and current values
                 if (entry.State == EntityState.Modified)
                 {
                     var changes = new Dictionary<string, object>();
@@ -89,7 +82,7 @@ namespace CartService.Persistence
                 }
                 else
                 {
-                    // Pro přidání/smazání stačí celá entita
+                    // For inserts and deletes, serialize the entire entity
                     data = entry.Entity;
                 }
 
@@ -103,9 +96,6 @@ namespace CartService.Persistence
                 AuditEventLogs.Add(auditLog);
             }
         }
-
-
-
 
 
 

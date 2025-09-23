@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.14.36301.6
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.11012.119 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UserService", "UserService", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 EndProject
@@ -121,9 +121,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "k8s", "k8s", "{634CB57C-21E
 		orderservice.yaml = orderservice.yaml
 		paymentservice.yaml = paymentservice.yaml
 		productservice.yaml = productservice.yaml
+		rabbitmq.yaml = rabbitmq.yaml
 		secrets.yaml = secrets.yaml
 		userservice.yaml = userservice.yaml
-		rabbitmq.yaml = rabbitmq.yaml
 	EndProjectSection
 EndProject
 Global

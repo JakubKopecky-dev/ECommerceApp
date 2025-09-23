@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CartService.Api.DependencyInjection
 {
-    public static class MigrationCollectionExtensions
+    public static class MigrationApplicationBuilderExtensions
     {
         public static void ApplyMigrations(this IApplicationBuilder app)
         {
