@@ -17,7 +17,7 @@ namespace ProductService.Persistence.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.7")
+                .HasAnnotation("ProductVersion", "9.0.8")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -37,7 +37,7 @@ namespace ProductService.Persistence.Migrations
                     b.ToTable("CategoryProduct");
                 });
 
-            modelBuilder.Entity("ProductService.Domain.Common.AuditEventLog", b =>
+            modelBuilder.Entity("ProductService.Domain.Common.AuditEventProductLog", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -62,7 +62,7 @@ namespace ProductService.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AuditEventLogs");
+                    b.ToTable("AuditEventProuctLogs");
                 });
 
             modelBuilder.Entity("ProductService.Domain.Entity.Brand", b =>

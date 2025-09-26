@@ -12,7 +12,7 @@ namespace OrderService.Persistence
     public class OrderDbContext(DbContextOptions<OrderDbContext> options, IHostEnvironment env) : DbContext(options)
     {
         private readonly IHostEnvironment _env = env;
-        public DbSet<AuditEventLog> AuditEventLogs { get; set; }
+        public DbSet<AuditEventOrderLog> AuditEventOrderLogs { get; set; }
 
         public DbSet<OrderItem> OrderItems { get; set; }
 
@@ -105,7 +105,7 @@ namespace OrderService.Persistence
                     };
                 }
 
-                AuditEventLogs.Add(new AuditEventLog
+                AuditEventOrderLogs.Add(new AuditEventOrderLog
                 {
                     EntityName = entry.Metadata.ClrType.Name,
                     EventType = entry.State.ToString(),

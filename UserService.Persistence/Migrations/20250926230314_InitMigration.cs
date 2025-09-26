@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace UserService.Persistence.Migrations
 {
     /// <inheritdoc />
-    public partial class InitMig : Migration
+    public partial class InitMigration : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -58,7 +58,7 @@ namespace UserService.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "AuditEventLogs",
+                name: "AuditEventUserLogs",
                 columns: table => new
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false)
@@ -70,7 +70,7 @@ namespace UserService.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_AuditEventLogs", x => x.Id);
+                    table.PrimaryKey("PK_AuditEventUserLogs", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -238,7 +238,7 @@ namespace UserService.Persistence.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
-                name: "AuditEventLogs");
+                name: "AuditEventUserLogs");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoles");

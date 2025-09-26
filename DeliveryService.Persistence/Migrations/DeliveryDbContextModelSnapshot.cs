@@ -22,7 +22,7 @@ namespace DeliveryService.Persistence.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("DeliveryService.Domain.Common.AuditEventLog", b =>
+            modelBuilder.Entity("DeliveryService.Domain.Common.AuditEventDeliveryLog", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -47,7 +47,7 @@ namespace DeliveryService.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AuditEventLogs");
+                    b.ToTable("AuditEventLog-Delivery", (string)null);
                 });
 
             modelBuilder.Entity("DeliveryService.Domain.Entity.Courier", b =>

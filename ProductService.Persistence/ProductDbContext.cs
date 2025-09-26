@@ -10,7 +10,7 @@ namespace ProductService.Persistence
     public class ProductDbContext(DbContextOptions<ProductDbContext> options, IHostEnvironment env) : DbContext(options)
     {
         private readonly IHostEnvironment _env = env;
-        public DbSet<AuditEventLog> AuditEventLogs { get; set; }
+        public DbSet<AuditEventProductLog> AuditEventProuctLogs { get; set; }
 
         public DbSet<Brand> Brands { get; set; }
 
@@ -105,14 +105,14 @@ namespace ProductService.Persistence
                     data = entry.Entity;
                 }
 
-                var auditLog = new AuditEventLog
+                var auditLog = new AuditEventProductLog
                 {
                     EntityName = entry.Metadata.ClrType.Name,
                     EventType = entry.State.ToString(),
                     InsertedDate = DateTime.UtcNow,
                     Data = System.Text.Json.JsonSerializer.Serialize(data)
                 };
-                AuditEventLogs.Add(auditLog);
+                AuditEventProuctLogs.Add(auditLog);
             }
         }
 

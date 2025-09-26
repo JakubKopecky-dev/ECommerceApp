@@ -22,7 +22,7 @@ namespace CartService.Persistence.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("CartService.Domain.Common.AuditEventLog", b =>
+            modelBuilder.Entity("CartService.Domain.Common.AuditEventCartLog", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -47,7 +47,7 @@ namespace CartService.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AuditEventLogs", (string)null);
+                    b.ToTable("AuditEventCartLogs");
                 });
 
             modelBuilder.Entity("CartService.Domain.Entity.Cart", b =>
@@ -70,7 +70,7 @@ namespace CartService.Persistence.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("Carts", (string)null);
+                    b.ToTable("Carts");
                 });
 
             modelBuilder.Entity("CartService.Domain.Entity.CartItem", b =>
@@ -106,16 +106,18 @@ namespace CartService.Persistence.Migrations
 
                     b.HasIndex("CartId");
 
-                    b.ToTable("CartItems", (string)null);
+                    b.ToTable("CartItems");
                 });
 
             modelBuilder.Entity("CartService.Domain.Entity.CartItem", b =>
                 {
-                    b.HasOne("CartService.Domain.Entity.Cart", null)
+                    b.HasOne("CartService.Domain.Entity.Cart", "Cart")
                         .WithMany("Items")
                         .HasForeignKey("CartId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Cart");
                 });
 
             modelBuilder.Entity("CartService.Domain.Entity.Cart", b =>

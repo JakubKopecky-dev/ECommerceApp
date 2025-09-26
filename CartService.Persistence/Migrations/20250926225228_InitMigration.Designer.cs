@@ -12,20 +12,20 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CartService.Persistence.Migrations
 {
     [DbContext(typeof(CartDbContext))]
-    [Migration("20250802211732_removeTotalPrice")]
-    partial class removeTotalPrice
+    [Migration("20250926225228_InitMigration")]
+    partial class InitMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.7")
+                .HasAnnotation("ProductVersion", "9.0.8")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("CartService.Domain.Common.AuditEventLog", b =>
+            modelBuilder.Entity("CartService.Domain.Common.AuditEventCartLog", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -50,7 +50,7 @@ namespace CartService.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AuditEventLogs");
+                    b.ToTable("AuditEventCartLogs");
                 });
 
             modelBuilder.Entity("CartService.Domain.Entity.Cart", b =>
@@ -62,9 +62,6 @@ namespace CartService.Persistence.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Note")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -73,7 +70,8 @@ namespace CartService.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("UserId")
+                        .IsUnique();
 
                     b.ToTable("Carts");
                 });
@@ -116,11 +114,13 @@ namespace CartService.Persistence.Migrations
 
             modelBuilder.Entity("CartService.Domain.Entity.CartItem", b =>
                 {
-                    b.HasOne("CartService.Domain.Entity.Cart", null)
+                    b.HasOne("CartService.Domain.Entity.Cart", "Cart")
                         .WithMany("Items")
                         .HasForeignKey("CartId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Cart");
                 });
 
             modelBuilder.Entity("CartService.Domain.Entity.Cart", b =>

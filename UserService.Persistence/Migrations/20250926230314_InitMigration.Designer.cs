@@ -12,8 +12,8 @@ using UserService.Persistence;
 namespace UserService.Persistence.Migrations
 {
     [DbContext(typeof(UserDbContext))]
-    [Migration("20250913145845_InitMig")]
-    partial class InitMig
+    [Migration("20250926230314_InitMigration")]
+    partial class InitMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -156,7 +156,7 @@ namespace UserService.Persistence.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("UserService.Domain.Common.AuditEventLog", b =>
+            modelBuilder.Entity("UserService.Domain.Common.AuditEventUserLog", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -181,7 +181,7 @@ namespace UserService.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AuditEventLogs");
+                    b.ToTable("AuditEventUserLogs");
                 });
 
             modelBuilder.Entity("UserService.Infrastructure.Identity.ApplicationUser", b =>

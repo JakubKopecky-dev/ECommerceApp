@@ -1,6 +1,6 @@
-﻿namespace CartService.Domain.Common
+﻿namespace DeliveryService.Domain.Common
 {
-    public class AuditEventLog
+    public class AuditEventDeliveryLog
     {
         public uint Id { get; set; }
 

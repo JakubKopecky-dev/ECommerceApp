@@ -153,7 +153,7 @@ namespace UserService.Persistence.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("UserService.Domain.Common.AuditEventLog", b =>
+            modelBuilder.Entity("UserService.Domain.Common.AuditEventUserLog", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -178,7 +178,7 @@ namespace UserService.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("AuditEventLogs");
+                    b.ToTable("AuditEventUserLogs");
                 });
 
             modelBuilder.Entity("UserService.Infrastructure.Identity.ApplicationUser", b =>

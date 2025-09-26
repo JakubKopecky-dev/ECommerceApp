@@ -9,7 +9,7 @@ namespace CartService.Persistence
     public class CartDbContext(DbContextOptions<CartDbContext> options, IHostEnvironment env) : DbContext(options)
     {
         private readonly IHostEnvironment _env = env;
-        public DbSet<AuditEventLog> AuditEventLogs { get; set; }
+        public DbSet<AuditEventCartLog> AuditEventCartLogs { get; set; }
 
         public DbSet<Cart> Carts { get; set; }
 
@@ -20,7 +20,6 @@ namespace CartService.Persistence
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-
 
 
             modelBuilder.Entity<Cart>()
@@ -86,14 +85,14 @@ namespace CartService.Persistence
                     data = entry.Entity;
                 }
 
-                var auditLog = new AuditEventLog
+                var auditLog = new AuditEventCartLog
                 {
                     EntityName = entry.Metadata.ClrType.Name,
                     EventType = entry.State.ToString(),
                     InsertedDate = DateTime.UtcNow,
                     Data = System.Text.Json.JsonSerializer.Serialize(data)
                 };
-                AuditEventLogs.Add(auditLog);
+                AuditEventCartLogs.Add(auditLog);
             }
         }
 

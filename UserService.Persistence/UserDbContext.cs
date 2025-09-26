@@ -11,7 +11,7 @@ namespace UserService.Persistence
     public class UserDbContext(DbContextOptions<UserDbContext> options, IHostEnvironment env) : IdentityDbContext<ApplicationUser, IdentityRole<Guid>, Guid>(options)
     {
         private readonly IHostEnvironment _env = env;
-        public DbSet<AuditEventLog> AuditEventLogs { get; set; }
+        public DbSet<AuditEventUserLog> AuditEventUserLogs { get; set; }
 
 
 
@@ -67,14 +67,14 @@ namespace UserService.Persistence
                     data = entry.Entity;
                 }
 
-                var auditLog = new AuditEventLog
+                var auditLog = new AuditEventUserLog
                 {
                     EntityName = entry.Metadata.ClrType.Name,
                     EventType = entry.State.ToString(),
                     InsertedDate = DateTime.UtcNow,
                     Data = System.Text.Json.JsonSerializer.Serialize(data)
                 };
-                AuditEventLogs.Add(auditLog);
+                AuditEventUserLogs.Add(auditLog);
             }
         }
 

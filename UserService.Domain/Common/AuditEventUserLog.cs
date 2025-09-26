@@ -1,6 +1,6 @@
-﻿namespace ProductService.Domain.Common
+﻿namespace UserService.Domain.Common
 {
-    public class AuditEventLog
+    public class AuditEventUserLog
     {
         public uint Id { get; set; }
 

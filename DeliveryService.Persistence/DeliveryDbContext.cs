@@ -9,7 +9,7 @@ namespace DeliveryService.Persistence
     public class DeliveryDbContext(DbContextOptions<DeliveryDbContext> options, IHostEnvironment env) : DbContext(options)
     {
         private readonly IHostEnvironment _env = env;
-        public DbSet<AuditEventLog> AuditEventLogs { get; set; }
+        public DbSet<AuditEventDeliveryLog> AuditEventDeliveryLogs { get; set; }
 
         public DbSet<Courier> Couriers { get; set; }
 
@@ -19,6 +19,10 @@ namespace DeliveryService.Persistence
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<AuditEventDeliveryLog>()
+                .ToTable("AuditEventLog-Delivery");
+
 
             modelBuilder.Entity<Courier>()
                 .HasIndex(c => c.Name)
@@ -94,14 +98,14 @@ namespace DeliveryService.Persistence
                     data = entry.Entity;
                 }
 
-                var auditLog = new AuditEventLog
+                var auditLog = new AuditEventDeliveryLog
                 {
                     EntityName = entry.Metadata.ClrType.Name,
                     EventType = entry.State.ToString(),
                     InsertedDate = DateTime.UtcNow,
                     Data = System.Text.Json.JsonSerializer.Serialize(data)
                 };
-                AuditEventLogs.Add(auditLog);
+                AuditEventDeliveryLogs.Add(auditLog);
             }
         }
 
