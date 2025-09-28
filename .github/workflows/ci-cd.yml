@@ -23,11 +23,20 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
+      # Cache NuGet packages for faster builds
+      - name: Cache .nuget/packages
+        uses: actions/cache@v3
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
       - name: Restore dependencies
         run: dotnet restore
 
       - name: Build solution
-        run: dotnet build --no-restore --configuration Release
+        run: dotnet build --no-restore --configuration Release --verbosity minimal
 
       - name: Run tests
         run: dotnet test --no-build --configuration Release --verbosity normal
@@ -60,5 +69,6 @@ jobs:
 
       - name: Build and push ${{ matrix.service }}
         run: |
-          docker build -t ghcr.io/jakubkopecky-dev/${{ matrix.service }}:latest -f ${{ matrix.service }}.Api/Dockerfile .
-          docker push ghcr.io/jakubkopecky-dev/${{ matrix.service }}:latest
+          SERVICE_TAG=$(echo "${{ matrix.service }}" | tr '[:upper:]' '[:lower:]')
+          docker build -t ghcr.io/jakubkopecky-dev/$SERVICE_TAG:latest -f ${{ matrix.service }}.Api/Dockerfile .
+          docker push ghcr.io/jakubkopecky-dev/$SERVICE_TAG:latest
