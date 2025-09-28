@@ -42,7 +42,7 @@ jobs:
           with:
               registry: ghcr.io
               username: ${{ github.actor }}
-              password: ${{ secrets.GITHUB_TOKEN }}
+              password: ${{ secrets.GHCR-Push }}
 
         # 6) Build & Push Docker image for all microservices
         - name: Build and push CartService
