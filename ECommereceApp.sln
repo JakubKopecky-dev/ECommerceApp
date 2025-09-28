@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.0.11012.119 d18.0
+VisualStudioVersion = 18.0.11012.119
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UserService", "UserService", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
 EndProject
@@ -124,6 +124,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "k8s", "k8s", "{634CB57C-21E
 		rabbitmq.yaml = rabbitmq.yaml
 		secrets.yaml = secrets.yaml
 		userservice.yaml = userservice.yaml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".github", ".github", "{CD534E06-601D-4C84-BC57-D4F379F5D77E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{0CF274FA-9B35-4A90-98ED-EA84BC52950C}"
+	ProjectSection(SolutionItems) = preProject
+		ci-cd.yml = ci-cd.yml
 	EndProjectSection
 EndProject
 Global
@@ -328,6 +335,7 @@ Global
 		{4AC00106-797A-4E5D-83A3-8E4B6A69B5E8} = {37BD24A9-AE9D-437D-840B-74DC44800CE5}
 		{55040531-BCE1-481A-8EB2-6EEEADD9DE3A} = {C8542865-2542-4EE9-B567-02BAB7C504D0}
 		{754298AC-7CC1-4F59-A334-275BF8E49956} = {E8EC15FF-7352-44A3-8776-99C09975D7AD}
+		{0CF274FA-9B35-4A90-98ED-EA84BC52950C} = {CD534E06-601D-4C84-BC57-D4F379F5D77E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {19EBBEF1-8991-417A-AACA-2B4BF39FA9FB}
