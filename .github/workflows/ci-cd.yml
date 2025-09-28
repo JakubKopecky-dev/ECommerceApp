@@ -23,20 +23,11 @@ jobs:
         with:
           dotnet-version: '9.0.x'
 
-      # Cache NuGet packages for faster builds
-      - name: Cache .nuget/packages
-        uses: actions/cache@v3
-        with:
-          path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
-          restore-keys: |
-            ${{ runner.os }}-nuget-
-
       - name: Restore dependencies
         run: dotnet restore
 
       - name: Build solution
-        run: dotnet build --no-restore --configuration Release --verbosity minimal
+        run: dotnet build --no-restore --configuration Release
 
       - name: Run tests
         run: dotnet test --no-build --configuration Release --verbosity normal
@@ -72,3 +63,66 @@ jobs:
           SERVICE_TAG=$(echo "${{ matrix.service }}" | tr '[:upper:]' '[:lower:]')
           docker build -t ghcr.io/jakubkopecky-dev/$SERVICE_TAG:latest -f ${{ matrix.service }}.Api/Dockerfile .
           docker push ghcr.io/jakubkopecky-dev/$SERVICE_TAG:latest
+
+  # 3) Deploy to Azure Container Apps
+  deploy-to-aca:
+    runs-on: ubuntu-latest
+    needs: docker-build
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy CartService
+        run: |
+          az containerapp update \
+            --name cartservice \
+            --resource-group ecommerceapp-rg \
+            --image ghcr.io/jakubkopecky-dev/cartservice:latest
+
+      - name: Deploy OrderService
+        run: |
+          az containerapp update \
+            --name orderservice \
+            --resource-group ecommerceapp-rg \
+            --image ghcr.io/jakubkopecky-dev/orderservice:latest
+
+      - name: Deploy ProductService
+        run: |
+          az containerapp update \
+            --name productservice \
+            --resource-group ecommerceapp-rg \
+            --image ghcr.io/jakubkopecky-dev/productservice:latest
+
+      - name: Deploy DeliveryService
+        run: |
+          az containerapp update \
+            --name deliveryservice \
+            --resource-group ecommerceapp-rg \
+            --image ghcr.io/jakubkopecky-dev/deliveryservice:latest
+
+      - name: Deploy NotificationService
+        run: |
+          az containerapp update \
+            --name notificationservice \
+            --resource-group ecommerceapp-rg \
+            --image ghcr.io/jakubkopecky-dev/notificationservice:latest
+
+      - name: Deploy PaymentService
+        run: |
+          az containerapp update \
+            --name paymentservice \
+            --resource-group ecommerceapp-rg \
+            --image ghcr.io/jakubkopecky-dev/paymentservice:latest
+
+      - name: Deploy UserService
+        run: |
+          az containerapp update \
+            --name userservice \
+            --resource-group ecommerceapp-rg \
+            --image ghcr.io/jakubkopecky-dev/userservice:latest
