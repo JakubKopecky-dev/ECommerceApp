@@ -47,35 +47,35 @@ jobs:
         # 6) Build & Push Docker image for all microservices
         - name: Build and push CartService
           run: |
-              docker build -t ghcr.io/jakubkopecky-dev/cartservice:latest ./CartService.Api
+              docker build -t ghcr.io/jakubkopecky-dev/cartservice:latest -f CartService.Api/Dockerfile .
               docker push ghcr.io/jakubkopecky-dev/cartservice:latest
 
         - name: Build and push OrderService
           run: |
-              docker build -t ghcr.io/jakubkopecky-dev/orderservice:latest ./OrderService.Api
+              docker build -t ghcr.io/jakubkopecky-dev/orderservice:latest -f OrderService.Api/Dockerfile .
               docker push ghcr.io/jakubkopecky-dev/orderservice:latest
 
         - name: Build and push ProductService
           run: |
-              docker build -t ghcr.io/jakubkopecky-dev/productservice:latest ./ProductService.Api
+              docker build -t ghcr.io/jakubkopecky-dev/productservice:latest -f ProductService.Api/Dockerfile .
               docker push ghcr.io/jakubkopecky-dev/productservice:latest
     
         - name: Build and push DeliveryService
           run: |
-              docker build -t ghcr.io/jakubkopecky-dev/deliveryservice:latest ./DeliveryService.Api
+              docker build -t ghcr.io/jakubkopecky-dev/deliveryservice:latest -f DeliveryService.Api/Dockerfile .
               docker push ghcr.io/jakubkopecky-dev/deliveryservice:latest
     
         - name: Build and push NotificationService
           run: |
-              docker build -t ghcr.io/jakubkopecky-dev/notificationservice:latest ./NotificationService.Api
+              docker build -t ghcr.io/jakubkopecky-dev/notificationservice:latest -f NotificationService.Api/Dockerfile .
               docker push ghcr.io/jakubkopecky-dev/notificationservice:latest
     
         - name: Build and push PaymentService
           run: |
-              docker build -t ghcr.io/jakubkopecky-dev/paymentservice:latest ./PaymentService.Api
+              docker build -t ghcr.io/jakubkopecky-dev/paymentservice:latest -f PaymentService.Api/Dockerfile .
               docker push ghcr.io/jakubkopecky-dev/paymentservice:latest
     
         - name: Build and push UserService
           run: |
-              docker build -t ghcr.io/jakubkopecky-dev/userservice:latest ./UserService.Api
+              docker build -t ghcr.io/jakubkopecky-dev/userservice:latest -f UserService.Api/Dockerfile .
               docker push ghcr.io/jakubkopecky-dev/userservice:latest
