@@ -37,12 +37,16 @@ namespace ProductService.Api.DependencyInjection
                 else if (transport == "AzureServiceBus")
                 {
                     var connectionString = configuration["AzureServiceBus:ConnectionString"];
+                    var queueName = configuration["AzureServiceBus:QueueName"]!;
 
                     x.UsingAzureServiceBus((context, cfg) =>
                     {
                         cfg.Host(connectionString);
 
-                        cfg.ConfigureEndpoints(context);
+                        cfg.ReceiveEndpoint(queueName, e =>
+                        {
+                            e.ConfigureConsumer<OrderItemReservedConsumer>(context);
+                        });
                     });
                 }
             });

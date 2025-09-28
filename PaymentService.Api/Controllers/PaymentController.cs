@@ -8,14 +8,13 @@ using PaymentService.Api.Enum;
 namespace PaymentService.Api.Controllers
 {
     [ApiController]
-    [Authorize(Roles = UserRoles.Admin)]
     [Route("api")]
     public class PaymentController(IPaymentService paymentService) : ControllerBase
     {
         private readonly IPaymentService _paymentService = paymentService;
 
 
-
+        [Authorize(Roles = UserRoles.Admin)]
         [HttpPost("create-checkout-session")]
         public async Task<IActionResult> CreateCheckoutSession(CreateCheckoutSessionRequestDto requestDto, CancellationToken ct)
         {
