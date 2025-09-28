@@ -7,6 +7,7 @@ on:
     pull_request:
         branches:
             - main          # spustí se i pøi PR do main, aby otestovala kod pøed mergem
+    workflow_dispatch:      # ruční spuštění flow
 
 
 jobs:
