@@ -47,35 +47,35 @@ jobs:
         # 6) Build & Push Docker image for all microservices
         - name: Build and push CartService
           run: |
-              docker build -t ghcr.io/${{ github.repository_owner }}/cartservice:latest ./CartService.Api
-              docker push ghcr.io/${{ github.repository_owner }}/cartservice:latest
+              docker build -t ghcr.io/${{ github.repository_owner | toLower }}/cartservice:latest ./CartService.Api
+              docker push ghcr.io/${{ github.repository_owner | toLower }}/cartservice:latest
 
         - name: Build and push OrderService
           run: |
-              docker build -t ghcr.io/${{ github.repository_owner }}/orderservice:latest ./OrderService.Api
-              docker push ghcr.io/${{ github.repository_owner }}/orderservice:latest
+              docker build -t ghcr.io/${{ github.repository_owner | toLower }}/orderservice:latest ./OrderService.Api
+              docker push ghcr.io/${{ github.repository_owner | toLower }}/orderservice:latest
 
         - name: Build and push ProductService
           run: |
               docker build -t ghcr.io/${{ github.repository_owner }}/productservice:latest ./ProductService.Api
-              docker push ghcr.io/${{ github.repository_owner }}/productservice:latest
+              docker push ghcr.io/${{ github.repository_owner | toLower }}/productservice:latest
     
         - name: Build and push DeliveryService
           run: |
-              docker build -t ghcr.io/${{ github.repository_owner }}/deliveryservice:latest ./DeliveryService.Api
-              docker push ghcr.io/${{ github.repository_owner }}/deliveryservice:latest
+              docker build -t ghcr.io/${{ github.repository_owner | toLower }}/deliveryservice:latest ./DeliveryService.Api
+              docker push ghcr.io/${{ github.repository_owner | toLower }}/deliveryservice:latest
     
         - name: Build and push NotificationService
           run: |
-              docker build -t ghcr.io/${{ github.repository_owner }}/notificationservice:latest ./NotificationService.Api
-              docker push ghcr.io/${{ github.repository_owner }}/notificationservice:latest
+              docker build -t ghcr.io/${{ github.repository_owner | toLower }}/notificationservice:latest ./NotificationService.Api
+              docker push ghcr.io/${{ github.repository_owner | toLower }}/notificationservice:latest
     
         - name: Build and push PaymentService
           run: |
-              docker build -t ghcr.io/${{ github.repository_owner }}/paymentservice:latest ./PaymentService.Api
-              docker push ghcr.io/${{ github.repository_owner }}/paymentservice:latest
+              docker build -t ghcr.io/${{ github.repository_owner | toLower }}/paymentservice:latest ./PaymentService.Api
+              docker push ghcr.io/${{ github.repository_owner | toLower }}/paymentservice:latest
     
         - name: Build and push UserService
           run: |
-              docker build -t ghcr.io/${{ github.repository_owner }}/userservice:latest ./UserService.Api
-              docker push ghcr.io/${{ github.repository_owner }}/userservice:latest
+              docker build -t ghcr.io/${{ github.repository_owner | toLower }}/userservice:latest ./UserService.Api
+              docker push ghcr.io/${{ github.repository_owner | toLower }}/userservice:latest
