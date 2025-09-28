@@ -3,10 +3,10 @@ name: CI/CD Pipeline
 on:
     push:
         branches:
-            - main          # pipeline se spustí, kdy pushneš do vìtve main
+            - main          # pipeline se spustÃ­, kdyÅ¾ pushneÅ¡ do vÃ¬tve main
     pull_request:
         branches:
-            - main          # spustí se i pøi PR do main, aby otestovala kod pøed mergem
+            - main          # spustÃ­ se i pÃ¸i PR do main, aby otestovala kod pÃ¸ed mergem
 
 
 jobs:
