@@ -34,7 +34,7 @@ namespace NotificationService.IntegrationTests.Consumers
 
             await harness.Bus.Publish(new OrderStatusChangedEvent {OrderId = orderId, UserId = userId, NewStatus = Shared.Contracts.Enums.OrderStatus.Accepted });
 
-            (await harness.Consumed.Any<OrderStatusChangedEvent>()).Should().BeTrue();
+            (await harness.Consumed.Any<OrderStatusChangedEvent>(cancellationToken: new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token)).Should().BeTrue();
 
             var db = scope.ServiceProvider.GetRequiredService<NotificationDbContext>();
             var notification = db.Notifications.SingleOrDefault(n => n.UserId == userId);

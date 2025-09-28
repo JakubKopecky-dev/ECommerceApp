@@ -30,7 +30,7 @@ namespace NotificationService.IntegrationTests.Consumers
 
             await harness.Bus.Publish(new DeliveryCanceledEvent{ UserId = userId,OrderId = orderId });
 
-            (await harness.Consumed.Any<DeliveryCanceledEvent>()).Should().BeTrue();
+            (await harness.Consumed.Any<DeliveryCanceledEvent>(cancellationToken: new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token)).Should().BeTrue();
 
             var db = scope.ServiceProvider.GetRequiredService<NotificationDbContext>();
             var notification = db.Notifications.SingleOrDefault(n => n.UserId == userId);

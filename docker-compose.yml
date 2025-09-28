@@ -128,8 +128,8 @@ services:
             <<: [*jwt-env, *rabbit-env]
             ASPNETCORE_ENVIRONMENT: "Production"
             # Striper configuration
-            Stripe__SecretKey: "sk_test_51S3KcYFzAPsvRxZYNAeAVNsDoNVIPh7ZGa0FuHzvF8NC52FxfNlmbzhsYQw5FYZb81WqG5ZMq5wzyIUZji7nnrxj00qaSyPz5D"
-            Stripe__WebHookSecret: "whsec_915baf41d3cb0adcaebd3029758b2d0b7b06ecb5a6891086ffc74ffd94c5c3cf"
+            Stripe__SecretKey: "sk_test_yourSecret"
+            Stripe__WebHookSecret: "whsec_yourSercret"
             Stripe__SuccessUrl: "http://localhost:7129/api/Payment/success"
             Stripe__CancelUrl: "http://localhost:7129/api/Payment/cancel"
             # Swagger

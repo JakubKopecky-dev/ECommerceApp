@@ -33,7 +33,7 @@ namespace OrderService.IntegrationTests
 
             await harness.Bus.Publish(new DeliveryDeliveredEvent { OrderId = orderId });
 
-            (await harness.Consumed.Any<DeliveryDeliveredEvent>()).Should().BeTrue();
+            (await harness.Consumed.Any<DeliveryDeliveredEvent>(cancellationToken: new CancellationTokenSource(TimeSpan.FromSeconds(5)).Token)).Should().BeTrue();
 
             ChangeOrderStatusDto changeDto = new() { Status = OrderStatus.Completed };
             orderServiceMock.Verify(s => s.ChangeOrderStatusAsync(orderId, changeDto, It.IsAny<CancellationToken>()), Times.Once);
