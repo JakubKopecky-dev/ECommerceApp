@@ -1,81 +1,64 @@
 name: CI/CD Pipeline
 
 on:
-    push:
-        branches:
-            - main          
-    pull_request:
-        branches:
-            - main          
-    workflow_dispatch:      
-
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
 
 jobs:
-    build-and-test:
-        runs-on: ubuntu-latest
+  # 1) Build and test all services
+  build-and-test:
+    runs-on: ubuntu-latest
 
-        steps:
-        # 1) Checkout repository
-        - name: Checkout code
-          uses: actions/checkout@v4
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-        # 2) Setup .NET SDK
-        - name: Setup .NET
-          uses: actions/setup-dotnet@v4
-          with:
-            dotnet-version: '9.0.x'     # verze netu projektu
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
 
-        # 3) Restore & Build
-        - name: Restore dependencies
-          run: dotnet restore
+      - name: Restore dependencies
+        run: dotnet restore
 
-        - name: Build
-          run: dotnet build --no-restore --configuration Release
+      - name: Build solution
+        run: dotnet build --no-restore --configuration Release
 
-        # 4) Run tests
-        - name: Run tests
-          run: dotnet test --no-build --configuration Release --verbosity normal
+      - name: Run tests
+        run: dotnet test --no-build --configuration Release --verbosity normal
 
-        # 5) Log in to GitHub Container Registry
-        - name: Log in to GitHub Container Registry
-          uses: docker/login-action@v3
-          with:
-              registry: ghcr.io
-              username: jakubkopecky-dev
-              password: ${{ secrets.GHCR_TOKEN }}
+  # 2) Build & push docker images (matrix for each microservice)
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    strategy:
+      matrix:
+        service: 
+          - CartService
+          - OrderService
+          - ProductService
+          - DeliveryService
+          - NotificationService
+          - PaymentService
+          - UserService
 
-        # 6) Build & Push Docker image for all microservices
-        - name: Build and push CartService
-          run: |
-              docker build -t ghcr.io/jakubkopecky-dev/cartservice:latest -f CartService.Api/Dockerfile .
-              docker push ghcr.io/jakubkopecky-dev/cartservice:latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-        - name: Build and push OrderService
-          run: |
-              docker build -t ghcr.io/jakubkopecky-dev/orderservice:latest -f OrderService.Api/Dockerfile .
-              docker push ghcr.io/jakubkopecky-dev/orderservice:latest
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: jakubkopecky-dev
+          password: ${{ secrets.GHCR_TOKEN }}
 
-        - name: Build and push ProductService
-          run: |
-              docker build -t ghcr.io/jakubkopecky-dev/productservice:latest -f ProductService.Api/Dockerfile .
-              docker push ghcr.io/jakubkopecky-dev/productservice:latest
-    
-        - name: Build and push DeliveryService
-          run: |
-              docker build -t ghcr.io/jakubkopecky-dev/deliveryservice:latest -f DeliveryService.Api/Dockerfile .
-              docker push ghcr.io/jakubkopecky-dev/deliveryservice:latest
-    
-        - name: Build and push NotificationService
-          run: |
-              docker build -t ghcr.io/jakubkopecky-dev/notificationservice:latest -f NotificationService.Api/Dockerfile .
-              docker push ghcr.io/jakubkopecky-dev/notificationservice:latest
-    
-        - name: Build and push PaymentService
-          run: |
-              docker build -t ghcr.io/jakubkopecky-dev/paymentservice:latest -f PaymentService.Api/Dockerfile .
-              docker push ghcr.io/jakubkopecky-dev/paymentservice:latest
-    
-        - name: Build and push UserService
-          run: |
-              docker build -t ghcr.io/jakubkopecky-dev/userservice:latest -f UserService.Api/Dockerfile .
-              docker push ghcr.io/jakubkopecky-dev/userservice:latest
+      - name: Build and push ${{ matrix.service }}
+        run: |
+          docker build -t ghcr.io/jakubkopecky-dev/${{ matrix.service }}:latest -f ${{ matrix.service }}.Api/Dockerfile .
+          docker push ghcr.io/jakubkopecky-dev/${{ matrix.service }}:latest
