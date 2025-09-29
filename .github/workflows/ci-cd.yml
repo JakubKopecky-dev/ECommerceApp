@@ -91,11 +91,6 @@ jobs:
       - name: Install Azure Container Apps extension
         run: az extension add --name containerapp --upgrade
 
-      - name: Debug CLI
-        run: |
-          az version
-          az containerapp --help
-
       - name: Deploy ${{ matrix.service }}
         run: |                                            
           az containerapp update \
