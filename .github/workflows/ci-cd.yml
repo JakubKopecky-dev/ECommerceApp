@@ -91,9 +91,14 @@ jobs:
       - name: Install Azure Container Apps extension
         run: az extension add --name containerapp --upgrade
 
+      - name: Debug CLI
+        run: |
+          az version
+          az containerapp --help
+
       - name: Deploy ${{ matrix.service }}
         run: |                                            
           az containerapp update \
-            --name ${{ matrix.service }} \                 
-            --resource-group ecommerceapp-rg \         
+            --name ${{ matrix.service }} \
+            --resource-group ecommerceapp-rg \
             --image ghcr.io/jakubkopecky-dev/${{ matrix.service }}:latest
