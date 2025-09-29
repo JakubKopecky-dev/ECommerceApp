@@ -112,20 +112,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PaymentService", "PaymentSe
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PaymentService.Api", "PaymentService.Api\PaymentService.Api.csproj", "{754298AC-7CC1-4F59-A334-275BF8E49956}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "k8s", "k8s", "{634CB57C-21E6-4DDD-A837-E9411C986C82}"
-	ProjectSection(SolutionItems) = preProject
-		cartservice.yaml = cartservice.yaml
-		deliveryservice.yaml = deliveryservice.yaml
-		ingress.yaml = ingress.yaml
-		notificationservice.yaml = notificationservice.yaml
-		orderservice.yaml = orderservice.yaml
-		paymentservice.yaml = paymentservice.yaml
-		productservice.yaml = productservice.yaml
-		rabbitmq.yaml = rabbitmq.yaml
-		secrets.yaml = secrets.yaml
-		userservice.yaml = userservice.yaml
-	EndProjectSection
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
