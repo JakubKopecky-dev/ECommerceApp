@@ -68,61 +68,29 @@ jobs:
   deploy-to-aca:
     runs-on: ubuntu-latest
     needs: docker-build
+    strategy:
+      matrix:
+        service:
+          - cartservice
+          - orderservice
+          - productservice
+          - deliveryservice
+          - notificationservice
+          - paymentservice
+          - userservice
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4                          
 
       - name: Azure Login
-        uses: azure/login@v2
+        uses: azure/login@v2                               
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          creds: ${{ secrets.AZURE_CREDENTIALS }}          
 
-      - name: Deploy CartService
-        run: |
+      - name: Deploy ${{ matrix.service }}
+        run: |                                            
           az containerapp update \
-            --name cartservice \
-            --resource-group ecommerceapp-rg \
-            --image ghcr.io/jakubkopecky-dev/cartservice:latest
-
-      - name: Deploy OrderService
-        run: |
-          az containerapp update \
-            --name orderservice \
-            --resource-group ecommerceapp-rg \
-            --image ghcr.io/jakubkopecky-dev/orderservice:latest
-
-      - name: Deploy ProductService
-        run: |
-          az containerapp update \
-            --name productservice \
-            --resource-group ecommerceapp-rg \
-            --image ghcr.io/jakubkopecky-dev/productservice:latest
-
-      - name: Deploy DeliveryService
-        run: |
-          az containerapp update \
-            --name deliveryservice \
-            --resource-group ecommerceapp-rg \
-            --image ghcr.io/jakubkopecky-dev/deliveryservice:latest
-
-      - name: Deploy NotificationService
-        run: |
-          az containerapp update \
-            --name notificationservice \
-            --resource-group ecommerceapp-rg \
-            --image ghcr.io/jakubkopecky-dev/notificationservice:latest
-
-      - name: Deploy PaymentService
-        run: |
-          az containerapp update \
-            --name paymentservice \
-            --resource-group ecommerceapp-rg \
-            --image ghcr.io/jakubkopecky-dev/paymentservice:latest
-
-      - name: Deploy UserService
-        run: |
-          az containerapp update \
-            --name userservice \
-            --resource-group ecommerceapp-rg \
-            --image ghcr.io/jakubkopecky-dev/userservice:latest
+            --name ${{ matrix.service }} \                 
+            --resource-group ecommerceapp-rg \         
+            --image ghcr.io/jakubkopecky-dev/${{ matrix.service }}:latest
