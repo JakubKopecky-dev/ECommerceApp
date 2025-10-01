@@ -13,11 +13,19 @@ namespace CartService.Api.DependencyInjection
             services.AddGrpcClient<ProductService.Grpc.ProductService.ProductServiceClient>(o =>
             {
                 o.Address = new Uri(configuration["ProductService:GrpcAddress"]!);
+            })
+            .ConfigureChannel(o =>
+            {
+                o.HttpHandler = new SocketsHttpHandler { EnableMultipleHttp2Connections = true };
             });
 
             services.AddGrpcClient<OrderService.Grpc.OrderService.OrderServiceClient>(o =>
             {
                 o.Address = new Uri(configuration["OrderService:GrpcAddress"]!);
+            })
+            .ConfigureChannel(o =>
+            {
+                o.HttpHandler = new SocketsHttpHandler { EnableMultipleHttp2Connections = true };
             });
 
 

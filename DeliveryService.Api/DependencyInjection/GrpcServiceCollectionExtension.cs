@@ -10,6 +10,10 @@ namespace DeliveryService.Api.DependencyInjection
             services.AddGrpcClient<OrderService.Grpc.OrderService.OrderServiceClient>(o =>
             {
                 o.Address = new Uri(configuration["OrderService:GrpcAddress"]!);
+            })
+            .ConfigureChannel(o =>
+            {
+                o.HttpHandler = new SocketsHttpHandler { EnableMultipleHttp2Connections = true };
             });
 
             services.AddScoped<IOrderReadClient, GrpcOrderReadClient>();
