@@ -3,6 +3,7 @@ using CartService.Application.Interfaces.External;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using ProductService.Grpc;
+using System.Net.Security;
 
 namespace CartService.Api.DependencyInjection
 {
@@ -16,7 +17,14 @@ namespace CartService.Api.DependencyInjection
             })
             .ConfigureChannel(o =>
             {
-                o.HttpHandler = new SocketsHttpHandler { EnableMultipleHttp2Connections = true };
+                o.HttpHandler = new SocketsHttpHandler
+                {
+                    EnableMultipleHttp2Connections = true,
+                    SslOptions = new SslClientAuthenticationOptions
+                    {
+                        ApplicationProtocols = [SslApplicationProtocol.Http2]
+                    }
+                };
             });
 
             services.AddGrpcClient<OrderService.Grpc.OrderService.OrderServiceClient>(o =>
@@ -25,7 +33,14 @@ namespace CartService.Api.DependencyInjection
             })
             .ConfigureChannel(o =>
             {
-                o.HttpHandler = new SocketsHttpHandler { EnableMultipleHttp2Connections = true };
+                o.HttpHandler = new SocketsHttpHandler
+                {
+                    EnableMultipleHttp2Connections = true,
+                    SslOptions = new SslClientAuthenticationOptions
+                    {
+                        ApplicationProtocols = [SslApplicationProtocol.Http2]
+                    }
+                };
             });
 
 

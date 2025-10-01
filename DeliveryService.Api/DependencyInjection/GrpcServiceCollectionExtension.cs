@@ -1,5 +1,6 @@
 ﻿using DeliveryService.Api.Grpc.GrpcClients;
 using DeliveryService.Application.Interfaces.External;
+using System.Net.Security;
 
 namespace DeliveryService.Api.DependencyInjection
 {
@@ -13,7 +14,14 @@ namespace DeliveryService.Api.DependencyInjection
             })
             .ConfigureChannel(o =>
             {
-                o.HttpHandler = new SocketsHttpHandler { EnableMultipleHttp2Connections = true };
+                o.HttpHandler = new SocketsHttpHandler
+                {
+                    EnableMultipleHttp2Connections = true,
+                    SslOptions = new SslClientAuthenticationOptions
+                    {
+                        ApplicationProtocols = [SslApplicationProtocol.Http2]
+                    }
+                };
             });
 
             services.AddScoped<IOrderReadClient, GrpcOrderReadClient>();

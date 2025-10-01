@@ -1,5 +1,6 @@
 ﻿using OrderService.Api.Grpc.GrpcClients;
 using OrderService.Application.Interfaces.External;
+using System.Net.Security;
 
 namespace OrderService.Api.DependencyInjection
 {
@@ -13,7 +14,14 @@ namespace OrderService.Api.DependencyInjection
             })
             .ConfigureChannel(o =>
             {
-                o.HttpHandler = new SocketsHttpHandler { EnableMultipleHttp2Connections = true };
+                o.HttpHandler = new SocketsHttpHandler
+                {
+                    EnableMultipleHttp2Connections = true,
+                    SslOptions = new SslClientAuthenticationOptions
+                    {
+                        ApplicationProtocols = [SslApplicationProtocol.Http2]
+                    }
+                };
             });
 
             services.AddGrpcClient<PaymentService.Grpc.PaymentService.PaymentServiceClient>(o =>
@@ -22,7 +30,14 @@ namespace OrderService.Api.DependencyInjection
             })
             .ConfigureChannel(o =>
             {
-                o.HttpHandler = new SocketsHttpHandler { EnableMultipleHttp2Connections = true };
+                o.HttpHandler = new SocketsHttpHandler
+                {
+                    EnableMultipleHttp2Connections = true,
+                    SslOptions = new SslClientAuthenticationOptions
+                    {
+                        ApplicationProtocols = [SslApplicationProtocol.Http2]
+                    }
+                };
             });
 
             services.AddScoped<IDeliveryReadClient, GrpcDeliveryReadClient>();
