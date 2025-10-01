@@ -12,15 +12,11 @@ namespace DeliveryService.Api.DependencyInjection
             {
                 o.Address = new Uri(configuration["OrderService:GrpcAddress"]!);
             })
-            .ConfigureChannel(o =>
+            .ConfigurePrimaryHttpMessageHandler(() =>
             {
-                o.HttpHandler = new SocketsHttpHandler
+                return new SocketsHttpHandler
                 {
-                    EnableMultipleHttp2Connections = true,
-                    SslOptions = new SslClientAuthenticationOptions
-                    {
-                        ApplicationProtocols = [SslApplicationProtocol.Http2]
-                    }
+                    EnableMultipleHttp2Connections = true
                 };
             });
 
