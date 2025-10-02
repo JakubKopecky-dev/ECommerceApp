@@ -62,8 +62,12 @@ jobs:
       - name: Build and push ${{ matrix.service }}
         run: |
           SERVICE_TAG=$(echo "${{ matrix.service }}" | tr '[:upper:]' '[:lower:]')
-          docker build -t ghcr.io/jakubkopecky-dev/$SERVICE_TAG:latest -f ${{ matrix.service }}.Api/Dockerfile .
-          docker push ghcr.io/jakubkopecky-dev/$SERVICE_TAG:latest
+
+          if [ "${{ matrix.service }}" = "GatewayService" ]; then
+            DOCKERFILE="GatewayService/Dockerfile"
+          else
+            DOCKERFILE="${{ matrix.service }}.Api/Dockerfile"
+          fi
 
   # 3) Deploy to Azure Container Apps
   deploy-to-aca:
