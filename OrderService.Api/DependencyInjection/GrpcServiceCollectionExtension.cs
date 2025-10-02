@@ -11,26 +11,14 @@ namespace OrderService.Api.DependencyInjection
             services.AddGrpcClient<DeliveryService.Grpc.DeliveryService.DeliveryServiceClient>(o =>
             {
                 o.Address = new Uri(configuration["DeliveryService:GrpcAddress"]!);
-            })
-            .ConfigurePrimaryHttpMessageHandler(() =>
-            {
-                return new SocketsHttpHandler
-                {
-                    EnableMultipleHttp2Connections = true
-                };
             });
+           
 
             services.AddGrpcClient<PaymentService.Grpc.PaymentService.PaymentServiceClient>(o =>
             {
-                o.Address = new Uri(configuration["PaymentService:GrpcAddress"]!);         
-            })
-            .ConfigurePrimaryHttpMessageHandler(() =>
-            {
-                return new SocketsHttpHandler
-                {
-                    EnableMultipleHttp2Connections = true
-                };
+                o.Address = new Uri(configuration["PaymentService:GrpcAddress"]!);
             });
+            
 
             services.AddScoped<IDeliveryReadClient, GrpcDeliveryReadClient>();
             services.AddScoped<IPaymentReadClient, GrpcPaymentReadClient>();

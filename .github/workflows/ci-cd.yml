@@ -46,6 +46,7 @@ jobs:
           - NotificationService
           - PaymentService
           - UserService
+          - GatewayService
 
     steps:
       - name: Checkout repository
@@ -78,6 +79,7 @@ jobs:
           - notificationservice
           - paymentservice
           - userservice
+          - gatewayservice
 
     steps:
       - name: Checkout repository

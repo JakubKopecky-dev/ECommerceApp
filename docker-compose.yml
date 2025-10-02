@@ -173,3 +173,20 @@ services:
             EnableSwagger: true
         depends_on:
             - sqldb
+
+    # GatewayService
+    gatewayservice:
+        build:
+            context: .
+            dockerfile: GatewayService/Dockerfile
+        container_name: gatewayservice
+        ports:
+            - "7000:8080"   
+        depends_on:
+            - cartservice
+            - orderservice
+            - productservice
+            - deliveryservice
+            - notificationservice
+            - paymentservice
+            - userservice
