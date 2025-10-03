@@ -29,7 +29,7 @@ options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddSignalR();
 
 // Swagger
-builder.Services.AddSwaggerWithJwt();
+builder.Services.AddSwaggerWithJwt(builder.Environment);
 
 #endregion
 

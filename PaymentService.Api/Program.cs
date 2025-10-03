@@ -28,7 +28,7 @@ builder.Services.AddGrpc();
 builder.Services.AddControllers();
 
 // Swagger
-builder.Services.AddSwaggerWithJwt();
+builder.Services.AddSwaggerWithJwt(builder.Environment);
 
 #endregion
 

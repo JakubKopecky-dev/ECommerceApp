@@ -5,7 +5,7 @@ namespace PaymentService.Api.DependencyInjection
 {
     public static class SwaggerServiceCollectionExtension
     {
-        public static IServiceCollection AddSwaggerWithJwt(this IServiceCollection services)
+        public static IServiceCollection AddSwaggerWithJwt(this IServiceCollection services, IWebHostEnvironment env)
         {
             services.AddSwaggerGen(options =>
             {
@@ -48,6 +48,17 @@ namespace PaymentService.Api.DependencyInjection
                 var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
                 var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
                 options.IncludeXmlComments(xmlPath, includeControllerXmlComments: true);
+
+
+                if (env.IsDevelopment())
+                {
+                    options.AddServer(new OpenApiServer { Url = "/" });
+                    options.AddServer(new OpenApiServer { Url = "/payment" });
+                }
+                else
+                {
+                    options.AddServer(new OpenApiServer { Url = "/payment" });
+                }
 
             });
 

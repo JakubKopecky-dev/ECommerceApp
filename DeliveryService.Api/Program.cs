@@ -32,7 +32,7 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 // Swagger
-builder.Services.AddSwaggerWithJwt();
+builder.Services.AddSwaggerWithJwt(builder.Environment);
 
 #endregion
 
