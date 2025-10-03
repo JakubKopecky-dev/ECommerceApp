@@ -53,7 +53,7 @@ if (builder.Configuration.GetValue<bool>("EnableSwagger"))
     app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("/swagger/DeliveryService/swagger.json", "DeliveryService - v1");
+        options.SwaggerEndpoint("./DeliveryService/swagger.json", "DeliveryService - v1");
     });
 }
 

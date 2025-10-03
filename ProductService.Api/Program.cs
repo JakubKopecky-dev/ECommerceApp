@@ -50,7 +50,7 @@ if (builder.Configuration.GetValue<bool>("EnableSwagger"))
     app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("/swagger/ProductService/swagger.json", "ProductService - v1");
+        options.SwaggerEndpoint("./ProductService/swagger.json", "ProductService - v1");
     });
 }
 

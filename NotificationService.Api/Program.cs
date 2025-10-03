@@ -50,7 +50,7 @@ if (builder.Configuration.GetValue<bool>("EnableSwagger"))
     app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("/swagger/NotificationService/swagger.json", "NotificationService - v1");
+        options.SwaggerEndpoint("./NotificationService/swagger.json", "NotificationService - v1");
     });
 }
 

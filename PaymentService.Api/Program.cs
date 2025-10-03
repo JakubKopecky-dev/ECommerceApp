@@ -44,7 +44,7 @@ if (builder.Configuration.GetValue<bool>("EnableSwagger"))
     app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("/swagger/PaymentService/swagger.json", "PaymentService - v1");
+        options.SwaggerEndpoint("./PaymentService/swagger.json", "PaymentService - v1");
     });
 }
 

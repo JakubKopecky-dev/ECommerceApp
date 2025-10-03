@@ -49,7 +49,7 @@ if (builder.Configuration.GetValue<bool>("EnableSwagger"))
     app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("/swagger/CartService/swagger.json", "CartService - v1");
+        options.SwaggerEndpoint("./CartService/swagger.json", "Cart Service - v1");
     });
 }
 
