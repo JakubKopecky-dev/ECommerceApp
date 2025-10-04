@@ -1,5 +1,6 @@
 using Yarp.ReverseProxy;
 
+AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
 var builder = WebApplication.CreateBuilder(args);
 
 // Add YARP proxy support
