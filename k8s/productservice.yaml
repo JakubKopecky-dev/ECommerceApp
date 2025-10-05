@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: productservice
+  namespace: ecommerce
   labels:
     app: productservice
 spec:
@@ -16,27 +17,17 @@ spec:
     spec:
       containers:
         - name: productservice
-          image: ghcr.io/<your-username>/productservice:latest
+          image: ghcr.io/jakubkopecky-dev/productservice:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
           env:
             - name: ASPNETCORE_ENVIRONMENT
               value: "Production"
-            - name: MessageBroker__Transport
-              value: "RabbitMq"
-
-            # Database connection (ProductDb)
-            - name: ConnectionStrings__DefaultConnection
-              valueFrom:
-                secretKeyRef:
-                  name: ecommerce-secrets
-                  key: ConnectionStrings__ProductDb
 
             - name: EnableSwagger
               value: "true"
 
-            # JWT
             - name: Jwt__Key
               valueFrom:
                 secretKeyRef:
@@ -53,27 +44,27 @@ spec:
                   name: ecommerce-secrets
                   key: Jwt__Audience
 
-            # RabbitMQ
-            - name: RabbitMq__Username
+            - name: ConnectionStrings__DefaultConnection
               valueFrom:
                 secretKeyRef:
                   name: ecommerce-secrets
-                  key: RabbitMq__Username
-            - name: RabbitMq__Password
-              valueFrom:
-                secretKeyRef:
-                  name: ecommerce-secrets
-                  key: RabbitMq__Password
-            - name: RabbitMq__Host
-              value: "rabbitmq"
-            - name: RabbitMq__VirtualHost
-              value: "/"
+                  key: ConnectionStrings__DefaultConnection
 
+            - name: MessageBroker__Transport
+              value: "AzureServiceBus"
+            - name: AzureServiceBus__ConnectionString
+              valueFrom:
+                secretKeyRef:
+                  name: ecommerce-secrets
+                  key: AzureServiceBus__ConnectionString
+            - name: AzureServiceBus__QueueName
+              value: "product-queue"
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: productservice
+  namespace: ecommerce
   labels:
     app: productservice
 spec:

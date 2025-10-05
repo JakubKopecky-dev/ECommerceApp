@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: orderservice
+  name: gatewayservice
   namespace: ecommerce
   labels:
-    app: orderservice
+    app: gatewayservice
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: orderservice
+      app: gatewayservice
   template:
     metadata:
       labels:
-        app: orderservice
+        app: gatewayservice
     spec:
       containers:
-        - name: orderservice
-          image: ghcr.io/jakubkopecky-dev/orderservice:latest
+        - name: gatewayservice
+          image: ghcr.io/jakubkopecky-dev/gatewayservice:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
@@ -43,40 +43,19 @@ spec:
                 secretKeyRef:
                   name: ecommerce-secrets
                   key: Jwt__Audience
-
-            - name: ConnectionStrings__DefaultConnection
-              valueFrom:
-                secretKeyRef:
-                  name: ecommerce-secrets
-                  key: ConnectionStrings__DefaultConnection
-
-            - name: MessageBroker__Transport
-              value: "AzureServiceBus"
-            - name: AzureServiceBus__ConnectionString
-              valueFrom:
-                secretKeyRef:
-                  name: ecommerce-secrets
-                  key: AzureServiceBus__ConnectionString
-            - name: AzureServiceBus__QueueName
-              value: "order-queue"
-
-            - name: DeliveryService__GrpcAddress
-              value: "http://deliveryservice:8080"
-            - name: PaymentService__GrpcAddress
-              value: "http://paymentservice:8080"
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: orderservice
+  name: gatewayservice
   namespace: ecommerce
   labels:
-    app: orderservice
+    app: gatewayservice
 spec:
   selector:
-    app: orderservice
+    app: gatewayservice
   ports:
     - protocol: TCP
       port: 8080
       targetPort: 8080
-  type: ClusterIP
+  type: LoadBalancer

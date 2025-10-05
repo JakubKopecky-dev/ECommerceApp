@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: userservice
+  namespace: ecommerce
   labels:
     app: userservice
 spec:
@@ -16,7 +17,7 @@ spec:
     spec:
       containers:
         - name: userservice
-          image: ghcr.io/<your-username>/userservice:latest
+          image: ghcr.io/jakubkopecky-dev/userservice:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
@@ -24,14 +25,9 @@ spec:
             - name: ASPNETCORE_ENVIRONMENT
               value: "Production"
 
-            # Database connection (UserDb)
-            - name: ConnectionStrings__DefaultConnection
-              valueFrom:
-                secretKeyRef:
-                  name: ecommerce-secrets
-                  key: ConnectionStrings__UserDb
+            - name: EnableSwagger
+              value: "true"
 
-            # JWT
             - name: Jwt__Key
               valueFrom:
                 secretKeyRef:
@@ -48,16 +44,19 @@ spec:
                   name: ecommerce-secrets
                   key: Jwt__Audience
             - name: Jwt_ExpiresInMinutes
-              value: "600"
+              value: "60"
 
-            - name: EnableSwagger
-              value: "true"
-
+            - name: ConnectionStrings__DefaultConnection
+              valueFrom:
+                secretKeyRef:
+                  name: ecommerce-secrets
+                  key: ConnectionStrings__DefaultConnection
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: userservice
+  namespace: ecommerce
   labels:
     app: userservice
 spec:

@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: paymentservice
+  namespace: ecommerce
   labels:
     app: paymentservice
 spec:
@@ -16,43 +17,17 @@ spec:
     spec:
       containers:
         - name: paymentservice
-          image: ghcr.io/<your-username>/paymentservice:latest
+          image: ghcr.io/jakubkopecky-dev/paymentservice:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
           env:
             - name: ASPNETCORE_ENVIRONMENT
               value: "Production"
-            - name: MessageBroker__Transport
-              value: "RabbitMq"
-
-            # Database connection (PaymentDb)
-            - name: ConnectionStrings__DefaultConnection
-              valueFrom:
-                secretKeyRef:
-                  name: ecommerce-secrets
-                  key: ConnectionStrings__PaymentDb
-
-            # Stripe configuration
-            - name: Stripe__SuccessUrl
-              value: "http://localhost:7129/api/Payment/success"
-            - name: Stripe__CancelUrl
-              value: "http://localhost:7129/api/Payment/cancel"
-            - name: Stripe__SecretKey
-              valueFrom:
-                secretKeyRef:
-                  name: ecommerce-secrets
-                  key: Stripe__SecretKey
-            - name: Stripe__WebHookSecret
-              valueFrom:
-                secretKeyRef:
-                  name: ecommerce-secrets
-                  key: Stripe__WebHookSecret
 
             - name: EnableSwagger
               value: "true"
 
-            # JWT
             - name: Jwt__Key
               valueFrom:
                 secretKeyRef:
@@ -69,27 +44,34 @@ spec:
                   name: ecommerce-secrets
                   key: Jwt__Audience
 
-            # RabbitMQ
-            - name: RabbitMq__Username
+            - name: MessageBroker__Transport
+              value: "AzureServiceBus"
+            - name: AzureServiceBus__ConnectionString
               valueFrom:
                 secretKeyRef:
                   name: ecommerce-secrets
-                  key: RabbitMq__Username
-            - name: RabbitMq__Password
-              valueFrom:
-                secretKeyRef:
-                  name: ecommerce-secrets
-                  key: RabbitMq__Password
-            - name: RabbitMq__Host
-              value: "rabbitmq"
-            - name: RabbitMq__VirtualHost
-              value: "/"
+                  key: AzureServiceBus__ConnectionString
 
+            - name: Stripe__SecretKey
+              valueFrom:
+                secretKeyRef:
+                  name: ecommerce-secrets
+                  key: Stripe__SecretKey
+            - name: Stripe__WebHookSecret
+              valueFrom:
+                secretKeyRef:
+                  name: ecommerce-secrets
+                  key: Stripe__WebHookSecret
+            - name: Stripe__SuccessUrl
+              value: "https://paymentservice/api/success"
+            - name: Stripe__CancelUrl
+              value: "https://paymentservice/api/cancel"
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: paymentservice
+  namespace: ecommerce
   labels:
     app: paymentservice
 spec:

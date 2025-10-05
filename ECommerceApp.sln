@@ -71,8 +71,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{EDF025
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{73E6DEBC-5D85-E032-7380-14D1E53616C6}"
 	ProjectSection(SolutionItems) = preProject
+		k8s\cartservice.yaml = k8s\cartservice.yaml
 		.github\workflows\ci-cd.yml = .github\workflows\ci-cd.yml
+		k8s\deliveryservice.yaml = k8s\deliveryservice.yaml
 		docker-compose.yml = docker-compose.yml
+		k8s\gatewayservice.yaml = k8s\gatewayservice.yaml
+		k8s\namespace.yaml = k8s\namespace.yaml
+		k8s\notificationservice.yaml = k8s\notificationservice.yaml
+		k8s\orderservice.yaml = k8s\orderservice.yaml
+		k8s\paymentservice.yaml = k8s\paymentservice.yaml
+		k8s\productservice.yaml = k8s\productservice.yaml
+		k8s\userservice.yaml = k8s\userservice.yaml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{3AC1EB1E-78B9-4427-81C8-5ED68E2218B5}"

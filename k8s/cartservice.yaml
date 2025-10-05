@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: cartservice
+  namespace: ecommerce
   labels:
     app: cartservice
 spec:
@@ -16,37 +17,17 @@ spec:
     spec:
       containers:
         - name: cartservice
-          image: ghcr.io/<your-username>/cartservice:latest
+          image: ghcr.io/jakubkopecky-dev/cartservice:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
           env:
-            # ASP.NET Core runtime environment
             - name: ASPNETCORE_ENVIRONMENT
               value: "Production"
 
-            # Message broker switch (RabbitMQ / AzureServiceBus)
-            - name: MessageBroker__Transport
-              value: "RabbitMq"
-
-            # Database connection string (CartDb)
-            - name: ConnectionStrings__DefaultConnection
-              valueFrom:
-                secretKeyRef:
-                  name: ecommerce-secrets
-                  key: ConnectionStrings__CartDb
-
-            # gRPC addresses of dependent services
-            - name: OrderService__GrpcAddress
-              value: "http://orderservice:8080"
-            - name: ProductService__GrpcAddress
-              value: "http://productservice:8080"
-
-            # Enable Swagger UI
             - name: EnableSwagger
               value: "true"
 
-            # JWT secrets
             - name: Jwt__Key
               valueFrom:
                 secretKeyRef:
@@ -63,27 +44,30 @@ spec:
                   name: ecommerce-secrets
                   key: Jwt__Audience
 
-            # RabbitMQ credentials
-            - name: RabbitMq__Username
+            - name: ConnectionStrings__DefaultConnection
               valueFrom:
                 secretKeyRef:
                   name: ecommerce-secrets
-                  key: RabbitMq__Username
-            - name: RabbitMq__Password
-              valueFrom:
-                secretKeyRef:
-                  name: ecommerce-secrets
-                  key: RabbitMq__Password
-            - name: RabbitMq__Host
-              value: "rabbitmq"
-            - name: RabbitMq__VirtualHost
-              value: "/"
+                  key: ConnectionStrings__DefaultConnection
 
+            - name: MessageBroker__Transport
+              value: "AzureServiceBus"
+            - name: AzureServiceBus__ConnectionString
+              valueFrom:
+                secretKeyRef:
+                  name: ecommerce-secrets
+                  key: AzureServiceBus__ConnectionString
+
+            - name: OrderService__GrpcAddress
+              value: "http://orderservice:8080"
+            - name: ProductService__GrpcAddress
+              value: "http://productservice:8080"
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: cartservice
+  namespace: ecommerce
   labels:
     app: cartservice
 spec:
