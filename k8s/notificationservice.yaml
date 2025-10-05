@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: notificationservice
-  namespace: ecommerce
+  namespace: ecommerceapp
   labels:
     app: notificationservice
 spec:
