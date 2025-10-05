@@ -98,33 +98,36 @@ jobs:
                       --name ecommerceapp-aks \
                       --overwrite-existing
 
-            - name: Set image tags in Kubernetes manifests
-              run: |
-                  COMMIT_TAG=${{ github.sha }}
-                  for svc in cartservice orderservice productservice deliveryservice notificationservice paymentservice userservice gatewayservice; do
-                      echo "Updating image tag for $svc..."
-                      yq e -i ".spec.template.spec.containers[0].image = \"ghcr.io/jakubkopecky-dev/${svc}:${COMMIT_TAG}\"" k8s/${svc}.yaml
-                  done
-
             - name: Apply Kubernetes manifests
               run: |
                   echo "Applying Kubernetes manifests..."
+                  kubectl apply -f k8s/namespace.yaml
                   kubectl apply -f k8s/
 
-            - name: Wait for all deployments to roll out
+            - name: Set container images to current commit
               run: |
-                  echo "Waiting for all deployments to successfully roll out..."
+                  COMMIT_TAG=${{ github.sha }}
+                  for svc in cartservice orderservice productservice deliveryservice notificationservice paymentservice userservice gatewayservice; do
+                      echo "Updating image for $svc..."
+                      kubectl set image deployment/$svc "*=ghcr.io/jakubkopecky-dev/${svc}:${COMMIT_TAG}" -n ecommerceapp
+                  done
+
+            - name: Wait for deployments to roll out
+              run: |
                   for svc in cartservice orderservice productservice deliveryservice notificationservice paymentservice userservice gatewayservice; do
                       echo "Checking rollout status for $svc..."
                       kubectl rollout status deployment/$svc -n ecommerceapp --timeout=180s || {
                           echo "Deployment of $svc failed."
-                          kubectl describe pods -l app=$svc -n ecommerceapp
-                          kubectl logs -l app=$svc -n ecommerceapp --tail=50
+                          kubectl describe deploy/$svc -n ecommerceapp || true
+                          kubectl describe pods -l app=$svc -n ecommerceapp || true
+                          kubectl logs -l app=$svc -n ecommerceapp --tail=80 || true
                           exit 1
                       }
                   done
 
             - name: Verify deployment status
               run: |
-                  echo "Final pod status:"
+                  echo "Current pods:"
                   kubectl get pods -n ecommerceapp -o wide
+                  echo "Services:"
+                  kubectl get svc -n ecommerceapp
