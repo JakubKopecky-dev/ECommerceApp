@@ -32,7 +32,7 @@ jobs:
             - name: Run tests
               run: dotnet test --no-build --configuration Release --verbosity normal
 
-    # 2) Build & push docker images (matrix for each microservice)
+    # 2) Build & push docker images
     docker-build:
         runs-on: ubuntu-latest
         needs: build-and-test
@@ -71,6 +71,7 @@ jobs:
               run: |
                   SERVICE_TAG=$(echo "${{ matrix.service }}" | tr '[:upper:]' '[:lower:]')
                   COMMIT_TAG=${{ github.sha }}
+                  IMAGE_NAME=ghcr.io/jakubkopecky-dev/$SERVICE_TAG
 
                   if [ "${{ matrix.service }}" = "GatewayService" ]; then
                       DOCKERFILE="GatewayService/Dockerfile"
@@ -78,12 +79,11 @@ jobs:
                       DOCKERFILE="${{ matrix.service }}.Api/Dockerfile"
                   fi
 
-                  IMAGE_NAME=ghcr.io/jakubkopecky-dev/$SERVICE_TAG
-
-                  echo "Building $IMAGE_NAME:$COMMIT_TAG for linux/amd64"
+                  echo "Building and pushing $IMAGE_NAME:$COMMIT_TAG for linux/amd64"
                   docker buildx build \
                       --platform linux/amd64 \
                       -t $IMAGE_NAME:$COMMIT_TAG \
+                      -t $IMAGE_NAME:latest \
                       -f $DOCKERFILE \
                       --push .
 
@@ -108,49 +108,56 @@ jobs:
                       --name ecommerceapp-aks \
                       --overwrite-existing
 
-            - name: Create namespace if not exists
+            - name: Ensure namespace exists
               run: |
                   kubectl create namespace ecommerceapp --dry-run=client -o yaml | kubectl apply -f -
 
-            - name: Create GHCR secret for pulling images
+            - name: Recreate GHCR secret
               run: |
+                  kubectl delete secret ghcr-secret -n ecommerceapp --ignore-not-found
                   kubectl create secret docker-registry ghcr-secret \
-                    --docker-server=ghcr.io \
-                    --docker-username=jakubkopecky-dev \
-                    --docker-password="${{ secrets.GHCR_TOKEN }}" \
-                    --namespace=ecommerceapp \
-                    --dry-run=client -o yaml | kubectl apply -f -
+                      --docker-server=ghcr.io \
+                      --docker-username=jakubkopecky-dev \
+                      --docker-password="${{ secrets.GHCR_TOKEN }}" \
+                      --namespace=ecommerceapp
 
             - name: Apply Kubernetes manifests
               run: |
-                  echo "Applying Kubernetes manifests..."
+                  echo "Applying manifests..."
                   kubectl apply -f k8s/namespace.yaml
                   kubectl apply -f k8s/
 
-            - name: Set container images to current commit
+            - name: Patch deployments to use ghcr-secret
+              run: |
+                  for svc in cartservice orderservice productservice deliveryservice notificationservice paymentservice userservice gatewayservice; do
+                      echo "Patching $svc to use ghcr-secret..."
+                      kubectl patch deployment $svc -n ecommerceapp \
+                          -p '{"spec": {"template": {"spec": {"imagePullSecrets": [{"name": "ghcr-secret"}]}}}}' || true
+                  done
+
+            - name: Update container images
               run: |
                   COMMIT_TAG=${{ github.sha }}
                   for svc in cartservice orderservice productservice deliveryservice notificationservice paymentservice userservice gatewayservice; do
                       echo "Updating image for $svc..."
-                      kubectl set image deployment/$svc "*=ghcr.io/jakubkopecky-dev/${svc}:${COMMIT_TAG}" -n ecommerceapp
+                      kubectl set image deployment/$svc "*=ghcr.io/jakubkopecky-dev/${svc}:${COMMIT_TAG}" -n ecommerceapp || true
                   done
 
-            - name: Wait for deployments to roll out
+            - name: Wait for rollout
               run: |
                   for svc in cartservice orderservice productservice deliveryservice notificationservice paymentservice userservice gatewayservice; do
-                      echo "Checking rollout status for $svc..."
+                      echo "Checking rollout for $svc..."
                       kubectl rollout status deployment/$svc -n ecommerceapp --timeout=180s || {
-                          echo "Deployment of $svc failed."
-                          kubectl describe deploy/$svc -n ecommerceapp || true
+                          echo "Rollout failed for $svc"
                           kubectl describe pods -l app=$svc -n ecommerceapp || true
                           kubectl logs -l app=$svc -n ecommerceapp --tail=80 || true
                           exit 1
                       }
                   done
 
-            - name: Verify deployment status
+            - name: Verify deployments
               run: |
-                  echo "Current pods:"
+                  echo "Pods:"
                   kubectl get pods -n ecommerceapp -o wide
                   echo "Services:"
                   kubectl get svc -n ecommerceapp
