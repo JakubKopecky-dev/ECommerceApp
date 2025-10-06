@@ -15,6 +15,8 @@ spec:
       labels:
         app: notificationservice
     spec:
+      imagePullSecrets:
+        - name: ghcr-secret
       containers:
         - name: notificationservice
           image: ghcr.io/jakubkopecky-dev/notificationservice:latest

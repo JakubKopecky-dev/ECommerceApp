@@ -15,6 +15,8 @@ spec:
       labels:
         app: deliveryservice
     spec:
+      imagePullSecrets:
+        - name: ghcr-secret
       containers:
         - name: deliveryservice
           image: ghcr.io/jakubkopecky-dev/deliveryservice:latest
