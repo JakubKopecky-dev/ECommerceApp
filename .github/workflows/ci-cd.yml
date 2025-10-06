@@ -98,6 +98,23 @@ jobs:
                       --name ecommerceapp-aks \
                       --overwrite-existing
 
+            - name: Ensure GHCR pull secret exists
+              run: |
+                  kubectl create namespace ecommerceapp --dry-run=client -o yaml | kubectl apply -f -
+                  kubectl create secret docker-registry ghcr-secret \
+                    --docker-server=ghcr.io \
+                    --docker-username=jakubkopecky-dev \
+                    --docker-password='${{ secrets.GHCR_TOKEN }}' \
+                    --namespace=ecommerceapp \
+                    --dry-run=client -o yaml | kubectl apply -f -
+
+            - name: Attach pull secret to default ServiceAccount
+              run: |
+                  kubectl patch serviceaccount default \
+                    -n ecommerceapp \
+                    -p '{"imagePullSecrets":[{"name":"ghcr-secret"}]}' \
+                    --type merge
+
             - name: Apply Kubernetes manifests
               run: |
                   echo "Applying Kubernetes manifests..."
