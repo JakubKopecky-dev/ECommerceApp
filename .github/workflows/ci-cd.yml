@@ -79,9 +79,9 @@ jobs:
                       DOCKERFILE="${{ matrix.service }}.Api/Dockerfile"
                   fi
 
-                  echo "Building and pushing $IMAGE_NAME:$COMMIT_TAG for linux/arm64 (AKS cluster architecture)"
+                  echo "Building and pushing $IMAGE_NAME:$COMMIT_TAG for linux/amd64 (native build for GitHub runner)"
                   docker buildx build \
-                    --platform linux/arm64 \
+                    --platform linux/amd64 \
                     --provenance=false \
                     -t $IMAGE_NAME:$COMMIT_TAG \
                     -t $IMAGE_NAME:latest \
