@@ -79,9 +79,9 @@ jobs:
                       DOCKERFILE="${{ matrix.service }}.Api/Dockerfile"
                   fi
 
-                  echo "Building and pushing $IMAGE_NAME:$COMMIT_TAG for linux/amd64"
+                  echo "Building and pushing $IMAGE_NAME:$COMMIT_TAG for linux/arm64 (AKS cluster architecture)"
                   docker buildx build \
-                    --platform linux/amd64,linux/arm64 \
+                    --platform linux/arm64 \
                     --provenance=false \
                     -t $IMAGE_NAME:$COMMIT_TAG \
                     -t $IMAGE_NAME:latest \
@@ -140,7 +140,7 @@ jobs:
               run: |
                   for svc in cartservice orderservice productservice deliveryservice notificationservice paymentservice userservice gatewayservice; do
                       echo "Checking rollout for $svc..."
-                      kubectl rollout status deployment/$svc -n ecommerceapp --timeout=180s || {
+                      kubectl rollout status deployment/$svc -n ecommerceapp --timeout=600s || {
                           echo "Rollout failed for $svc"
                           kubectl describe deploy/$svc -n ecommerceapp || true
                           kubectl describe pods -l app=$svc -n ecommerceapp || true
