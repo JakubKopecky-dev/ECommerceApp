@@ -49,12 +49,13 @@ jobs:
       - name: Build and push Docker images
         run: |
           services=("cartservice" "orderservice" "productservice" "deliveryservice" "notificationservice" "paymentservice" "userservice" "gatewayservice")
+          owner=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
 
           for svc in "${services[@]}"; do
             echo "Building image for $svc..."
             docker buildx build \
               --platform linux/amd64 \
-              -t $REGISTRY/${{ github.repository_owner }}/$svc:${{ github.sha }} \
+              -t ghcr.io/${owner}/$svc:${{ github.sha }} \
               -f ${svc^}.Api/Dockerfile \
               --push .
           done
