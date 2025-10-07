@@ -69,7 +69,7 @@ jobs:
           OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
           IMAGE="ghcr.io/${OWNER_LOWER}/${{ matrix.service }}:${{ github.sha }}"
 
-          echo "Building ${IMAGE} from ${% raw %}{{ matrix.dockerfile }}{% endraw %}"
+          echo "Building ${IMAGE} from ${{ matrix.dockerfile }}"
           docker buildx build \
             --platform linux/amd64 \
             -t "${IMAGE}" \
