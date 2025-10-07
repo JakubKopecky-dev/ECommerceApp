@@ -9,7 +9,7 @@ RUN dotnet restore PaymentService.Api/PaymentService.Api.csproj
 # copy the rest of the source code
 COPY . .
 WORKDIR /src/PaymentService.Api
-RUN dotnet publish -c Release -o /app/publish
+RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime

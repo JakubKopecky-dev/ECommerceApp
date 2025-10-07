@@ -8,7 +8,8 @@ RUN dotnet restore GatewayService/GatewayService.csproj
 
 # copy the rest of the source code
 COPY . .
-RUN dotnet publish GatewayService/GatewayService.csproj -c Release -o /app/publish
+WORKDIR /src/GatewayService
+RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime stage
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
