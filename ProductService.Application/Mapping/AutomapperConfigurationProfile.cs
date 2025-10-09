@@ -35,6 +35,7 @@ namespace ProductService.Application.Mapping
                 );
 
 
+
             CreateMap<CreateProductReviewDto, ProductReview>();
             CreateMap<UpdateProductReviewDto, ProductReview>();
             CreateMap<ProductReview, ProductReviewDto>();

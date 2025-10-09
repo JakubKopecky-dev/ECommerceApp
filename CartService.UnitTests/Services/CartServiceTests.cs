@@ -409,12 +409,8 @@ namespace CartService.UnitTests.Services
                 .Setup(p => p.CheckProductAvailabilityAsync(It.IsAny<List<ProductQuantityCheckRequestDto>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(ok);
 
-            mapperMock
-                .Setup(m => m.Map<List<CartItemForCheckoutDto>>(cart.Items))
-                .Returns(mappedItems);
-
             orderClientMock
-                .Setup(o => o.CreateOrderAndDeliveryAsync(expectedRequest, It.IsAny<CancellationToken>()))
+                .Setup(o => o.CreateOrderAndDeliveryAsync(It.IsAny<CreateOrderAndDeliveryDto>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(orderResponse);
 
             cartRepositoryMock
@@ -438,8 +434,7 @@ namespace CartService.UnitTests.Services
 
             cartRepositoryMock.Verify(c => c.FindCartByUserIdIncludeItemsAsync(userId, It.IsAny<CancellationToken>()), Times.Exactly(2));
             productClientMock.Verify(p => p.CheckProductAvailabilityAsync(It.IsAny<List<ProductQuantityCheckRequestDto>>(), It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<List<CartItemForCheckoutDto>>(cart.Items), Times.Once);
-            orderClientMock.Verify(o => o.CreateOrderAndDeliveryAsync(expectedRequest, It.IsAny<CancellationToken>()), Times.Once);
+            orderClientMock.Verify(o => o.CreateOrderAndDeliveryAsync(It.IsAny<CreateOrderAndDeliveryDto>(), It.IsAny<CancellationToken>()), Times.Once);
             cartRepositoryMock.Verify(c => c.Remove(cart), Times.Once);
             cartRepositoryMock.Verify(c => c.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
@@ -521,12 +516,8 @@ namespace CartService.UnitTests.Services
                 .Setup(p => p.CheckProductAvailabilityAsync(It.IsAny<List<ProductQuantityCheckRequestDto>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(ok);
 
-            mapperMock
-                .Setup(m => m.Map<List<CartItemForCheckoutDto>>(cart.Items))
-                .Returns(mappedItems);
-
             orderClientMock
-                .Setup(o => o.CreateOrderAndDeliveryAsync(expectedRequest, It.IsAny<CancellationToken>()))
+                .Setup(o => o.CreateOrderAndDeliveryAsync(It.IsAny<CreateOrderAndDeliveryDto>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(orderResponse);
 
             cartRepositoryMock
@@ -549,8 +540,7 @@ namespace CartService.UnitTests.Services
 
             cartRepositoryMock.Verify(c => c.FindCartByUserIdIncludeItemsAsync(userId, It.IsAny<CancellationToken>()), Times.Exactly(2));
             productClientMock.Verify(p => p.CheckProductAvailabilityAsync(It.IsAny<List<ProductQuantityCheckRequestDto>>(), It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<List<CartItemForCheckoutDto>>(cart.Items), Times.Once);
-            orderClientMock.Verify(o => o.CreateOrderAndDeliveryAsync(expectedRequest, It.IsAny<CancellationToken>()), Times.Once);
+            orderClientMock.Verify(o => o.CreateOrderAndDeliveryAsync(It.IsAny<CreateOrderAndDeliveryDto>(), It.IsAny<CancellationToken>()), Times.Once);
             cartRepositoryMock.Verify(c => c.Remove(cart), Times.Once);
             cartRepositoryMock.Verify(c => c.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
@@ -592,10 +582,6 @@ namespace CartService.UnitTests.Services
                 .Setup(p => p.CheckProductAvailabilityAsync(It.IsAny<List<ProductQuantityCheckRequestDto>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync([]);
 
-            mapperMock
-                .Setup(m => m.Map<List<CartItemForCheckoutDto>>(cart.Items))
-                .Returns([new() { ProductId = items[0].ProductId, Quantity = items[0].Quantity }]);
-
             orderClientMock
                 .Setup(o => o.CreateOrderAndDeliveryAsync(It.IsAny<CreateOrderAndDeliveryDto>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(orderResponse);
@@ -616,7 +602,6 @@ namespace CartService.UnitTests.Services
 
             cartRepositoryMock.Verify(c => c.FindCartByUserIdIncludeItemsAsync(userId, It.IsAny<CancellationToken>()), Times.Exactly(2));
             productClientMock.Verify(p => p.CheckProductAvailabilityAsync(It.IsAny<List<ProductQuantityCheckRequestDto>>(), It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<List<CartItemForCheckoutDto>>(cart.Items), Times.Once);
             orderClientMock.Verify(o => o.CreateOrderAndDeliveryAsync(It.IsAny<CreateOrderAndDeliveryDto>(), It.IsAny<CancellationToken>()), Times.Once);
             cartRepositoryMock.Verify(c => c.Remove(cart), Times.Once);
             cartRepositoryMock.Verify(c => c.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
@@ -658,10 +643,6 @@ namespace CartService.UnitTests.Services
                 .Setup(p => p.CheckProductAvailabilityAsync(It.IsAny<List<ProductQuantityCheckRequestDto>>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync([]);
 
-            mapperMock
-                .Setup(m => m.Map<List<CartItemForCheckoutDto>>(cart.Items))
-                .Returns([new() { ProductId = items[0].ProductId, Quantity = items[0].Quantity }]);
-
             orderClientMock
                 .Setup(o => o.CreateOrderAndDeliveryAsync(It.IsAny<CreateOrderAndDeliveryDto>(), It.IsAny<CancellationToken>()))
                 .ReturnsAsync(orderResponse);
@@ -682,7 +663,6 @@ namespace CartService.UnitTests.Services
 
             cartRepositoryMock.Verify(c => c.FindCartByUserIdIncludeItemsAsync(userId, It.IsAny<CancellationToken>()), Times.Exactly(2));
             productClientMock.Verify(p => p.CheckProductAvailabilityAsync(It.IsAny<List<ProductQuantityCheckRequestDto>>(), It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<List<CartItemForCheckoutDto>>(cart.Items), Times.Once);
             orderClientMock.Verify(o => o.CreateOrderAndDeliveryAsync(It.IsAny<CreateOrderAndDeliveryDto>(), It.IsAny<CancellationToken>()), Times.Once);
             cartRepositoryMock.Verify(c => c.Remove(cart), Times.Once);
             cartRepositoryMock.Verify(c => c.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);

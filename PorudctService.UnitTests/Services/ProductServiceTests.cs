@@ -187,8 +187,8 @@ namespace ProductService.UnitTests.Services
 
             List<Category> expectedCategory = [new() { Id = Guid.NewGuid(), Title = "Phone" }];
             Product product = new() { Id = Guid.Empty, Brand = brand, Title = createDto.Title, CreatedAt = DateTime.UtcNow, Categories = [] };
-            Product createdProduct = new() { Id = Guid.NewGuid(), Brand = brand, Title = product.Title, CreatedAt = product.CreatedAt, Categories = expectedCategory};
-            ProductExtendedDto expectedDto = new() { Title = createDto.Title, Categories = createDto.Categories, BrandId = createDto.BrandId, CreatedAt = createdProduct.CreatedAt };
+            Product createdProduct = new() { Id = Guid.NewGuid(), Brand = brand, BrandId = brand.Id, Title = product.Title, CreatedAt = product.CreatedAt, Categories = expectedCategory};
+            ProductExtendedDto expectedDto = new() {Id = createdProduct.Id, Title = createDto.Title, Categories = createDto.Categories, BrandId = createDto.BrandId, CreatedAt = createdProduct.CreatedAt };
 
             Mock<IProductRepository> productRepositoryMock = new();
             Mock<IMapper> mapperMock = new();
@@ -206,10 +206,6 @@ namespace ProductService.UnitTests.Services
                 .Setup(p => p.InsertAsync(product, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(createdProduct);
 
-            mapperMock
-                .Setup(m => m.Map<ProductExtendedDto>(createdProduct))
-                .Returns(expectedDto);
-
             ProductServiceService service = new(
                 productRepositoryMock.Object,
                 categoryRepositoryMock.Object,
@@ -226,7 +222,6 @@ namespace ProductService.UnitTests.Services
             mapperMock.Verify(m => m.Map<Product>(createDto), Times.Once);
             categoryRepositoryMock.Verify(c => c.GetCategoriesByName(createDto.Categories, It.IsAny<CancellationToken>()), Times.Once);
             productRepositoryMock.Verify(p => p.InsertAsync(product, It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify((m => m.Map<ProductExtendedDto>(createdProduct)), Times.Once);
         }
 
 

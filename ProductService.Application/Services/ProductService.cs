@@ -63,7 +63,22 @@ namespace ProductService.Application.Services
             Product createdProduct = await _productRepository.InsertAsync(product, ct);
             _logger.LogInformation("Product created. ProductId: {ProductId}", createdProduct.Id);
 
-            return _mapper.Map<ProductExtendedDto>(createdProduct);
+
+            return new ProductExtendedDto
+            {
+                Id = createdProduct.Id,
+                Title = createdProduct.Title,
+                Description = createdProduct.Description,
+                QuantityInStock = createdProduct.QuantityInStock,
+                IsActive = createdProduct.IsActive,
+                SoldCount = createdProduct.SoldCount,
+                Price = createdProduct.Price,
+                ImageUrl = createdProduct.ImageUrl,
+                CreatedAt = createdProduct.CreatedAt,
+                UpdatedAt = createdProduct.UpdatedAt,
+                BrandId = createdProduct.BrandId,
+                Categories = [.. createdProduct.Categories.Select(c => c.Title)]
+            }; 
         }
 
 
