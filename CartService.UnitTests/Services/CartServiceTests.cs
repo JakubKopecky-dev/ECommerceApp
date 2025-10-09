@@ -271,8 +271,8 @@ namespace CartService.UnitTests.Services
 
             List<CartItem> items =
             [
-                new() { Id = Guid.NewGuid(), ProductId = Guid.NewGuid(), Quantity = 2, UnitPrice = 10m, Cart = cart },
-                new() { Id = Guid.NewGuid(), ProductId = Guid.NewGuid(), Quantity = 1, UnitPrice = 20m, Cart = cart }
+                new() { Id = Guid.NewGuid(), ProductId = Guid.NewGuid(), Quantity = 2, UnitPrice = 10m },
+                new() { Id = Guid.NewGuid(), ProductId = Guid.NewGuid(), Quantity = 1, UnitPrice = 20m }
             ];
 
             cart.Items = items;
@@ -336,8 +336,8 @@ namespace CartService.UnitTests.Services
 
             List<CartItem> items =
             [
-                new() { Id = Guid.NewGuid(), ProductId = Guid.NewGuid(), Quantity = 2, UnitPrice = 10m, Cart = cart },
-                new() { Id = Guid.NewGuid(), ProductId = Guid.NewGuid(), Quantity = 1, UnitPrice = 25m, Cart = cart }
+                new() { Id = Guid.NewGuid(), ProductId = Guid.NewGuid(), Quantity = 2, UnitPrice = 10m },
+                new() { Id = Guid.NewGuid(), ProductId = Guid.NewGuid(), Quantity = 1, UnitPrice = 25m }
             ];
 
             cart.Items = items;
@@ -445,7 +445,7 @@ namespace CartService.UnitTests.Services
 
             List<CartItem> items =
             [
-                new() { Id = Guid.NewGuid(), ProductId = Guid.NewGuid(), Quantity = 3, UnitPrice = 15m, Cart = cart }
+                new() { Id = Guid.NewGuid(), ProductId = Guid.NewGuid(), Quantity = 3, UnitPrice = 15m }
             ];
 
             cart.Items = items;
@@ -551,7 +551,7 @@ namespace CartService.UnitTests.Services
 
             List<CartItem> items =
             [
-                new() { Id = Guid.NewGuid(), ProductId = Guid.NewGuid(), Quantity = 1, UnitPrice = 1200, Cart = cart }
+                new() { Id = Guid.NewGuid(), ProductId = Guid.NewGuid(), Quantity = 1, UnitPrice = 1200 }
             ];
 
             cart.Items = items;
@@ -612,7 +612,7 @@ namespace CartService.UnitTests.Services
             Cart cart = new() { Id = Guid.NewGuid(), UserId = userId, Items = [] };
             List<CartItem> items =
             [
-                new() { Id = Guid.NewGuid(), ProductId = Guid.NewGuid(), Quantity = 1, UnitPrice = 1299, Cart = cart }
+                new() { Id = Guid.NewGuid(), ProductId = Guid.NewGuid(), Quantity = 1, UnitPrice = 1299 }
             ];
 
             cart.Items = items;

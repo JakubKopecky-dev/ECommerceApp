@@ -171,7 +171,7 @@ namespace CartService.IntegrationTests
             Guid productId = Guid.NewGuid();
 
             Cart cart = new() { Id = Guid.NewGuid() };
-            CartItem existingItem = new() { Id = Guid.NewGuid(), CartId = cartId, ProductId = productId, Quantity = 2, UnitPrice = 1200, ProductName = "iPhone 16", Cart = cart };
+            CartItem existingItem = new() { Id = Guid.NewGuid(), CartId = cartId, ProductId = productId, Quantity = 2, UnitPrice = 1200, ProductName = "iPhone 16" };
             ProductDto existingProduct = new() { Title = "iPhone 16", Price = 1200, QuantityInStock = 10 };
 
             var factory = _factory.WithWebHostBuilder(builder =>

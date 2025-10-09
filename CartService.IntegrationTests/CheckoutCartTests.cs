@@ -65,7 +65,7 @@ namespace CartService.IntegrationTests
             using var scope = factory.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<CartDbContext>();
             Cart cart = new() { Id = Guid.NewGuid(), UserId = userId, Items = [] };
-            cart.Items = [new() { Id = Guid.NewGuid(), ProductId = Guid.NewGuid(), Quantity = 2, UnitPrice = 999, Cart = cart }];
+            cart.Items = [new() { Id = Guid.NewGuid(), ProductId = Guid.NewGuid(), Quantity = 2, UnitPrice = 999 }];
             db.Carts.Add(cart);
             db.SaveChanges();
 
@@ -193,7 +193,7 @@ namespace CartService.IntegrationTests
             using var scope = factory.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<CartDbContext>();
             Cart cart = new() { Id = Guid.NewGuid(), UserId = userId, Items = [] };
-            cart.Items = [new() { Id = Guid.NewGuid(), ProductId = Guid.NewGuid(), Quantity = 2, UnitPrice = 999, Cart = cart }];
+            cart.Items = [new() { Id = Guid.NewGuid(), ProductId = Guid.NewGuid(), Quantity = 2, UnitPrice = 999 }];
             db.Carts.Add(cart);
             db.SaveChanges();
 
@@ -237,7 +237,7 @@ namespace CartService.IntegrationTests
             using var scope = factory.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<CartDbContext>();
             Cart cart = new() { Id = Guid.NewGuid(), UserId = userId, Items = [] };
-            cart.Items = [new() { Id = Guid.NewGuid(), ProductId = Guid.NewGuid(), Quantity = 2, UnitPrice = 999, Cart = cart }];
+            cart.Items = [new() { Id = Guid.NewGuid(), ProductId = Guid.NewGuid(), Quantity = 2, UnitPrice = 999 }];
             db.Carts.Add(cart);
             db.SaveChanges();
 
@@ -273,7 +273,7 @@ namespace CartService.IntegrationTests
             using var scope = factory.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<CartDbContext>();
             Cart cart = new() { Id = Guid.NewGuid(), UserId = userId, Items = [] };
-            cart.Items = [new() { Id = Guid.NewGuid(), ProductId = Guid.NewGuid(), Quantity = 2, UnitPrice = 999, Cart = cart }];
+            cart.Items = [new() { Id = Guid.NewGuid(), ProductId = Guid.NewGuid(), Quantity = 2, UnitPrice = 999}];
             db.Carts.Add(cart);
             db.SaveChanges();
 
@@ -310,7 +310,7 @@ namespace CartService.IntegrationTests
             using var scope = factory.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<CartDbContext>();
             Cart cart = new() { Id = Guid.NewGuid(), UserId = userId, Items = [] };
-            cart.Items = [new() { Id = Guid.NewGuid(), ProductId = Guid.NewGuid(), Quantity = 2, UnitPrice = 999, Cart = cart }];
+            cart.Items = [new() { Id = Guid.NewGuid(), ProductId = Guid.NewGuid(), Quantity = 2, UnitPrice = 999 }];
             db.Carts.Add(cart);
             db.SaveChanges();
 

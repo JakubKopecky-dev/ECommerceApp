@@ -23,8 +23,7 @@ namespace CartService.UnitTests.Services
         {
             Guid cartItemId = Guid.NewGuid();
 
-            Cart cart = new() { Id = Guid.NewGuid() };
-            CartItem cartItem = new() { Id = cartItemId, CartId = Guid.NewGuid(), ProductId = Guid.NewGuid(), Quantity = 2, Cart = cart };
+            CartItem cartItem = new() { Id = cartItemId, CartId = Guid.NewGuid(), ProductId = Guid.NewGuid(), Quantity = 2 };
             CartItemDto expectedDto = new() { Id = cartItemId, CartId = cartItem.CartId, ProductId = cartItem.ProductId, Quantity = cartItem.Quantity };
 
             Mock<ICartItemRepository> cartItemRepositoryMock = new();
@@ -96,8 +95,7 @@ namespace CartService.UnitTests.Services
 
             CreateCartItemDto createDto = new() { CartId = cartId, ProductId = productId, Quantity = 3 };
 
-            Cart cart = new() { Id = Guid.NewGuid() };
-            CartItem existingCartItem = new() { Id = Guid.NewGuid(), CartId = cartId, ProductId = productId, Quantity = 2, Cart = cart };
+            CartItem existingCartItem = new() { Id = Guid.NewGuid(), CartId = cartId, ProductId = productId, Quantity = 2};
             ProductDto productDto = new() { Title = "iPhone 16", Price = 1299, QuantityInStock = 10 };
             CartItemDto expectedDto = new() { Id = existingCartItem.Id, CartId = cartId, ProductId = productId, Quantity = 5 };
 
@@ -152,8 +150,7 @@ namespace CartService.UnitTests.Services
 
             CreateCartItemDto createDto = new() { CartId = cartId, ProductId = productId, Quantity = 1 };
 
-            Cart cart = new() { Id = Guid.NewGuid() };
-            CartItem existingCartItem = new() { Id = Guid.NewGuid(), CartId = cartId, ProductId = productId, Quantity = 2, Cart = cart };
+            CartItem existingCartItem = new() { Id = Guid.NewGuid(), CartId = cartId, ProductId = productId, Quantity = 2};
 
             Mock<ICartItemRepository> cartItemRepositoryMock = new();
             Mock<IProductReadClient> productClientMock = new();
@@ -198,8 +195,7 @@ namespace CartService.UnitTests.Services
 
             CreateCartItemDto createDto = new() { CartId = cartId, ProductId = productId, Quantity = 5 };
 
-            Cart cart = new() { Id = Guid.NewGuid() };
-            CartItem existing = new() { Id = Guid.NewGuid(), CartId = cartId, ProductId = productId, Quantity = 8, Cart = cart };
+            CartItem existing = new() { Id = Guid.NewGuid(), CartId = cartId, ProductId = productId, Quantity = 8 };
             ProductDto productDto = new() { Title = "iPhone 16", Price = 1200, QuantityInStock = 12 }; // newQuantity = 8+5 = 13 > 12
 
             Mock<ICartItemRepository> cartItemRepositoryMock = new();
@@ -245,11 +241,10 @@ namespace CartService.UnitTests.Services
 
             CreateCartItemDto createDto = new() { CartId = cartId, ProductId = productId, Quantity = 2 };
 
-            Cart cart = new() { Id = Guid.NewGuid() };
-            CartItem cartItem = new() { Id = Guid.Empty, CartId = cartId, ProductId = productId, Quantity = createDto.Quantity, CreatedAt = DateTime.UtcNow, Cart = cart };
+            CartItem cartItem = new() { Id = Guid.Empty, CartId = cartId, ProductId = productId, Quantity = createDto.Quantity, CreatedAt = DateTime.UtcNow};
             ProductDto productDto = new() { Title = "iPhone", Price = 1200, QuantityInStock = 10 };
 
-            CartItem createdCartItem = new() { Id = Guid.NewGuid(), CartId = cartId, ProductId = productId, Quantity = 2, ProductName = productDto.Title, UnitPrice = productDto.Price, Cart = cart };
+            CartItem createdCartItem = new() { Id = Guid.NewGuid(), CartId = cartId, ProductId = productId, Quantity = 2, ProductName = productDto.Title, UnitPrice = productDto.Price};
             CartItemDto expectedDto = new() { Id = createdCartItem.Id, CartId = cartId, ProductId = productId, Quantity = 2, ProductName = productDto.Title, UnitPrice = productDto.Price };
 
             Mock<ICartItemRepository> cartItemRepositoryMock = new();
@@ -308,8 +303,7 @@ namespace CartService.UnitTests.Services
 
             CreateCartItemDto createDto = new() { CartId = cartId, ProductId = productId, Quantity = 2 };
 
-            Cart cart = new() { Id = Guid.NewGuid() };
-            CartItem cartItem = new() { Id = Guid.Empty, CartId = cartId, ProductId = productId, Quantity = 2, Cart = cart };
+            CartItem cartItem = new() { Id = Guid.Empty, CartId = cartId, ProductId = productId, Quantity = 2};
 
             Mock<ICartItemRepository> cartItemRepositoryMock = new();
             Mock<IProductReadClient> productClientMock = new();
@@ -358,8 +352,7 @@ namespace CartService.UnitTests.Services
 
             CreateCartItemDto createDto = new() { CartId = cartId, ProductId = productId, Quantity = 7 };
 
-            Cart cart = new() { Id = Guid.NewGuid() };
-            CartItem mapped = new() { CartId = cartId, ProductId = productId, Quantity = 7, Cart = cart };
+            CartItem mapped = new() { CartId = cartId, ProductId = productId, Quantity = 7 };
             ProductDto productDto = new() { Title = "iPhone 15", Price = 999, QuantityInStock = 5 };
 
             Mock<ICartItemRepository> cartItemRepositoryMock = new();
@@ -443,8 +436,7 @@ namespace CartService.UnitTests.Services
             Guid cartItemId = Guid.NewGuid();
             ChangeQuantityCartItemDto changeDto = new() { Quantity = 0 };
 
-            Cart cart = new() { Id = Guid.NewGuid() };
-            CartItem cartItem = new() { Id = cartItemId, CartId = Guid.NewGuid(), ProductId = Guid.NewGuid(), Quantity = 4, Cart = cart };
+            CartItem cartItem = new() { Id = cartItemId, CartId = Guid.NewGuid(), ProductId = Guid.NewGuid(), Quantity = 4};
             CartItemDto expectedDeletedDto = new() { Id = cartItemId, CartId = cartItem.CartId, ProductId = cartItem.ProductId, Quantity = cartItem.Quantity };
 
             Mock<ICartItemRepository> cartItemRepositoryMock = new();
@@ -492,8 +484,7 @@ namespace CartService.UnitTests.Services
             Guid cartItemId = Guid.NewGuid();
             ChangeQuantityCartItemDto changeDto = new() { Quantity = 7 };
 
-            Cart cart = new() { Id = Guid.NewGuid() };
-            CartItem cartItem = new() { Id = cartItemId, ProductId = Guid.NewGuid(), Quantity = 2, Cart = cart };
+            CartItem cartItem = new() { Id = cartItemId, ProductId = Guid.NewGuid(), Quantity = 2 };
 
             Mock<ICartItemRepository> cartItemRepositoryMock = new();
             Mock<IProductReadClient> productClientMock = new();
@@ -535,9 +526,8 @@ namespace CartService.UnitTests.Services
             Guid cartItemId = Guid.NewGuid();
             ChangeQuantityCartItemDto changeDto = new() { Quantity = 10 };
 
-            Cart cart = new() { Id = Guid.NewGuid() };
             Guid productId = Guid.NewGuid();
-            CartItem cartItem = new() { Id = cartItemId, ProductId = productId, Quantity = 2, Cart = cart };
+            CartItem cartItem = new() { Id = cartItemId, ProductId = productId, Quantity = 2};
 
             ProductDto productDto = new() { Title = "iPhone 16", Price = 1200, QuantityInStock = 5 }; // 10 > 5
 
@@ -582,8 +572,7 @@ namespace CartService.UnitTests.Services
             ChangeQuantityCartItemDto changeDto = new() { Quantity = 6 };
 
             Guid productId = Guid.NewGuid();
-            Cart cart = new() { Id = Guid.NewGuid() };
-            CartItem cartItem = new() { Id = cartItemId, ProductId = productId, Quantity = 2, Cart = cart };
+            CartItem cartItem = new() { Id = cartItemId, ProductId = productId, Quantity = 2 };
 
             ProductDto productDto = new() { Title = "iPhone 16", Price = 1200, QuantityInStock = 20 };
             CartItemDto expectedDto = new() { Id = cartItemId, ProductId = productId, Quantity = 6 };
@@ -635,8 +624,7 @@ namespace CartService.UnitTests.Services
         {
             Guid cartItemId = Guid.NewGuid();
 
-            Cart cart = new() { Id = Guid.NewGuid() };
-            CartItem cartItem = new() { Id = cartItemId, CartId = Guid.NewGuid(), ProductId = Guid.NewGuid(), Quantity = 3, Cart = cart };
+            CartItem cartItem = new() { Id = cartItemId, CartId = Guid.NewGuid(), ProductId = Guid.NewGuid(), Quantity = 3};
             CartItemDto expectedDto = new() { Id = cartItemId, CartId = cartItem.CartId, ProductId = cartItem.ProductId, Quantity = cartItem.Quantity };
 
             Mock<ICartItemRepository> cartItemRepositoryMock = new();

@@ -6,7 +6,6 @@ namespace CartService.Domain.Entity
     public class CartItem : BaseEntity
     {
         public Guid CartId { get; set; }
-        public required Cart Cart { get; set; }
 
         public Guid ProductId { get; set; }
 
