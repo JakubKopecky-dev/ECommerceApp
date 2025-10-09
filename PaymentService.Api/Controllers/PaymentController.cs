@@ -8,7 +8,7 @@ using PaymentService.Api.Enum;
 namespace PaymentService.Api.Controllers
 {
     [ApiController]
-    [Route("api")]
+    [Route("api/[controller]")]
     public class PaymentController(IPaymentService paymentService) : ControllerBase
     {
         private readonly IPaymentService _paymentService = paymentService;

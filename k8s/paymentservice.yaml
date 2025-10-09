@@ -65,9 +65,9 @@ spec:
                   name: ecommerce-secrets
                   key: Stripe__WebHookSecret
             - name: Stripe__SuccessUrl
-              value: "https://paymentservice/api/success"
+              value: "https://ecommerce.9.163.223.240.nip.io/payment/api/Payment/success"
             - name: Stripe__CancelUrl
-              value: "https://paymentservice/api/cancel"
+              value: "https://ecommerce.9.163.223.240.nip.io/payment/api/Payment/cancel"
 ---
 apiVersion: v1
 kind: Service
@@ -80,7 +80,12 @@ spec:
   selector:
     app: paymentservice
   ports:
-    - protocol: TCP
+    - name: rest
+      protocol: TCP
       port: 8080
       targetPort: 8080
+    - name: grpc
+      protocol: TCP
+      port: 8081
+      targetPort: 8081
   type: ClusterIP
