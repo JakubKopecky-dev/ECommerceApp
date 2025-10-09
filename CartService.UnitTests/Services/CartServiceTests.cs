@@ -124,10 +124,6 @@ namespace CartService.UnitTests.Services
                 .Setup(c => c.FindCartByUserIdIncludeItemsAsync(userId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(cart);
 
-            mapperMock
-                .Setup(m => m.Map<CartDto>(cart))
-                .Returns(expectedDto);
-
             cartRepositoryMock
                 .Setup(c => c.SaveChangesAsync(It.IsAny<CancellationToken>()))
                 .Returns(Task.CompletedTask);
@@ -146,7 +142,6 @@ namespace CartService.UnitTests.Services
             result.Should().BeEquivalentTo(expectedDto);
 
             cartRepositoryMock.Verify(c => c.FindCartByUserIdIncludeItemsAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<CartDto>(cart), Times.Once);
             cartRepositoryMock.Verify(c => c.Remove(cart), Times.Once);
             cartRepositoryMock.Verify(c => c.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
@@ -182,7 +177,6 @@ namespace CartService.UnitTests.Services
             result.Should().BeNull();
 
             cartRepositoryMock.Verify(c => c.FindCartByUserIdIncludeItemsAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<CartDto>(It.IsAny<Cart>()), Times.Never);
             cartRepositoryMock.Verify(c => c.Remove(It.IsAny<Cart>()), Times.Never);
             cartRepositoryMock.Verify(c => c.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
         }

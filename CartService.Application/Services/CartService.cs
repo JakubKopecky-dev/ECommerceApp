@@ -74,7 +74,12 @@ namespace CartService.Application.Services
                 return null;
             }
 
-            CartDto deletedCart = _mapper.Map<CartDto>(cart);
+            CartDto deletedCart = new()
+            {
+                Id = cart.Id,
+                UserId = cart.UserId,
+                TotalPrice = cart.Items.Sum(i => i.UnitPrice * i.Quantity)
+            };
 
             _cartRepository.Remove(cart);
             await _cartRepository.SaveChangesAsync(ct);

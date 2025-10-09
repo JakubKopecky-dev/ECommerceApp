@@ -209,7 +209,7 @@ namespace CartService.Application.Services
                 return null;
             }
 
-            CartItemDto deletedCartItem = _mapper.Map<CartItemDto>(cartItem);
+            CartItemDto deletedCartItem =  _mapper.Map<CartItemDto>(cartItem);
 
             _cartItemRepository.Remove(cartItem);
             await _cartItemRepository.SaveChangesAsync(ct);

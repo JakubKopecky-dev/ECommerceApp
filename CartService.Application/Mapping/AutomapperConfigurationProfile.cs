@@ -14,6 +14,7 @@ namespace CartService.Application.Mapping
 
             CreateMap<CreateCartItemDto, CartItem>();
             CreateMap<CartItem, CartItemDto>();
+
             CreateMap<CartItem, CartItemForCheckoutDto>()
                 .ForSourceMember(src => src.Cart, opt => opt.DoNotValidate()); 
 
