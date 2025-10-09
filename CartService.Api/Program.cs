@@ -1,12 +1,21 @@
-﻿using System.Text.Json.Serialization;
-using CartService.Api.DependencyInjection;
+﻿using CartService.Api.DependencyInjection;
 using CartService.Api.Middleware;
 using CartService.Application;
 using CartService.Application.Interfaces.Services;
 using CartService.Persistence;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+using System.Text.Json.Serialization;
 
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(8080, listenOptions =>
+    {
+        listenOptions.Protocols = HttpProtocols.Http1AndHttp2;
+    });
+});
 
 #region Register services (Dependecy Injection)
 

@@ -1,11 +1,20 @@
-using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using ProductService.Api.DependencyInjection;
 using ProductService.Api.Grpc.GrpcServices;
 using ProductService.Api.Middleware;
 using ProductService.Application;
 using ProductService.Persistence;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(8080, listenOptions =>
+    {
+        listenOptions.Protocols = HttpProtocols.Http1AndHttp2;
+    });
+});
 
 #region Register services (Dependency Injection)
 

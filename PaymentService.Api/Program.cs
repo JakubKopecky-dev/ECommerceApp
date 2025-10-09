@@ -1,11 +1,20 @@
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using PaymentService.Api.DependencyInjection;
-using Stripe;
-using PaymentService.Api.Middleware;
 using PaymentService.Api.Grpc.GrpcService;
 using PaymentService.Api.Interfaces;
+using PaymentService.Api.Middleware;
+using Stripe;
 using PaymentServiceService = PaymentService.Api.Services.PaymentService;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(8080, listenOptions =>
+    {
+        listenOptions.Protocols = HttpProtocols.Http1AndHttp2;
+    });
+});
 
 #region Register Services (Dependency Injection)
 

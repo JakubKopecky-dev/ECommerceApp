@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using System.Text.Json.Serialization;
 using UserService.Api.Auth;
 using UserService.Api.DependencyInjection;
@@ -5,6 +6,14 @@ using UserService.Infrastructure;
 using UserService.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(8080, listenOptions =>
+    {
+        listenOptions.Protocols = HttpProtocols.Http1AndHttp2;
+    });
+});
 
 #region Register services (Dependency Injection)
 
