@@ -1,9 +1,11 @@
 ﻿using CartService.Domain.Common;
+using System.Text.Json.Serialization;
 
 namespace CartService.Domain.Entity
 {
     public class CartItem : BaseEntity
     {
+        [JsonIgnore]
         public required Cart Cart { get; set; }
         public Guid CartId { get; set; }
 
