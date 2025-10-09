@@ -119,9 +119,9 @@ namespace CartService.Application.Services
             if (badProducts.Any())
             {
                 _logger.LogWarning("Cannot check out cart. Lack of goods in stock. CartId: {CartId}, ProductIds: {ProductIds}.", cart.Id, string.Join(", ", badProducts.Select(p => p.Id)));
-                return Result<CheckoutResult, CartError>.Ok(new CheckoutResult(false, badProducts,null));
+                return Result<CheckoutResult, CartError>.Ok(new CheckoutResult(false, badProducts, null));
             }
-                
+
 
             // creating order and delivery
             CreateOrderAndDeliveryDto checkOutCartDto = new()
@@ -138,7 +138,13 @@ namespace CartService.Application.Services
                 City = cartCheckoutRequestDto.City,
                 PostalCode = cartCheckoutRequestDto.PostalCode,
                 State = cartCheckoutRequestDto.State,
-                Items = _mapper.Map<List<CartItemForCheckoutDto>>(cart.Items)
+                Items = [.. cart.Items.Select(i =>  new CartItemForCheckoutDto
+                {
+                    ProductId = i.ProductId,
+                    ProductName = i.ProductName,
+                    UnitPrice = i.UnitPrice,
+                    Quantity = i.Quantity
+                })]
             };
 
 
@@ -164,17 +170,17 @@ namespace CartService.Application.Services
 
             if (createdOrder.DeliveryId is null)
             {
-                _logger.LogWarning("Order created but not its delivery. OrderId: {OrderId} UserId: {UserId}, CourierId: {CourierId}.",createdOrder.OrderId,userId,cartCheckoutRequestDto.CourierId);
+                _logger.LogWarning("Order created but not its delivery. OrderId: {OrderId} UserId: {UserId}, CourierId: {CourierId}.", createdOrder.OrderId, userId, cartCheckoutRequestDto.CourierId);
 
                 await DeleteCartByUserIdAsync(userId, ct);
 
                 return Result<CheckoutResult, CartError>.Fail(CartError.DeliveryNotCreated);
             }
-            
+
 
             await DeleteCartByUserIdAsync(userId, ct);
 
-            _logger.LogInformation("Checkout completed successfully. UserId: {UserId}, OrderId: {OrderId}, DeliveryId: {DeliveryId}.", userId,createdOrder.OrderId,createdOrder.DeliveryId);
+            _logger.LogInformation("Checkout completed successfully. UserId: {UserId}, OrderId: {OrderId}, DeliveryId: {DeliveryId}.", userId, createdOrder.OrderId, createdOrder.DeliveryId);
 
             return Result<CheckoutResult, CartError>.Ok(new CheckoutResult(true, [], createdOrder.CheckoutUrl));
         }

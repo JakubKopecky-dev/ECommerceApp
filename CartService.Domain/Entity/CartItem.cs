@@ -5,9 +5,8 @@ namespace CartService.Domain.Entity
 {
     public class CartItem : BaseEntity
     {
-        [JsonIgnore]
-        public required Cart Cart { get; set; }
         public Guid CartId { get; set; }
+        public required Cart Cart { get; set; }
 
         public Guid ProductId { get; set; }
 
