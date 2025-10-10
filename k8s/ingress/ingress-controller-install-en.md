@@ -63,29 +63,52 @@ kubectl get clusterissuer
 
 ## 🌐 4️⃣ Deploy the Ingress
 
-The Ingress defines the public domain and routes traffic to the gateway service.
+The Ingress defines the public domain and routes traffic to the `gatewayservice`.
+
+There are **two ways** to apply the ingress configuration:
+
+### 🟢 Option 1 – Apply from local file
+If you have the YAML file in your project (for example in `k8s/ingress/gateway-ingress.yaml`):
 
 ```
 kubectl apply -f k8s/ingress/gateway-ingress.yaml
 ```
 
-Verify:
+This applies the ingress directly from your local repository.
+
+---
+
+### 🌐 Option 2 – Apply directly from GitHub
+If the file is already pushed to your GitHub repository,  
+you can apply it **directly from the raw URL** without downloading it:
+
+```
+kubectl apply -f https://raw.githubusercontent.com/JakubKopecky-dev/ECommerceApp/main/k8s/ingress/gateway-ingress.yaml
+```
+
+This downloads the YAML from GitHub and applies it straight to your AKS cluster.  
+✅ Ideal for setup in Azure Cloud Shell.
+
+---
+
+### 🔍 Verify deployment:
 ```
 kubectl get ingress -n ecommerceapp
 kubectl describe ingress gateway-ingress -n ecommerceapp
 ```
 
+You should see your domain listed under `ADDRESS` and `HOSTS`, e.g.:
+
+```
+ADDRESS: 9.163.223.240
+HOSTS: ecommerce.9.163.223.240.nip.io
+```
+
 ---
 
-## ✅ 5️⃣ Test Access
-
-Once the Ingress has an `ADDRESS` (IP), open your app in a browser:
-
-```
-https://ecommerce.<your-public-ip>.nip.io
-```
-
-> The Let's Encrypt certificate should be automatically issued within a few minutes.
+💡 **Tip:**  
+Once this ingress is applied, your `GatewayService` will automatically be accessible through HTTPS  
+as soon as CI/CD deploys the application pods.
 
 ---
 
@@ -99,4 +122,3 @@ https://ecommerce.<your-public-ip>.nip.io
 - For staging environments, you can create a test ClusterIssuer using the Let's Encrypt staging API (`staging.api.letsencrypt.org`).
 
 ---
-
