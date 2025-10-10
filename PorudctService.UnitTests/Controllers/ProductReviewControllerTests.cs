@@ -1,20 +1,39 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Security.Claims;
-using System.Threading;
-using System.Threading.Tasks;
-using FluentAssertions;
+﻿using FluentAssertions;
+using Microsoft.AspNetCore.Cors.Infrastructure;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using ProductService.Api.Controllers;
 using ProductService.Application.DTOs.ProductReview;
 using ProductService.Application.Interfaces.Services;
+using System;
+using System.Collections.Generic;
+using System.Security.Claims;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace ProductService.UnitTests.Controllers
 {
     public class ProductReviewControllerTests
     {
+
+        private static ProductReviewController CreateControllerWithUser(Mock<IProductReviewService> reviewServiceMock, Guid? userId, string? userName)
+        {
+            ProductReviewController controller = new(reviewServiceMock.Object);
+
+            ClaimsIdentity identity = userId is not null && userName is not null
+                ? new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, userId.Value.ToString()), new Claim(ClaimTypes.Name,userName)], "mock")
+                : new ClaimsIdentity();
+
+            controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = new DefaultHttpContext { User = new ClaimsPrincipal(identity) }
+            };
+
+            return controller;
+        }
+
+
         [Fact]
         [Trait("Category", "Unit")]
         public async Task GetAllProductReviews_ReturnsProductReviewDtoList_WhenExists()
@@ -121,18 +140,19 @@ namespace ProductService.UnitTests.Controllers
         [Trait("Category", "Unit")]
         public async Task CreateProductReview_ReturnsCreatedAtAction_WithProductReviewDto()
         {
-            CreateProductReviewDto createDto = new() { Comment = "Excellent", ProductId = Guid.NewGuid(), UserId = Guid.NewGuid() };
+            Guid userId = Guid.NewGuid();
+            string userName = "John";
+            CreateProductReviewDto createDto = new() { Comment = "Excellent", ProductId = Guid.NewGuid()};
 
-            ProductReviewDto expectedDto = new() { Id = Guid.NewGuid(), Comment = createDto.Comment, ProductId = createDto.ProductId, UserId = createDto.UserId };
+            ProductReviewDto expectedDto = new() { Id = Guid.NewGuid(), Comment = createDto.Comment, ProductId = createDto.ProductId, UserId = userId };
 
             Mock<IProductReviewService> reviewServiceMock = new();
 
             reviewServiceMock
-                .Setup(r => r.CreateProductReviewAsync(createDto, It.IsAny<CancellationToken>()))
+                .Setup(r => r.CreateProductReviewAsync(createDto,userId,userName, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(expectedDto);
 
-            ProductReviewController controller = new(reviewServiceMock.Object);
-
+            ProductReviewController controller = CreateControllerWithUser(reviewServiceMock, userId, userName);
 
             var result = await controller.CreateProductReview(createDto, It.IsAny<CancellationToken>());
             var createdResult = result as CreatedAtActionResult;
@@ -141,7 +161,26 @@ namespace ProductService.UnitTests.Controllers
             createdResult.RouteValues!["reviewId"].Should().Be(expectedDto.Id);
             createdResult.Value.Should().BeEquivalentTo(expectedDto);
 
-            reviewServiceMock.Verify(r => r.CreateProductReviewAsync(createDto, It.IsAny<CancellationToken>()), Times.Once);
+            reviewServiceMock.Verify(r => r.CreateProductReviewAsync(createDto, userId,userName,It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+
+
+        [Fact]
+        [Trait("Category", "Unit")]
+        public async Task CreateProductReview_ReturnsUnauthorized_WhenUserIdMissingOrInvalid()
+        {
+            CreateProductReviewDto createDto = new() { Comment = "Excellent", ProductId = Guid.NewGuid() };
+
+            Mock<IProductReviewService> reviewServiceMock = new();
+
+            ProductReviewController controller = CreateControllerWithUser(reviewServiceMock, null, null);
+
+            var result = await controller.CreateProductReview(createDto, It.IsAny<CancellationToken>());
+
+            result.Should().BeOfType<UnauthorizedResult>();
+
+            reviewServiceMock.Verify(r => r.CreateProductReviewAsync(createDto, It.IsAny<Guid>(),It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
         }
 
 

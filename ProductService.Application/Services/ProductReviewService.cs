@@ -44,13 +44,15 @@ namespace ProductService.Application.Services
 
 
 
-        public async Task<ProductReviewDto> CreateProductReviewAsync(CreateProductReviewDto createDto, CancellationToken ct = default)
+        public async Task<ProductReviewDto> CreateProductReviewAsync(CreateProductReviewDto createDto, Guid userId, string userName, CancellationToken ct = default)
         {
             _logger.LogInformation("Creating new productReview. Title: {Title}.", createDto.Title);
 
             ProductReview review = _mapper.Map<ProductReview>(createDto);
             review.Id = Guid.Empty;
             review.CreatedAt = DateTime.UtcNow;
+            review.UserId = userId;
+            review.UserName = userName;
 
             ProductReview createdReview = await _productReviewRepository.InsertAsync(review,ct);
             _logger.LogInformation("ProductReview created. ProductReviewId: {ReviewId}.", createdReview.Id);

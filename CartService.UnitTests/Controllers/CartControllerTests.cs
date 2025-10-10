@@ -15,9 +15,9 @@ namespace CartService.UnitTests.Controllers
 {
     public class CartControllerTests
     {
-        private static CartController CreateControllerWithUser(Mock<ICartService> svc, Guid? userId)
+        private static CartController CreateControllerWithUser(Mock<ICartService> cartServiceMock, Guid? userId)
         {
-            CartController controller = new(svc.Object);
+            CartController controller = new(cartServiceMock.Object);
 
             ClaimsIdentity identity = userId is not null
                 ? new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, userId.Value.ToString())], "mock")

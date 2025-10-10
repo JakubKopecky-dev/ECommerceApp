@@ -33,7 +33,15 @@ namespace ProductService.Api.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateProductReview([FromBody] CreateProductReviewDto createDto, CancellationToken ct)
         {
-            ProductReviewDto review = await _productReviewService.CreateProductReviewAsync(createDto, ct);
+            string? userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if(!Guid.TryParse(userIdString, out Guid userId))
+                return Unauthorized();
+
+            string? userName = User.FindFirstValue(ClaimTypes.Name);
+            if (userName is null)
+                return Unauthorized();
+
+            ProductReviewDto review = await _productReviewService.CreateProductReviewAsync(createDto,userId,userName, ct);
 
             return CreatedAtAction(nameof(GetProductReview), new { reviewId = review.Id }, review);
         }

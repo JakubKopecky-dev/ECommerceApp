@@ -179,9 +179,11 @@ namespace ProductService.UnitTests.Services
             Brand brand = new() { Id = Guid.NewGuid(), Title = "Apple" };
             Product product = new() { Id = Guid.NewGuid(), Brand = brand, Title = "iPhone 16" };
 
-            CreateProductReviewDto createDto = new() { ProductId = product.Id, UserId = Guid.NewGuid() };
+            Guid userId = Guid.NewGuid();
+            string userName = "John";
+            CreateProductReviewDto createDto = new() { ProductId = product.Id };
 
-            ProductReview review = new() { Id = Guid.Empty, Product = product, CreatedAt = DateTime.UtcNow };
+            ProductReview review = new() { Id = Guid.Empty, Product = product, CreatedAt = DateTime.UtcNow, UserId = userId, UserName = userName };
             ProductReview createdReview = new() { Id = Guid.NewGuid(), Product = product, CreatedAt = review.CreatedAt };
             ProductReviewDto expectedDto = new() { Id = createdReview.Id, ProductId = product.Id, CreatedAt = review.CreatedAt };
 
@@ -207,7 +209,7 @@ namespace ProductService.UnitTests.Services
                 );
 
 
-            ProductReviewDto result = await service.CreateProductReviewAsync(createDto);
+            ProductReviewDto result = await service.CreateProductReviewAsync(createDto,userId,userName);
 
             result.Should().BeEquivalentTo(expectedDto);
 
