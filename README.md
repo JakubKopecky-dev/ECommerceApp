@@ -2,7 +2,9 @@
 
 ![CI/CD](https://github.com/JakubKopecky-dev/ECommerceApp/actions/workflows/ci-cd.yml/badge.svg)
 
-ECommerceApp is a backend e-commerce application built with a microservices architecture. Each service has a well-defined domain responsibility and they communicate with each other via gRPC, MassTransit (RabbitMQ/Azure Service Bus), and SignalR for real-time notifications. External clients interact with the system through a centralized **API Gateway** (reverse proxy, single entry point), which routes requests to the correct microservice. The project is designed and deployed in **Azure Container Apps**, using **Azure SQL Database** and **Azure Service Bus**.
+**ECommerceApp** is a backend e-commerce system built with a microservices architecture, running on **Azure Kubernetes Service (AKS)**.
+Each service has a specific domain responsibility and communicates with others via **gRPC**, **MassTransit (Azure Service Bus)**, and **SignalR** for real-time updates.
+All external traffic is routed through a centralized **API Gateway** (YARP Reverse Proxy).
 
 ## Tech Stack
 
@@ -14,22 +16,23 @@ ECommerceApp is a backend e-commerce application built with a microservices arch
 - EF Core  
 - ASP.NET Core Identity  
 - JWT
-- YARP API Gateway (reverse proxy & single entry point for microservices)  
+- YARP API Gateway (API Gateway)  
 
 
-### Deployment
-- Docker, Azure Container Apps  
-- Prepared YAML files for Kubernetes (k8s)  
+### Infrastructure
+- Azure Kubernetes Service (AKS)
+- Azure SQL
+- Azure Service Bus
+- Cert-Manager + Let's Encrypt for HTTPS
+- NGINX Ingress Controller
 
-### Database
-- Azure SQL  
 
 ### CI/CD Pipeline
 The project includes a fully automated CI/CD pipeline using **GitHub Actions**:
 
 - **Build & Test** – On every push to `main` or when opening a pull request, the project is built and all unit and integration tests are executed.  
 - **Docker Build & Push** – A Docker image is built for each microservice and pushed to the GitHub Container Registry (GHCR).  
-- **Deploy** – After a successful build, the images tagged with the commit SHA are automatically deployed to **Azure Container Apps**.  
+- **Deploy** – After a successful build, the images tagged with the commit SHA are automatically deployed to **Azure Kubernetes Service**.  
 
 ## Project Structure
 
@@ -64,21 +67,10 @@ The project includes a fully automated CI/CD pipeline using **GitHub Actions**:
 ### Tests
 - Contains positive and negative xUnit tests for all services and controllers
 - All tests are also executed automatically in the CI/CD pipeline
-- **300 xUnit tests in total**  
+- **301 xUnit tests in total**  
 - Integration tests cover critical application flows  
 - **29 integration tests in total**  
 
-## API Documentation (Swagger)
-
-| Service             | Swagger UI |
-|---------------------|------------|
-| CartService         | [Swagger](https://gatewayservice.gentleplant-c909a9be.westeurope.azurecontainerapps.io/cart/swagger) |
-| DeliveryService     | [Swagger](https://gatewayservice.gentleplant-c909a9be.westeurope.azurecontainerapps.io/delivery/swagger) |
-| NotificationService | [Swagger](https://gatewayservice.gentleplant-c909a9be.westeurope.azurecontainerapps.io/notification/swagger) |
-| OrderService        | [Swagger](https://gatewayservice.gentleplant-c909a9be.westeurope.azurecontainerapps.io/order/swagger) |
-| PaymentService      | [Swagger](https://gatewayservice.gentleplant-c909a9be.westeurope.azurecontainerapps.io/payment/swagger) |
-| ProductService      | [Swagger](https://gatewayservice.gentleplant-c909a9be.westeurope.azurecontainerapps.io/product/swagger) |
-| UserService         | [Swagger](https://gatewayservice.gentleplant-c909a9be.westeurope.azurecontainerapps.io/user/swagger) |
 
 ## Features
 - Decoupled microservices communicating via gRPC and RabbitMQ/Azure Service Bus
@@ -91,7 +83,7 @@ The project includes a fully automated CI/CD pipeline using **GitHub Actions**:
 - Order creation and delivery handling  
 - Order and delivery status management  
 - Real-time notifications when an order is created, status changes, or delivery is canceled (SignalR)  
-- Automated tests (300 xUnit, 29 integration)  
+- Automated tests (301 xUnit, 29 integration)  
 
 ## Stripe
 - Integration with the Stripe payment service  
@@ -137,9 +129,11 @@ docker-compose up -d --build
 | SQL Server             | `localhost,1433` (user: `sa`, password: `ECom2025!Pass`) |
 
 #### 4) Configuration
-- Configurations are set in `docker-compose.yml`
-> ⚠️ Credentials (e.g. SQL password or Stripe keys) are only for local usage.  
-> In production, it is recommended to use **Azure Key Vault** or **Application settings / Environment variables** in Azure Container Apps.
+- Configurations are defined in `docker-compose.yml` for local development.
+
+> ⚠️ Credentials (e.g. SQL connection string, JWT key, or Stripe keys) are only for local usage.  
+> In production on **Azure Kubernetes Service (AKS)**, sensitive configuration values are stored securely using **Kubernetes Secrets**  
+> (e.g. `ecommerce-secrets` and `ghcr-secret`) or managed through **Azure Key Vault** if integrated.
 
 #### 5) Running tests
 
