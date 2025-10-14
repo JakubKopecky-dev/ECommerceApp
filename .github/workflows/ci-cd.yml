@@ -155,8 +155,3 @@ jobs:
           kubectl get pods -n ecommerceapp -o wide
           echo "Services:"
           kubectl get svc -n ecommerceapp
-
-      - name: Show Gateway public IP
-        run: |
-          echo "Gateway external IP:"
-          kubectl get svc gatewayservice -n ecommerceapp -o jsonpath='{.status.loadBalancer.ingress[0].ip}'
