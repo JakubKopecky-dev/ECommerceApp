@@ -3,7 +3,7 @@ using OrderService.Application.Interfaces.Repositories;
 
 namespace OrderService.Persistence.Repositories
 {
-    public class BaseRepository<TEntity>(OrderDbContext dbContext) : IBaseRepository<TEntity> where TEntity : class
+    public abstract class BaseRepository<TEntity>(OrderDbContext dbContext) : IBaseRepository<TEntity> where TEntity : class
     {
         protected readonly OrderDbContext _dbContext = dbContext;
         protected readonly DbSet<TEntity> _dbSet = dbContext.Set<TEntity>();
