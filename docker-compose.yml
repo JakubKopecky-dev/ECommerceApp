@@ -40,14 +40,16 @@ services:
         container_name: cartservice
         ports:
             - "7125:8080"
+        expose:
+            - "8081" 
         environment:
             <<: [*jwt-env, *rabbit-env]
             ASPNETCORE_ENVIRONMENT: "Production"
             # Connection striong to MSSQL conteiner
             ConnectionStrings__DefaultConnection: "Server=sqldb;Database=ECommerceApp_CartDb;User Id=sa;Password=ECom2025!Pass;TrustServerCertificate=True;"
             # gRPC address for other microservices
-            OrderService__GrpcAddress: "http://orderservice:8080"
-            ProductService__GrpcAddress: "http://productservice:8080"
+            OrderService__GrpcAddress: "http://orderservice:8081"
+            ProductService__GrpcAddress: "http://productservice:8081"
             # Swagger
             EnableSwagger: true
         depends_on:
@@ -62,13 +64,15 @@ services:
         container_name: deliveryservice
         ports:
             - "7126:8080"
+        expose:
+            - "8081" 
         environment:
             <<: [*jwt-env, *rabbit-env]
             ASPNETCORE_ENVIRONMENT: "Production"
             # Connection string to MSSQL conteiner
             ConnectionStrings__DefaultConnection: "Server=sqldb;Database=ECommerceApp_DeliveryDb;User Id=sa;Password=ECom2025!Pass;TrustServerCertificate=True;"
             # gRPC address for other microservices
-            OrderService__GrpcAddress: "http://orderservice:8080"
+            OrderService__GrpcAddress: "http://orderservice:8081"
             # Swagger
             EnableSwagger: true
         depends_on:
@@ -83,6 +87,8 @@ services:
         container_name: notificationservice
         ports:
             - "7127:8080"
+        expose:
+            - "8081" 
         environment:
             <<: [*jwt-env, *rabbit-env]
             ASPNETCORE_ENVIRONMENT: "Production"
@@ -102,14 +108,16 @@ services:
         container_name: orderservice
         ports:
             - "7128:8080"
+        expose:
+            - "8081" 
         environment:
             <<: [*jwt-env, *rabbit-env]
             ASPNETCORE_ENVIRONMENT: "Production"
             # Connection string to MSSQL conteiner
             ConnectionStrings__DefaultConnection: "Server=sqldb;Database=ECommerceApp_OrderDb;User Id=sa;Password=ECom2025!Pass;TrustServerCertificate=True;"
             # gRPC address for other microservices
-            DeliveryService__GrpcAddress: "http://deliveryservice:8080"
-            PaymentService__GrpcAddress: "http://paymentservice:8080"
+            DeliveryService__GrpcAddress: "http://deliveryservice:8081"
+            PaymentService__GrpcAddress: "http://paymentservice:8081"
             # Swagger
             EnableSwagger: true
         depends_on:
@@ -124,6 +132,8 @@ services:
         container_name: paymentservice
         ports:
             - "7129:8080"
+        expose:
+            - "8081" 
         environment:
             <<: [*jwt-env, *rabbit-env]
             ASPNETCORE_ENVIRONMENT: "Production"
@@ -145,6 +155,8 @@ services:
         container_name: productservice
         ports:
             - "7130:8080"
+        expose:
+            - "8081" 
         environment:
             <<: [*jwt-env, *rabbit-env]
             ASPNETCORE_ENVIRONMENT: "Production"
@@ -164,6 +176,8 @@ services:
         container_name: userservice
         ports:
            - "7131:8080"
+        expose:
+            - "8081" 
         environment:
             <<: *jwt-env
             Jwt_ExpiresInMinutes: 600
