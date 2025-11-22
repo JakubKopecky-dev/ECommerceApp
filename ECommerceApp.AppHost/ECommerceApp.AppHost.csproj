@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <Sdk Name="Aspire.AppHost.Sdk" Version="9.5.0" />
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UserSecretsId>e0327ba9-eb69-4714-8d17-ac23d28fb2fd</UserSecretsId>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.AppHost" Version="13.0.0" />
+    <PackageReference Include="Aspire.Hosting.RabbitMQ" Version="13.0.0" />
+    <PackageReference Include="Aspire.Hosting.SqlServer" Version="13.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CartService.Api\CartService.Api.csproj" />
+    <ProjectReference Include="..\DeliveryService.Api\DeliveryService.Api.csproj" />
+    <ProjectReference Include="..\GatewayService\GatewayService.csproj" />
+    <ProjectReference Include="..\NotificationService.Api\NotificationService.Api.csproj" />
+    <ProjectReference Include="..\OrderService.Api\OrderService.Api.csproj" />
+    <ProjectReference Include="..\PaymentService.Api\PaymentService.Api.csproj" />
+    <ProjectReference Include="..\ProductService.Api\ProductService.Api.csproj" />
+    <ProjectReference Include="..\UserService.Api\UserService.Api.csproj" />
+  </ItemGroup>
+
+</Project>

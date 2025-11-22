@@ -82,7 +82,6 @@ namespace UserService.Api.DependencyInjection
             .AddEntityFrameworkStores<UserDbContext>()
             .AddDefaultTokenProviders();
 
-
             return services;
 
         }

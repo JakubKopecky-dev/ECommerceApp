@@ -180,11 +180,11 @@ services:
             - "8081" 
         environment:
             <<: *jwt-env
-            Jwt_ExpiresInMinutes: 600
+            Jwt__ExpiresInMinutes: 600
             # ConnectionString
             ConnectionStrings__DefaultConnection: "Server=sqldb;Database=ECommerceApp_UserDb;User Id=sa;Password=ECom2025!Pass;TrustServerCertificate=True;"
             # Swagger
-            EnableSwagger: true
+            EnableSwagger: true   
         depends_on:
             - sqldb
 

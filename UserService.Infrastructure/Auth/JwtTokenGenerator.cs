@@ -17,7 +17,21 @@ namespace UserService.Infrastructure.Auth
             {
                 new (ClaimTypes.NameIdentifier, userId.ToString()),
                 new (ClaimTypes.Name, !string.IsNullOrEmpty(userName) ? userName : "UnknownUser"),
-                new (ClaimTypes.Email, !string.IsNullOrEmpty(email) ? email : "UnknownEmail")
+                new (ClaimTypes.Email, !string.IsNullOrEmpty(email) ? email : "UnknownEmail"),
+
+
+                // ASP.NET Identity compatible
+                new (ClaimTypes.NameIdentifier, userId.ToString()),
+                new (ClaimTypes.Name, userName),
+                new (ClaimTypes.Email, email),
+
+                // JWT/OIDC standard compatible
+                new (JwtRegisteredClaimNames.Sub, userId.ToString()),
+                new (JwtRegisteredClaimNames.UniqueName, userName),
+                new (JwtRegisteredClaimNames.Email, email),
+                new (JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new (JwtRegisteredClaimNames.Iat,
+                new DateTimeOffset(DateTime.UtcNow).ToUnixTimeSeconds().ToString(),ClaimValueTypes.Integer64)
             };
 
             // Add role to claim
@@ -26,6 +40,7 @@ namespace UserService.Infrastructure.Auth
                 foreach (var role in roles)
                 {
                     claims.Add(new Claim(ClaimTypes.Role, role));
+                    claims.Add(new Claim("role", role));
                 }
             }
 

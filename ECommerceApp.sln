@@ -124,6 +124,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PaymentService.Api", "Payme
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GatewayService", "GatewayService\GatewayService.csproj", "{161D99A9-7165-4F0E-AD27-C89C10D2C2AA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ECommerceApp.AppHost", "ECommerceApp.AppHost\ECommerceApp.AppHost.csproj", "{0F5B9B16-44CD-47FA-AE07-78676DC65A0A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -282,6 +284,10 @@ Global
 		{161D99A9-7165-4F0E-AD27-C89C10D2C2AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{161D99A9-7165-4F0E-AD27-C89C10D2C2AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{161D99A9-7165-4F0E-AD27-C89C10D2C2AA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0F5B9B16-44CD-47FA-AE07-78676DC65A0A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0F5B9B16-44CD-47FA-AE07-78676DC65A0A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0F5B9B16-44CD-47FA-AE07-78676DC65A0A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0F5B9B16-44CD-47FA-AE07-78676DC65A0A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

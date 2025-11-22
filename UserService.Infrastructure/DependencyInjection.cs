@@ -11,7 +11,7 @@ namespace UserService.Infrastructure
         {
             services.AddScoped<IApplicationUserService, ApplicationUserService>();
             services.AddScoped<IAuthService, AuthService>();
-
+            services.AddScoped<IExternalAuthService, ExternalAuthService>();
 
             services.AddAutoMapper(cfg => { }, typeof(AutomapperConfigurationProfile).Assembly);
 

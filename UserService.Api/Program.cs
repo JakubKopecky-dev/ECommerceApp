@@ -7,6 +7,8 @@ using UserService.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddHttpContextAccessor();
+
 builder.WebHost.ConfigureKestrel(options =>
 {
     // HTTP/1.1 for Swagger + Controllers
@@ -30,7 +32,7 @@ builder.Services.AddPersistenceServices(builder.Configuration);
 // Infrastrucutre (Automapper, Services)
 builder.Services.AddInfrastructureServices();
 
-// Identity & Autentization (JWT, UserManager, TokenGenerator)
+// Identity & Authentication (JWT, UserManager, TokenGenerator)
 builder.Services.AddAuthenticationAndIdentityServiceCollection(builder.Configuration);
 
 // Controllers & JSON setting
