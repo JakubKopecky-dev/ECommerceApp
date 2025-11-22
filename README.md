@@ -15,7 +15,7 @@ All external traffic is routed through a centralized **API Gateway** (YARP Rever
 - MassTransit, RabbitMQ, Azure Service Bus  
 - EF Core  
 - ASP.NET Core Identity  
-- JWT
+- JWT, OIDC
 - YARP API Gateway (API Gateway)  
 
 
@@ -58,7 +58,10 @@ The project includes a fully automated CI/CD pipeline using **GitHub Actions**:
 - Responsible for managing products, brands, categories, and reviews  
 
 ### UserService
-- Responsible for user management, authentication, and JWT generation
+- Responsible for user management, authentication, and JWT generation  
+- Supports classic email/password login using ASP.NET Core Identity  
+- Supports external authentication via **Google (OIDC)**  
+- After successful Google login, the backend validates the Google ID Token and issues its own JWT token
 
 ### GatewayService
 - Acts as the single entry point, routing external requests to the appropriate microservice  
