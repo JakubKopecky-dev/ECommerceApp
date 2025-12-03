@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using OrderService.Application.Interfaces.Repositories;
-using OrderService.Domain.Entity;
+using OrderService.Domain.Entities;
 
 namespace OrderService.Persistence.Repositories
 {

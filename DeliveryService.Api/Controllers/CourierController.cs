@@ -1,6 +1,6 @@
 ﻿using DeliveryService.Application.DTOs.Courier;
 using DeliveryService.Application.Interfaces.Services;
-using DeliveryService.Domain.Enum;
+using DeliveryService.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

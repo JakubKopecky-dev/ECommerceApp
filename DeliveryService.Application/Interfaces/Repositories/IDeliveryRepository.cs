@@ -1,4 +1,4 @@
-﻿using DeliveryService.Domain.Entity;
+﻿using DeliveryService.Domain.Entities;
 
 namespace DeliveryService.Application.Interfaces.Repositories
 {

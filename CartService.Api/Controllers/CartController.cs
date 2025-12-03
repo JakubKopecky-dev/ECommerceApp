@@ -2,7 +2,7 @@
 using CartService.Api.Extensions;
 using CartService.Application.DTOs.Cart;
 using CartService.Application.Interfaces.Services;
-using CartService.Domain.Enum;
+using CartService.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

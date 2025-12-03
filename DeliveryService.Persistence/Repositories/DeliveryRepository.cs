@@ -1,0 +1,13 @@
+﻿using DeliveryService.Application.Interfaces.Repositories;
+using DeliveryService.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
+
+namespace DeliveryService.Persistence.Repository
+{
+    public class DeliveryRepository(DeliveryDbContext dbContext) : BaseRepository<Delivery>(dbContext), IDeliveryRepository
+    {
+        public async Task<Delivery?> FindDeliveryByOrderIdIncludeCourierAsync(Guid orderId,CancellationToken ct = default) => await _dbSet
+            .Include(d => d.Courier)
+            .SingleOrDefaultAsync(d => d.OrderId == orderId,ct);
+    }
+}

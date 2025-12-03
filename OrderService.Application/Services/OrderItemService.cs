@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 using OrderService.Application.DTOs.OrderItem;
 using OrderService.Application.Interfaces.Repositories;
 using OrderService.Application.Interfaces.Services;
-using OrderService.Domain.Entity;
+using OrderService.Domain.Entities;
 using Shared.Contracts.Events;
 
 namespace OrderService.Application.Services

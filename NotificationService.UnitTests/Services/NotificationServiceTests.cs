@@ -9,8 +9,8 @@ using Moq;
 using NotificationService.Application.DTOs;
 using NotificationService.Application.Interfaces.Repositories;
 using NotificationService.Application.Services;
-using NotificationService.Domain.Entity;
-using NotificationService.Domain.Enum;
+using NotificationService.Domain.Entities;
+using NotificationService.Domain.Enums;
 using NotificationServiceService = NotificationService.Application.Services.NotificationService;
 
 namespace NotificationService.UnitTests.Services

@@ -5,7 +5,7 @@ using CartService.Application.DTOs.CartItem;
 using CartService.Application.DTOs.External;
 using CartService.Application.Interfaces.External;
 using CartService.Application.Interfaces.Repositories;
-using CartService.Domain.Entity;
+using CartService.Domain.Entities;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;

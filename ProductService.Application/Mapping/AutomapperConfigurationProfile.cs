@@ -3,7 +3,7 @@ using ProductService.Application.DTOs.Brand;
 using ProductService.Application.DTOs.Category;
 using ProductService.Application.DTOs.Product;
 using ProductService.Application.DTOs.ProductReview;
-using ProductService.Domain.Entity;
+using ProductService.Domain.Entities;
 
 namespace ProductService.Application.Mapping
 {

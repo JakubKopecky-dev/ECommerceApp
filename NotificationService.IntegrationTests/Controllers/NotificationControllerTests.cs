@@ -6,7 +6,7 @@ using System.Text.Json.Serialization;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using NotificationService.Application.DTOs;
-using NotificationService.Domain.Enum;
+using NotificationService.Domain.Enums;
 using NotificationService.IntegrationTests.Common;
 using NotificationService.Persistence;
 

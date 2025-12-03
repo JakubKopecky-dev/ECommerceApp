@@ -10,7 +10,7 @@ using Moq;
 using ProductService.Application.DTOs.Brand;
 using ProductService.Application.Interfaces.Repositories;
 using ProductService.Application.Services;
-using ProductService.Domain.Entity;
+using ProductService.Domain.Entities;
 
 namespace ProductService.UnitTests.Services
 {

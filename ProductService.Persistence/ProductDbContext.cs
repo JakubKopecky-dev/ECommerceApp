@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.Extensions.Hosting;
 using ProductService.Domain.Common;
-using ProductService.Domain.Entity;
+using ProductService.Domain.Entities;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 

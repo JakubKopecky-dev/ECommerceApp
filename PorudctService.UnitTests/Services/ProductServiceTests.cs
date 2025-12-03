@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using Moq;
 using ProductService.Application.DTOs.Product;
 using ProductService.Application.Interfaces.Repositories;
-using ProductService.Domain.Entity;
+using ProductService.Domain.Entities;
 using Shared.Contracts.DTOs;
 using ProductServiceService = ProductService.Application.Services.ProductService;
 

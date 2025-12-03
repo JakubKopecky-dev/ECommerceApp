@@ -1,4 +1,4 @@
-﻿using CartService.Domain.Entity;
+﻿using CartService.Domain.Entities;
 
 namespace CartService.Application.Interfaces.Repositories
 {

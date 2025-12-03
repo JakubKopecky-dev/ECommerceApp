@@ -1,5 +1,5 @@
 ﻿using CartService.Application.Interfaces.Repositories;
-using CartService.Domain.Entity;
+using CartService.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace CartService.Persistence.Repositories

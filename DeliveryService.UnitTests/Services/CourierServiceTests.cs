@@ -8,7 +8,7 @@ using Microsoft.Extensions.Logging;
 using DeliveryService.Application.DTOs.Courier;
 using DeliveryService.Application.Interfaces.Repositories;
 using DeliveryService.Application.Services;
-using DeliveryService.Domain.Entity;
+using DeliveryService.Domain.Entities;
 using Moq;
 using FluentAssertions;
 

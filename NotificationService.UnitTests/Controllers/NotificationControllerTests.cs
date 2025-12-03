@@ -11,7 +11,7 @@ using Moq;
 using NotificationService.Api.Controllers;
 using NotificationService.Application.DTOs;
 using NotificationService.Application.Interfaces.Services;
-using NotificationService.Domain.Enum;
+using NotificationService.Domain.Enums;
 
 namespace NotificationService.UnitTests.Controllers
 {

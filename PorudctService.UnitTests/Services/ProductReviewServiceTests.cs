@@ -8,7 +8,7 @@ using Moq;
 using ProductService.Application.DTOs.ProductReview;
 using ProductService.Application.Interfaces.Repositories;
 using ProductService.Application.Services;
-using ProductService.Domain.Entity;
+using ProductService.Domain.Entities;
 using Microsoft.Extensions.Logging;
 using FluentAssertions;
 

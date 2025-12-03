@@ -1,5 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using OrderService.Domain.Enum;
+using OrderService.Domain.Enums;
 
 namespace OrderService.Application.DTOs.Order
 {

@@ -2,7 +2,7 @@
 using OrderService.Application.DTOs.External;
 using OrderService.Application.DTOs.Order;
 using OrderService.Application.DTOs.OrderItem;
-using OrderService.Domain.Entity;
+using OrderService.Domain.Entities;
 
 namespace OrderService.Application.Mapping
 {

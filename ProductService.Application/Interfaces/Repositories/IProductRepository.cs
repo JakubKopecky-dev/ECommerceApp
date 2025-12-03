@@ -1,5 +1,5 @@
 ﻿using ProductService.Application.DTOs.Product;
-using ProductService.Domain.Entity;
+using ProductService.Domain.Entities;
 
 namespace ProductService.Application.Interfaces.Repositories
 {

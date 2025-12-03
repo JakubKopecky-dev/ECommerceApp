@@ -7,7 +7,7 @@ using Moq;
 using OrderService.Application.DTOs.OrderItem;
 using OrderService.Application.Interfaces.Repositories;
 using OrderService.Application.Services;
-using OrderService.Domain.Entity;
+using OrderService.Domain.Entities;
 using Microsoft.Extensions.Logging;
 using FluentAssertions;
 

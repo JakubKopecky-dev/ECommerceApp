@@ -1,4 +1,4 @@
-﻿using NotificationService.Domain.Enum;
+﻿using NotificationService.Domain.Enums;
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using DeliveryService.Application.DTOs.Courier;
 using DeliveryService.Application.DTOs.Delivery;
-using DeliveryService.Domain.Entity;
+using DeliveryService.Domain.Entities;
 
 namespace DeliveryService.Application.Mapping
 {

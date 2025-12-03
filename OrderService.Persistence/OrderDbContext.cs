@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.Extensions.Hosting;
 using OrderService.Domain.Common;
-using OrderService.Domain.Entity;
+using OrderService.Domain.Entities;
 
 namespace OrderService.Persistence
 {

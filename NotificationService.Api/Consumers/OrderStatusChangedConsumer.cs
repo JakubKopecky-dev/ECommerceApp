@@ -4,7 +4,7 @@ using NotificationService.Api.Hubs;
 using NotificationService.Application.DTOs;
 using NotificationService.Application.Interfaces.Services;
 using Shared.Contracts.Events;
-using NotificationService.Domain.Enum;
+using NotificationService.Domain.Enums;
 
 namespace NotificationService.Api.Consumers
 {

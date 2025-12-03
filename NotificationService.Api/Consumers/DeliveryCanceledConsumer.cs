@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.SignalR;
 using NotificationService.Api.Hubs;
 using NotificationService.Application.DTOs;
 using NotificationService.Application.Interfaces.Services;
-using NotificationService.Domain.Enum;
+using NotificationService.Domain.Enums;
 using Shared.Contracts.Events;
 
 namespace NotificationService.Api.Consumers

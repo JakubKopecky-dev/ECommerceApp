@@ -1,4 +1,4 @@
-﻿using DeliveryService.Domain.Enum;
+﻿using DeliveryService.Domain.Enums;
 
 namespace DeliveryService.Application.DTOs.Delivery
 {

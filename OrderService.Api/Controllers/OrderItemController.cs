@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using OrderService.Application.DTOs.OrderItem;
 using OrderService.Application.Interfaces.Services;
-using OrderService.Domain.Enum;
+using OrderService.Domain.Enums;
 
 namespace OrderService.Api.Controllers
 {

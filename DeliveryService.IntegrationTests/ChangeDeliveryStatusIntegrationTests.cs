@@ -2,8 +2,8 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using DeliveryService.Application.Interfaces.External;
-using DeliveryService.Domain.Entity;
-using DeliveryService.Domain.Enum;
+using DeliveryService.Domain.Entities;
+using DeliveryService.Domain.Enums;
 using DeliveryService.IntegrationTests.Common;
 using DeliveryService.Persistence;
 using FluentAssertions;

@@ -6,7 +6,7 @@ using Moq;
 using OrderService.Api.Controllers;
 using OrderService.Application.DTOs.Order;
 using OrderService.Application.Interfaces.Services;
-using OrderService.Domain.Enum;
+using OrderService.Domain.Enums;
 
 namespace OrderService.UnitTests.Controllers
 {
@@ -297,7 +297,7 @@ namespace OrderService.UnitTests.Controllers
         {
             Guid orderId = Guid.NewGuid();
 
-            ChangeOrderStatusDto changeDto = new() { Status = OrderService.Domain.Enum.OrderStatus.Accepted };
+            ChangeOrderStatusDto changeDto = new() { Status = OrderService.Domain.Enums.OrderStatus.Accepted };
             OrderDto expectedDto = new() { Id = orderId, Status = changeDto.Status };
 
             Mock<IOrderService> orderServiceMock = new();
@@ -323,7 +323,7 @@ namespace OrderService.UnitTests.Controllers
         public async Task ChangeOrderStatus_ReturnsNotFound_WhenNotExists()
         {
             Guid orderId = Guid.NewGuid();
-            ChangeOrderStatusDto changeDto = new() { Status = OrderService.Domain.Enum.OrderStatus.Accepted };
+            ChangeOrderStatusDto changeDto = new() { Status = OrderService.Domain.Enums.OrderStatus.Accepted };
 
             Mock<IOrderService> orderServiceMock = new();
 
@@ -375,7 +375,7 @@ namespace OrderService.UnitTests.Controllers
         public async Task ChangeInternalOrderStatus_ReturnsNotFound_WhenNotExists()
         {
             Guid orderId = Guid.NewGuid();
-            ChangeInternalOrderStatusDto changeDto = new() { InternalStatus = OrderService.Domain.Enum.InternalOrderStatus.DeliveryFaild };
+            ChangeInternalOrderStatusDto changeDto = new() { InternalStatus = OrderService.Domain.Enums.InternalOrderStatus.DeliveryFaild };
 
             Mock<IOrderService> orderServiceMock = new();
 

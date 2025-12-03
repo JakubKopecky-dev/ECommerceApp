@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using UserService.Application.DTOs.User;
 using UserService.Application.Interfaces.Services;
-using UserService.Domain.Enum;
+using UserService.Domain.Enums;
 using UserService.Infrastructure.Identity;
 
 namespace UserService.Infrastructure.Services

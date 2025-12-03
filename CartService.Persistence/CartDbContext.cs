@@ -1,5 +1,5 @@
 ﻿using CartService.Domain.Common;
-using CartService.Domain.Entity;
+using CartService.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.Extensions.Hosting;

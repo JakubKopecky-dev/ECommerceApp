@@ -11,7 +11,7 @@ using Microsoft.Extensions.Options;
 using Moq;
 using MockQueryable.Moq;
 using UserService.Application.DTOs.User;
-using UserService.Domain.Enum;
+using UserService.Domain.Enums;
 using UserService.Infrastructure.Identity;
 using UserService.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;

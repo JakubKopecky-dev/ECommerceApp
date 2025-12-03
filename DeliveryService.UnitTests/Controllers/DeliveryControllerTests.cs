@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using DeliveryService.Api.Controllers;
 using DeliveryService.Application.DTOs.Delivery;
 using DeliveryService.Application.Interfaces.Services;
-using DeliveryService.Domain.Enum;
+using DeliveryService.Domain.Enums;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Moq;

@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using ProductService.Application.DTOs.ProductReview;
 using ProductService.Application.Interfaces.Repositories;
 using ProductService.Application.Interfaces.Services;
-using ProductService.Domain.Entity;
+using ProductService.Domain.Entities;
 
 namespace ProductService.Application.Services
 {

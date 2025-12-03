@@ -1,0 +1,19 @@
+﻿using OrderService.Domain.Common;
+
+namespace OrderService.Domain.Entities
+{
+    public class OrderItem : BaseEntity
+    {
+        public Guid ProductId { get; set; }
+
+        public string ProductName { get; set; } = "";
+
+        public decimal UnitPrice { get; set; }
+
+        public uint Quantity { get; set; }
+
+        public Guid OrderId { get; set; }
+        public required Order Order { get; set; }
+
+    }
+}

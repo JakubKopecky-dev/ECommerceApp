@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using System.Text.Json.Serialization;
 using UserService.Api.Auth;
 using UserService.Api.DependencyInjection;
+using UserService.Api.Middleware;
 using UserService.Infrastructure;
 using UserService.Persistence;
 
@@ -29,7 +30,7 @@ builder.WebHost.ConfigureKestrel(options =>
 // Persistence (DbContext)
 builder.Services.AddPersistenceServices(builder.Configuration);
 
-// Infrastrucutre (Automapper, Services)
+// Infrastructure (Automapper, Services)
 builder.Services.AddInfrastructureServices();
 
 // Identity & Authentication (JWT, UserManager, TokenGenerator)
@@ -64,6 +65,12 @@ if (builder.Configuration.GetValue<bool>("EnableSwagger"))
         options.SwaggerEndpoint("./UserService/swagger.json", "UserService - v1");
     });
 }
+
+// Global error handling
+app.UseGlobalExceptionHandling();
+
+// Client cancellation logging
+app.UseClientCancellationLogging();
 
 // Authentitaction and Authorization
 app.UseAuthentication();

@@ -6,9 +6,9 @@ using CartService.Application.DTOs.CartItem;
 using CartService.Application.DTOs.External;
 using CartService.Application.Interfaces.Repositories;
 using CartService.Application.Interfaces.Services;
-using CartService.Domain.Entity;
 using Microsoft.Extensions.Logging;
 using CartService.Application.Interfaces.External;
+using CartService.Domain.Entities;
 
 namespace CartService.Application.Services
 {

@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using ProductService.Application.DTOs.Product;
 using ProductService.Application.Interfaces.Services;
 using ProductService.Application.Services;
-using ProductService.Domain.Entity;
-using ProductService.Domain.Enum;
+using ProductService.Domain.Entities;
+using ProductService.Domain.Enums;
 
 namespace ProductService.Api.Controllers
 {

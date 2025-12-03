@@ -4,7 +4,7 @@ using MassTransit.Testing;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
-using NotificationService.Domain.Entity;
+using NotificationService.Domain.Entities;
 using NotificationService.IntegrationTests.Common;
 using NotificationService.Persistence;
 using Shared.Contracts.Events;

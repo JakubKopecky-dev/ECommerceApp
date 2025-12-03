@@ -2,7 +2,7 @@
 using DeliveryService.Application.DTOs.Courier;
 using DeliveryService.Application.Interfaces.Repositories;
 using DeliveryService.Application.Interfaces.Services;
-using DeliveryService.Domain.Entity;
+using DeliveryService.Domain.Entities;
 using Microsoft.Extensions.Logging;
 
 namespace DeliveryService.Application.Services

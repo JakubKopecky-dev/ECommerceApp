@@ -46,6 +46,7 @@ namespace UserService.Infrastructure.Auth
 
 
             // Token credentials
+           
             var credentials = new SigningCredentials(
                 new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key)),
                 SecurityAlgorithms.HmacSha256

@@ -6,7 +6,7 @@ using CartService.Application.Common;
 using CartService.Application.DTOs.Cart;
 using CartService.Application.DTOs.External;
 using CartService.Application.Interfaces.External;
-using CartService.Domain.Entity;
+using CartService.Domain.Entities;
 using CartService.IntegrationTests.Common;
 using CartService.Persistence;
 using FluentAssertions;

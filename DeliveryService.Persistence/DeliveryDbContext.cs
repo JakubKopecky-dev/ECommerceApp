@@ -1,5 +1,5 @@
 ﻿using DeliveryService.Domain.Common;
-using DeliveryService.Domain.Entity;
+using DeliveryService.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.Extensions.Hosting;

@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NotificationService.Application.DTOs;
 using NotificationService.Application.Interfaces.Services;
-using NotificationService.Domain.Enum;
+using NotificationService.Domain.Enums;
 
 namespace NotificationService.Api.Controllers
 {

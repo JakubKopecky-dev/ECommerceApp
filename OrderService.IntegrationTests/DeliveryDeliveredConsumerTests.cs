@@ -13,7 +13,7 @@ using OrderService.IntegrationTests.Common;
 using Shared.Contracts.Events;
 using Microsoft.Extensions.Logging;
 using OrderService.Application.DTOs.Order;
-using OrderService.Domain.Enum;
+using OrderService.Domain.Enums;
 
 namespace OrderService.IntegrationTests
 {

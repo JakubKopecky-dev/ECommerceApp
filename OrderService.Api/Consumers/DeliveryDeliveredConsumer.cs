@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.SignalR;
 using OrderService.Application.DTOs.Order;
 using OrderService.Application.Interfaces.Services;
 using Shared.Contracts.Events;
-using OrderService.Domain.Enum;
+using OrderService.Domain.Enums;
 
 namespace OrderService.Api.Consumers
 {

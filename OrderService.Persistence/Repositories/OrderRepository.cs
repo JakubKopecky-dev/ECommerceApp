@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using OrderService.Application.Interfaces.Repositories;
-using OrderService.Domain.Entity;
-using OrderService.Domain.Enum;
+using OrderService.Domain.Entities;
+using OrderService.Domain.Enums;
 
 namespace OrderService.Persistence.Repositories
 {

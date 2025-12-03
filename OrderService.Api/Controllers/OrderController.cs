@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using OrderService.Application.DTOs.Order;
 using OrderService.Application.Interfaces.Services;
-using OrderService.Domain.Enum;
+using OrderService.Domain.Enums;
 using Shared.Contracts.Events;
 
 namespace OrderService.Api.Controllers

@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using ProductService.Application.DTOs.Brand;
 using ProductService.Application.Interfaces.Services;
-using ProductService.Domain.Enum;
+using ProductService.Domain.Enums;
 
 namespace ProductService.Api.Controllers
 {

@@ -13,7 +13,7 @@ using UserService.Application.DTOs.User;
 using UserService.Application.Interfaces.JwtToken;
 using UserService.Infrastructure.Identity;
 using UserService.Infrastructure.Services;
-using UserService.Domain.Enum;
+using UserService.Domain.Enums;
 
 namespace UserService.UnitTests.Services
 {

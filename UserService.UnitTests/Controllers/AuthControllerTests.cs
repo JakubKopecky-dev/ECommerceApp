@@ -5,7 +5,7 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
-using UserService.Api.Controller;
+using UserService.Api.Controllers;
 using UserService.Application.DTOs.Auth;
 using UserService.Application.DTOs.User;
 using UserService.Application.Interfaces.Services;

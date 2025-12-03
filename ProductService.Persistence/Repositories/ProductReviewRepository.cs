@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using ProductService.Application.Interfaces.Repositories;
-using ProductService.Domain.Entity;
+using ProductService.Domain.Entities;
 
 namespace ProductService.Persistence.Repositories
 {

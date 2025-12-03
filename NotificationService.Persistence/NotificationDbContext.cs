@@ -1,5 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using NotificationService.Domain.Entity;
+using NotificationService.Domain.Entities;
 
 namespace NotificationService.Persistence
 {

@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using NotificationService.Application.DTOs;
 using NotificationService.Application.Interfaces.Repositories;
 using NotificationService.Application.Interfaces.Services;
-using NotificationService.Domain.Entity;
+using NotificationService.Domain.Entities;
 
 namespace NotificationService.Application.Services
 {

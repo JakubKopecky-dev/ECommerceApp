@@ -1,4 +1,4 @@
-﻿using OrderService.Domain.Entity;
+﻿using OrderService.Domain.Entities;
 
 namespace OrderService.Application.Interfaces.Repositories
 {

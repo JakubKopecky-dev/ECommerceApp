@@ -2,7 +2,7 @@
 using CartService.Application.DTOs.Cart;
 using CartService.Application.DTOs.CartItem;
 using CartService.Application.DTOs.External;
-using CartService.Domain.Entity;
+using CartService.Domain.Entities;
 
 namespace CartService.Application.Mapping
 {
