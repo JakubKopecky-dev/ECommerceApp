@@ -1,8 +1,9 @@
-﻿using System.Security.Claims;
-using System.Text;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 using UserService.Application.Interfaces.JwtToken;
 using UserService.Infrastructure.Auth;
 using UserService.Infrastructure.Identity;
@@ -14,6 +15,15 @@ namespace UserService.Api.DependencyInjection
     {
         public static IServiceCollection AddAuthenticationAndIdentityServiceCollection(this IServiceCollection services, IConfiguration configuration)
         {
+            // Load ES256 public key from config
+            var publicKeyPem = configuration["Jwt:PublicKey"] ?? throw new InvalidOperationException("Missing Jwt:PublicKey");
+
+            var ecdsa = ECDsa.Create();
+            ecdsa.ImportFromPem(publicKeyPem);
+
+            var securityKey = new ECDsaSecurityKey(ecdsa);
+
+
             // JWT autentizace
             services.AddAuthentication(options =>
             {
@@ -33,11 +43,11 @@ namespace UserService.Api.DependencyInjection
                     ValidateIssuerSigningKey = true,
                     ValidIssuer = configuration["Jwt:Issuer"],
                     ValidAudience = configuration["Jwt:Audience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
-                        configuration["Jwt:Key"] ?? throw new InvalidOperationException("Missing Jwt:Key"))),
+                    IssuerSigningKey = securityKey,
                     RoleClaimType = ClaimTypes.Role
                 };
 
+                // Logging
                 options.Events = new JwtBearerEvents
                 {
                     OnAuthenticationFailed = context =>
@@ -64,9 +74,6 @@ namespace UserService.Api.DependencyInjection
                 };
             });
 
-            // JWT settings + token generator
-            services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
-            services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 
             // Identity without cookies; also registering UserManager and RoleManager
             services.AddIdentityCore<ApplicationUser>(options =>
@@ -81,6 +88,11 @@ namespace UserService.Api.DependencyInjection
             .AddRoles<IdentityRole<Guid>>()
             .AddEntityFrameworkStores<UserDbContext>()
             .AddDefaultTokenProviders();
+
+
+            // JWT settings + token generator
+            services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
+            services.AddScoped<IJwtTokenGenerator, JwtGenerator>();
 
             return services;
 

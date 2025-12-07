@@ -1,7 +1,8 @@
-﻿using System.Security.Claims;
-using System.Text;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 
 
 namespace PaymentService.Api.DependencyInjection
@@ -11,6 +12,15 @@ namespace PaymentService.Api.DependencyInjection
 
         public static IServiceCollection AddAuthenticationServiceCollection(this IServiceCollection services, IConfiguration configuration)
         {
+            // Load ES256 public key from config
+            var publicKeyPem = configuration["Jwt:PublicKey"] ?? throw new InvalidOperationException("Missing Jwt:PublicKey");
+
+            var ecdsa = ECDsa.Create();
+            ecdsa.ImportFromPem(publicKeyPem);
+
+            var securityKey = new ECDsaSecurityKey(ecdsa);
+
+
             // JWT autentizace
             services.AddAuthentication(options =>
             {
@@ -30,11 +40,11 @@ namespace PaymentService.Api.DependencyInjection
                     ValidateIssuerSigningKey = true,
                     ValidIssuer = configuration["Jwt:Issuer"],
                     ValidAudience = configuration["Jwt:Audience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
-                        configuration["Jwt:Key"] ?? throw new InvalidOperationException("Missing Jwt:Key"))),
+                    IssuerSigningKey = securityKey,
                     RoleClaimType = ClaimTypes.Role
                 };
 
+                // Logging
                 options.Events = new JwtBearerEvents
                 {
                     OnAuthenticationFailed = context =>

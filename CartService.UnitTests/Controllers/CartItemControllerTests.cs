@@ -5,7 +5,7 @@ using CartService.Api.Controllers;
 using CartService.Application.Common;
 using CartService.Application.DTOs.CartItem;
 using CartService.Application.Interfaces.Services;
-using CartService.Domain.Entity;
+using CartService.Domain.Entities;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Moq;

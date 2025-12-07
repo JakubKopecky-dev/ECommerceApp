@@ -1,5 +1,5 @@
 x-jwt: &jwt-env
-    Jwt__Key: "a851091109b0dad8b3834341577e990f"
+    Jwt__PublicKey: "-----BEGIN PUBLIC KEY----- MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAElaSojkTx7x9ud4Q6H8RnTP22yNRs tksLUL6MXApsm7J/lC4AdCNYR422CnS3UUqpRPkxPESyULdl4Woc7bXKog== -----END PUBLIC KEY-----"
     Jwt__Issuer: "ECommerceApp.AuthService"
     Jwt__Audience: "ECommerceApp.Frontend"
 
@@ -180,7 +180,8 @@ services:
             - "8081" 
         environment:
             <<: *jwt-env
-            Jwt__ExpiresInMinutes: 600
+            Jwt__ExpiresInMinutes: 60
+            Jwt__PrivateKey: "-----BEGIN EC PRIVATE KEY----- MHcCAQEEIKkOyBtD67AeTs7zGLwfZW9NDO9l+v3+6oUASTFzTEwJoAoGCCqGSM49 AwEHoUQDQgAElaSojkTx7x9ud4Q6H8RnTP22yNRstksLUL6MXApsm7J/lC4AdCNY R422CnS3UUqpRPkxPESyULdl4Woc7bXKog== -----END EC PRIVATE KEY-----"
             # ConnectionString
             ConnectionStrings__DefaultConnection: "Server=sqldb;Database=ECommerceApp_UserDb;User Id=sa;Password=ECom2025!Pass;TrustServerCertificate=True;"
             # Swagger

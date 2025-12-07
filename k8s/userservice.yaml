@@ -30,11 +30,16 @@ spec:
             - name: EnableSwagger
               value: "true"
 
-            - name: Jwt__Key
+            - name: Jwt__PublicKey
               valueFrom:
                 secretKeyRef:
                   name: ecommerce-secrets
-                  key: Jwt__Key
+                  key: Jwt__PublicKey
+            - name: Jwt__PrivateKey
+              valueFrom:
+                secretKeyRef:
+                  name: ecommerece-secrets
+                  key: Jwt__PrivateKey
             - name: Jwt__Issuer
               valueFrom:
                 secretKeyRef:

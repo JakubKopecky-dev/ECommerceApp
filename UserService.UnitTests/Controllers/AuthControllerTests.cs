@@ -43,7 +43,7 @@ namespace UserService.UnitTests.Controllers
                 .Setup(a => a.RegisterUserAsync(registerDto))
                 .ReturnsAsync(expectedDto);
 
-            AuthController controller = new(authServiceMock.Object, new Mock<ExternalAuthService>().Object);
+            AuthController controller = new(authServiceMock.Object, new Mock<IExternalAuthService>().Object);
 
 
             var result = await controller.UserRegister(registerDto);
@@ -67,7 +67,7 @@ namespace UserService.UnitTests.Controllers
                 .Setup(a => a.RegisterUserAsync(registerDto))
                 .ReturnsAsync((AuthResponseDto?)null);
 
-            AuthController controller = new(authServiceMock.Object, new Mock<ExternalAuthService>().Object);
+            AuthController controller = new(authServiceMock.Object, new Mock<IExternalAuthService>().Object);
 
 
             var result = await controller.UserRegister(registerDto);
@@ -97,7 +97,7 @@ namespace UserService.UnitTests.Controllers
                 .Setup(a => a.LoginUserAsync(loginDto))
                 .ReturnsAsync(expectedDto);
 
-            AuthController controller = new(authServiceMock.Object, new Mock<ExternalAuthService>().Object);
+            AuthController controller = new(authServiceMock.Object, new Mock<IExternalAuthService>().Object);
 
 
             var result = await controller.LoginUser(loginDto);
@@ -121,7 +121,7 @@ namespace UserService.UnitTests.Controllers
                 .Setup(a => a.LoginUserAsync(loginDto))
                 .ReturnsAsync((AuthResponseDto?)null);
 
-            AuthController controller = new(authServiceMock.Object, new Mock<ExternalAuthService>().Object);
+            AuthController controller = new(authServiceMock.Object, new Mock<IExternalAuthService>().Object);
 
 
             var result = await controller.LoginUser(loginDto);
@@ -147,7 +147,7 @@ namespace UserService.UnitTests.Controllers
                 .Setup(a => a.GetCurrentUserAsync(It.IsAny<ClaimsPrincipal>()))
                 .ReturnsAsync(expectedDto);
 
-            AuthController controller = new(authServiceMock.Object, new Mock<ExternalAuthService>().Object)
+            AuthController controller = new(authServiceMock.Object, new Mock<IExternalAuthService>().Object)
             {
                 ControllerContext = new ControllerContext
                 {
@@ -177,7 +177,7 @@ namespace UserService.UnitTests.Controllers
                 .Setup(a => a.GetCurrentUserAsync(It.IsAny<ClaimsPrincipal>()))
                 .ReturnsAsync((UserDto?)null);
 
-            AuthController controller = new(authServiceMock.Object, new Mock<ExternalAuthService>().Object)
+            AuthController controller = new(authServiceMock.Object, new Mock<IExternalAuthService>().Object)
             {
                 ControllerContext = new ControllerContext
                 {
