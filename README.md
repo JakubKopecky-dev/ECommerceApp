@@ -15,7 +15,7 @@ All external traffic is routed through a centralized **API Gateway** (YARP Rever
 - MassTransit, RabbitMQ, Azure Service Bus  
 - EF Core  
 - ASP.NET Core Identity  
-- JWT, OIDC
+- JWT (ES256), OIDC
 - YARP API Gateway (API Gateway)  
 
 
