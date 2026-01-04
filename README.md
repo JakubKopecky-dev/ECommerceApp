@@ -79,7 +79,7 @@ The project includes a fully automated CI/CD pipeline using **GitHub Actions**:
 - Decoupled microservices communicating via gRPC and RabbitMQ/Azure Service Bus
 - Centralized API Gateway (single entry point, routing, reverse proxy)  
 - User management  
-- User registration and login (JWT authentication)  
+- User registration and login (JWT authentication, OIDC)
 - Product, brand, category, and product review management  
 - Add products to cart and checkout  
 - Payments via Stripe (Checkout Session)  
