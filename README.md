@@ -16,7 +16,7 @@ All external traffic is routed through a centralized **API Gateway** (YARP Rever
 - EF Core  
 - ASP.NET Core Identity  
 - JWT (ES256), OIDC
-- YARP API Gateway (API Gateway)  
+- YARP API Gateway
 
 
 ### Infrastructure
