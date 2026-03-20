@@ -49,6 +49,7 @@ namespace CartService.Api.Extensions
                 return controller.Ok(result.Value);
 
             }
+
             return result.Error switch
             {
                 CartError.CartNotFound => controller.NotFound(new { Message = "Cart not found." }),

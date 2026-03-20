@@ -17,6 +17,10 @@ namespace DeliveryService.Api.Middleware
             {
                 await _next(context); 
             }
+            catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
+            {
+                throw;
+            }
             catch (Exception ex)
             {
                 await HandleExceptionAsync(context, ex);

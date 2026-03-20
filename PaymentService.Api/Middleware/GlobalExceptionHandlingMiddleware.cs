@@ -15,7 +15,11 @@ namespace PaymentService.Api.Middleware
         {
             try
             {
-                await _next(context); // Pokračuj v pipeline
+                await _next(context);
+            }
+            catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
+            {
+                throw;
             }
             catch (Exception ex)
             {

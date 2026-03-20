@@ -17,6 +17,10 @@ namespace CartService.Api.Middleware
             {
                 await _next(context);
             }
+            catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
+            {
+                throw; 
+            }
             catch (Exception ex)
             {
                 await HandleExceptionAsync(context, ex);
@@ -36,7 +40,6 @@ namespace CartService.Api.Middleware
             {
                 StatusCode = context.Response.StatusCode,
                 Message = "An unexpected error occurred.",
-                Detail = ex.Message 
             };
 
             var json = JsonSerializer.Serialize(errorResponse);
