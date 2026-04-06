@@ -17,7 +17,7 @@ namespace ProductService.Persistence.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.8")
+                .HasAnnotation("ProductVersion", "10.0.5")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -37,38 +37,9 @@ namespace ProductService.Persistence.Migrations
                     b.ToTable("CategoryProduct");
                 });
 
-            modelBuilder.Entity("ProductService.Domain.Common.AuditEventProductLog", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<string>("Data")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("EntityName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("EventType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("InsertedDate")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("AuditEventProuctLogs");
-                });
-
-            modelBuilder.Entity("ProductService.Domain.Entity.Brand", b =>
+            modelBuilder.Entity("ProductService.Domain.Entities.Brand", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -76,11 +47,13 @@ namespace ProductService.Persistence.Migrations
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -93,10 +66,9 @@ namespace ProductService.Persistence.Migrations
                     b.ToTable("Brands");
                 });
 
-            modelBuilder.Entity("ProductService.Domain.Entity.Category", b =>
+            modelBuilder.Entity("ProductService.Domain.Entities.Category", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -104,7 +76,8 @@ namespace ProductService.Persistence.Migrations
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -117,10 +90,9 @@ namespace ProductService.Persistence.Migrations
                     b.ToTable("Categories");
                 });
 
-            modelBuilder.Entity("ProductService.Domain.Entity.Product", b =>
+            modelBuilder.Entity("ProductService.Domain.Entities.Product", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("BrandId")
@@ -130,10 +102,6 @@ namespace ProductService.Persistence.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("ImageUrl")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -152,7 +120,8 @@ namespace ProductService.Persistence.Migrations
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -164,15 +133,15 @@ namespace ProductService.Persistence.Migrations
                     b.ToTable("Products");
                 });
 
-            modelBuilder.Entity("ProductService.Domain.Entity.ProductReview", b =>
+            modelBuilder.Entity("ProductService.Domain.Entities.ProductReview", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Comment")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -181,11 +150,13 @@ namespace ProductService.Persistence.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<long>("Rating")
+                        .HasMaxLength(5)
                         .HasColumnType("bigint");
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -206,47 +177,69 @@ namespace ProductService.Persistence.Migrations
 
             modelBuilder.Entity("CategoryProduct", b =>
                 {
-                    b.HasOne("ProductService.Domain.Entity.Category", null)
+                    b.HasOne("ProductService.Domain.Entities.Category", null)
                         .WithMany()
                         .HasForeignKey("CategoriesId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("ProductService.Domain.Entity.Product", null)
+                    b.HasOne("ProductService.Domain.Entities.Product", null)
                         .WithMany()
                         .HasForeignKey("ProductsId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("ProductService.Domain.Entity.Product", b =>
+            modelBuilder.Entity("ProductService.Domain.Entities.Product", b =>
                 {
-                    b.HasOne("ProductService.Domain.Entity.Brand", "Brand")
+                    b.HasOne("ProductService.Domain.Entities.Brand", "Brand")
                         .WithMany("Products")
                         .HasForeignKey("BrandId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.OwnsOne("ProductService.Domain.ValueObject.ImageUrl", "ImageUrl", b1 =>
+                        {
+                            b1.Property<Guid>("ProductId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(500)
+                                .HasColumnType("nvarchar(500)")
+                                .HasColumnName("ImageUrl");
+
+                            b1.HasKey("ProductId");
+
+                            b1.ToTable("Products");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ProductId");
+                        });
+
                     b.Navigation("Brand");
+
+                    b.Navigation("ImageUrl")
+                        .IsRequired();
                 });
 
-            modelBuilder.Entity("ProductService.Domain.Entity.ProductReview", b =>
+            modelBuilder.Entity("ProductService.Domain.Entities.ProductReview", b =>
                 {
-                    b.HasOne("ProductService.Domain.Entity.Product", "Product")
+                    b.HasOne("ProductService.Domain.Entities.Product", "Product")
                         .WithMany("Reviews")
                         .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("ProductService.Domain.Entity.Brand", b =>
+            modelBuilder.Entity("ProductService.Domain.Entities.Brand", b =>
                 {
                     b.Navigation("Products");
                 });
 
-            modelBuilder.Entity("ProductService.Domain.Entity.Product", b =>
+            modelBuilder.Entity("ProductService.Domain.Entities.Product", b =>
                 {
                     b.Navigation("Reviews");
                 });

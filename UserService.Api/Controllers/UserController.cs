@@ -31,6 +31,7 @@ namespace UserService.Api.Controllers
         }
 
 
+
         [Authorize(Roles = UserRoles.Admin)]
         [HttpPost]
         public async Task<IActionResult> CreateUser([FromBody] CreateUserDto createUserDto)
@@ -51,13 +52,15 @@ namespace UserService.Api.Controllers
         }
 
 
+
         [HttpDelete("{userId}")]
         public async Task<IActionResult> DeleteUser(Guid userId)
         {
-            UserDto? user = await _userService.DeleteUserAsync(userId);
+            bool isDeleted = await _userService.DeleteUserAsync(userId);
 
-            return user is not null ? Ok(user) : NotFound();
+            return isDeleted ? NoContent() : NotFound();
         }
+
 
 
         [Authorize(Roles = UserRoles.Admin)]

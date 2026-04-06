@@ -202,24 +202,21 @@ namespace OrderService.UnitTests.Controllers
 
         [Fact]
         [Trait("Category", "Unit")]
-        public async Task DeleteOrderItem_ReturnsOk_WhenExists()
+        public async Task DeleteOrderItem_ReturnsNoContent_WhenExists()
         {
             Guid orderItemId = Guid.NewGuid();
 
-            OrderItemDto expectedDto = new() { Id = orderItemId, OrderId = Guid.NewGuid(), Quantity = 1 };
-
             Mock<IOrderItemService> orderItemServiceMock = new();
-
             orderItemServiceMock
                 .Setup(i => i.DeleteOrderItemAsync(orderItemId, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(expectedDto);
+                .ReturnsAsync(true);
 
             OrderItemController controller = new(orderItemServiceMock.Object);
 
 
             var result = await controller.DeleteOrderItem(orderItemId, It.IsAny<CancellationToken>());
 
-            (result as OkObjectResult)!.Value.Should().BeEquivalentTo(expectedDto);
+            result.Should().BeOfType<NoContentResult>();
 
             orderItemServiceMock.Verify(i => i.DeleteOrderItemAsync(orderItemId, It.IsAny<CancellationToken>()), Times.Once);
         }
@@ -235,8 +232,8 @@ namespace OrderService.UnitTests.Controllers
             Mock<IOrderItemService> orderItemServiceMock = new();
 
             orderItemServiceMock
-                .Setup(i => i .DeleteOrderItemAsync(orderItemId, It.IsAny<CancellationToken>()))
-                .ReturnsAsync((OrderItemDto?)null);
+                .Setup(i => i.DeleteOrderItemAsync(orderItemId, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(false);
 
             OrderItemController controller = new(orderItemServiceMock.Object);
 

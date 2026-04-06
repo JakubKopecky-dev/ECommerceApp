@@ -199,24 +199,22 @@ namespace ProductService.UnitTests.Controllers
 
         [Fact]
         [Trait("Category", "Unit")]
-        public async Task DeleteCategory_ReturnsOk_WhenExists()
+        public async Task DeleteCategory_ReturnsNoContent_WhenExists()
         {
             Guid categoryId = Guid.NewGuid();
-
-            CategoryDto expectedDto = new() { Id = categoryId, Title = "Laptop" };
 
             Mock<ICategoryService> categoryServiceMock = new();
 
             categoryServiceMock
                 .Setup(c => c.DeleteCategoryAsync(categoryId, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(expectedDto);
+                .ReturnsAsync(true);
 
             CategoryController controller = new(categoryServiceMock.Object);
 
 
             var result = await controller.DeleteCategory(categoryId, It.IsAny<CancellationToken>());
 
-            (result as OkObjectResult)!.Value.Should().BeEquivalentTo(expectedDto);
+            result.Should().BeOfType<NoContentResult>();
 
             categoryServiceMock.Verify(c => c.DeleteCategoryAsync(categoryId, It.IsAny<CancellationToken>()), Times.Once);
         }
@@ -235,7 +233,7 @@ namespace ProductService.UnitTests.Controllers
 
             categoryServiceMock
                 .Setup(c => c.DeleteCategoryAsync(categoryId, It.IsAny<CancellationToken>()))
-                .ReturnsAsync((CategoryDto?)null);
+                .ReturnsAsync(false);
 
             CategoryController controller = new(categoryServiceMock.Object);
 

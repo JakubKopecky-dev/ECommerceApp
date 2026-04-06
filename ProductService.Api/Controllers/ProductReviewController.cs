@@ -64,9 +64,9 @@ namespace ProductService.Api.Controllers
         [HttpDelete("{reviewId}")]
         public async Task<IActionResult> DeleteProductReview(Guid reviewId, CancellationToken ct)
         {
-            ProductReviewDto? review = await _productReviewService.DeleteProductReviewAsync(reviewId, ct);
+            bool isDeleted = await _productReviewService.DeleteProductReviewAsync(reviewId, ct);
 
-            return review is not null ? Ok(review) : NotFound();
+            return isDeleted ? NoContent() : NotFound();
         }
 
 
@@ -79,9 +79,9 @@ namespace ProductService.Api.Controllers
             if (!Guid.TryParse(userIdString, out Guid userId))
                 return Unauthorized();
 
-            ProductReviewDto? review = await _productReviewService.DeleteOwnProductReviewAsync(reviewId, userId, ct);
+            bool isDeleted = await _productReviewService.DeleteOwnProductReviewAsync(reviewId, userId, ct);
 
-            return review is not null ? Ok(review) : NotFound();
+            return isDeleted  ? NoContent(): NotFound();
         }
 
 

@@ -239,24 +239,22 @@ namespace ProductService.UnitTests.Controllers
 
         [Fact]
         [Trait("Category", "Unit")]
-        public async Task DeleteProductReview_ReturnsOk_WhenExists()
+        public async Task DeleteProductReview_ReturnsNoContent_WhenExists()
         {
             Guid reviewId = Guid.NewGuid();
-
-            ProductReviewDto expectedDto = new() { Id = reviewId, Comment = "Nice phone" };
 
             Mock<IProductReviewService> reviewServiceMock = new();
 
             reviewServiceMock
                 .Setup(p => p.DeleteProductReviewAsync(reviewId, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(expectedDto);
+                .ReturnsAsync(true);
 
             ProductReviewController controller = new(reviewServiceMock.Object);
 
 
             var result = await controller.DeleteProductReview(reviewId, It.IsAny<CancellationToken>());
 
-            (result as OkObjectResult)!.Value.Should().BeEquivalentTo(expectedDto);
+            result.Should().BeOfType<NoContentResult>();
 
             reviewServiceMock.Verify(p => p.DeleteProductReviewAsync(reviewId, It.IsAny<CancellationToken>()), Times.Once);
         }
@@ -273,7 +271,7 @@ namespace ProductService.UnitTests.Controllers
 
             reviewServiceMock
                 .Setup(p => p.DeleteProductReviewAsync(reviewId, It.IsAny<CancellationToken>()))
-                .ReturnsAsync((ProductReviewDto?)null);
+                .ReturnsAsync(false);
 
             ProductReviewController controller = new(reviewServiceMock.Object);
 
@@ -316,18 +314,16 @@ namespace ProductService.UnitTests.Controllers
 
         [Fact]
         [Trait("Category", "Unit")]
-        public async Task DeleteOwnProductReview_ReturnsOk_WhenExists()
+        public async Task DeleteOwnProductReview_ReturnsNoContent_WhenExists()
         {
             Guid reviewId = Guid.NewGuid();
             Guid userId = Guid.NewGuid();
-
-            ProductReviewDto expectedDto = new() { Id = reviewId, Comment = "Nice phone", UserId = userId };
 
             Mock<IProductReviewService> reviewServiceMock = new();
 
             reviewServiceMock
                 .Setup(p => p.DeleteOwnProductReviewAsync(reviewId, userId, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(expectedDto);
+                .ReturnsAsync(true);
 
             ProductReviewController controller = new(reviewServiceMock.Object)
             {
@@ -346,7 +342,7 @@ namespace ProductService.UnitTests.Controllers
 
             var result = await controller.DeleteOwnProductReview(reviewId, It.IsAny<CancellationToken>());
 
-            (result as OkObjectResult)!.Value.Should().BeEquivalentTo(expectedDto);
+            result.Should().BeOfType<NoContentResult>();
 
             reviewServiceMock.Verify(p => p.DeleteOwnProductReviewAsync(reviewId, userId, It.IsAny<CancellationToken>()), Times.Once);
         }
@@ -364,7 +360,7 @@ namespace ProductService.UnitTests.Controllers
 
             reviewServiceMock
                 .Setup(p => p.DeleteOwnProductReviewAsync(reviewId, userId, It.IsAny<CancellationToken>()))
-                .ReturnsAsync((ProductReviewDto?)null);
+                .ReturnsAsync(false);
 
             ProductReviewController controller = new(reviewServiceMock.Object)
             {

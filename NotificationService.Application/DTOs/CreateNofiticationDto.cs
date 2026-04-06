@@ -12,7 +12,6 @@ namespace NotificationService.Application.DTOs
 
         public NotificationType Type { get; init; }
 
-        public DateTime CreatedAt { get; init; }
 
     }
 }

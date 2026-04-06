@@ -27,14 +27,15 @@ namespace ProductService.Api.Grpc.GrpcServices
         {
             List<ProductQuantityCheckRequestDto> productsDto = [.. request.Products.Select(p => new ProductQuantityCheckRequestDto { Id = Guid.Parse(p.Id), Quantity = p.Quantity })];
 
-            IReadOnlyList<ProductQuantityCheckResponseDto> products = await _productService.ProductsQuantityCheckFromCartAsync(productsDto,context.CancellationToken);
+            IReadOnlyList<ProductQuantityCheckResponseDto> products = await _productService.ProductsQuantityCheckFromCartAsync(productsDto, context.CancellationToken);
 
             ProductsQuantityCheckFromCartResponse response = new();
 
-            response.Products.AddRange(products.Select(p => new ProductQuantityCheckResponse 
-            { Id = p.Id.ToString(),
-              Title = p.Title,
-              QuantityInStock = p.QuantityInStock 
+            response.Products.AddRange(products.Select(p => new ProductQuantityCheckResponse
+            {
+                Id = p.Id.ToString(),
+                Title = p.Title,
+                QuantityInStock = p.QuantityInStock
             }));
 
             return response;

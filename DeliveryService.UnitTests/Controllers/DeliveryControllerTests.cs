@@ -151,20 +151,18 @@ namespace DeliveryService.UnitTests.Controllers
         {
             Guid deliveryId = Guid.NewGuid();
 
-            DeliveryDto expectedDto = new() { Id = deliveryId, OrderId = Guid.NewGuid(), CourierId = Guid.NewGuid() };
-
             Mock<IDeliveryService> deliveryServiceMock = new();
 
             deliveryServiceMock
                 .Setup(s => s.DeleteDeliveryAsync(deliveryId, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(expectedDto);
+                .ReturnsAsync(true);
 
             DeliveryController controller = new(deliveryServiceMock.Object);
 
 
             var result = await controller.DeleteDelivery(deliveryId, It.IsAny<CancellationToken>());
 
-            (result as OkObjectResult)!.Value.Should().BeEquivalentTo(expectedDto);
+            result.Should().BeOfType<NoContentResult>();
 
             deliveryServiceMock.Verify(s => s.DeleteDeliveryAsync(deliveryId, It.IsAny<CancellationToken>()), Times.Once);
         }
@@ -181,7 +179,7 @@ namespace DeliveryService.UnitTests.Controllers
 
             deliveryServiceMock
                 .Setup(s => s.DeleteDeliveryAsync(deliveryId, It.IsAny<CancellationToken>()))
-                .ReturnsAsync((DeliveryDto?)null);
+                .ReturnsAsync(false);
 
             DeliveryController controller = new(deliveryServiceMock.Object);
 

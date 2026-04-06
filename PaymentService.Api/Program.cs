@@ -23,7 +23,6 @@ builder.WebHost.ConfigureKestrel(options =>
     });
 });
 
-#region Register Services (Dependency Injection)
 
 //Authentication
 builder.Services.AddAuthenticationServiceCollection(builder.Configuration);
@@ -44,23 +43,25 @@ builder.Services.AddGrpc();
 builder.Services.AddControllers();
 
 // Swagger
-builder.Services.AddSwaggerWithJwt(builder.Environment);
+builder.Services.AddOpenApiWithJwt();
 
-#endregion
 
 
 var app = builder.Build();
-
-#region Middleware pipeline
 
 
 // Swagger
 if (builder.Configuration.GetValue<bool>("EnableSwagger"))
 {
-    app.UseSwagger();
+    app.MapOpenApi();
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("./PaymentService/swagger.json", "PaymentService - v1");
+        options.RoutePrefix = "swagger";
+
+        if (app.Environment.IsDevelopment())
+            options.SwaggerEndpoint("/openapi/v1.json", "PaymentService - v1");
+        else
+            options.SwaggerEndpoint("/payment/openapi/v1.json", "PaymentService - v1");
     });
 }
 
@@ -80,7 +81,6 @@ app.MapControllers();
 // gRPC map service
 app.MapGrpcService<PaymentGrpcService>();
 
-#endregion
 
 
 app.Run();

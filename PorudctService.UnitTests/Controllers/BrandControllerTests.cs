@@ -197,23 +197,21 @@ namespace ProductService.UnitTests.Controllers
 
         [Fact]
         [Trait("Category", "Unit")]
-        public async Task DeletetBrand_ReturnsOk_WhenExists()
+        public async Task DeletetBrand_ReturnsNoContent_WhenExists()
         {
             Guid brandId = Guid.NewGuid();
-
-            BrandDto expectedDto = new() { Id = brandId, Title = "Apple" };
 
             Mock<IBrandService> brandServiceMock = new();
 
             brandServiceMock
                 .Setup(b => b.DeleteBrandAsync(brandId, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(expectedDto);
+                .ReturnsAsync(true);
 
             BrandController controller = new(brandServiceMock.Object);
 
             var result = await controller.DeleteBrand(brandId, It.IsAny<CancellationToken>());
 
-            (result as OkObjectResult)!.Value.Should().BeEquivalentTo(expectedDto);
+            result.Should().BeOfType<NoContentResult>();
 
             brandServiceMock.Verify(b => b.DeleteBrandAsync(brandId, It.IsAny<CancellationToken>()), Times.Once);
         }
@@ -232,7 +230,7 @@ namespace ProductService.UnitTests.Controllers
 
             brandServiceMock
                 .Setup(b => b.DeleteBrandAsync(brandId, It.IsAny<CancellationToken>()))
-                .ReturnsAsync((BrandDto?)null);
+                .ReturnsAsync(false);
 
             BrandController controller = new(brandServiceMock.Object);
 

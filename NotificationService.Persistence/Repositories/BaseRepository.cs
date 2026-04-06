@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using NotificationService.Application.Interfaces.Repositories;
 
-namespace NotificationService.Persistence.Repository
+namespace NotificationService.Persistence.Repositories
 {
     public abstract class BaseRepository<TEntity>(NotificationDbContext dbContext) : IBaseRepository<TEntity> where TEntity : class
     {
@@ -19,12 +19,9 @@ namespace NotificationService.Persistence.Repository
 
 
 
-        public async Task<TEntity> InsertAsync(TEntity entity, CancellationToken ct = default)
+        public async Task AddAsync(TEntity entity, CancellationToken ct = default)
         {
             await _dbSet.AddAsync(entity, ct);
-            await _dbContext.SaveChangesAsync(ct);
-
-            return entity;
         }
 
 

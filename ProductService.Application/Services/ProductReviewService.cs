@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using ProductService.Application.DTOs.ProductReview;
 using ProductService.Application.Interfaces.Repositories;
 using ProductService.Application.Interfaces.Services;
@@ -7,10 +6,9 @@ using ProductService.Domain.Entities;
 
 namespace ProductService.Application.Services
 {
-    public class ProductReviewService(IProductReviewRepository productReviewRepository, IMapper mapper, ILogger<ProductReviewService> logger) : IProductReviewService
+    public class ProductReviewService(IProductReviewRepository productReviewRepository,ILogger<ProductReviewService> logger) : IProductReviewService
     {
         private readonly IProductReviewRepository _productReviewRepository = productReviewRepository;
-        private readonly IMapper _mapper = mapper;
         private readonly ILogger<ProductReviewService> _logger = logger;
 
 
@@ -22,7 +20,7 @@ namespace ProductService.Application.Services
             IReadOnlyList<ProductReview> reviews = await _productReviewRepository.GetAllAsync(ct);
             _logger.LogInformation("Retrieved all productReviews. Count: {Count}.", reviews.Count);
 
-            return _mapper.Map<List<ProductReviewDto>>(reviews);
+            return [..reviews.Select(x => x.ProductReviewToProductReviewDto())];
         }
 
 
@@ -33,13 +31,11 @@ namespace ProductService.Application.Services
 
             ProductReview? review = await _productReviewRepository.FindByIdAsync(reviewId,ct);
             if (review is null)
-            {
                 _logger.LogWarning("ProductReview not found. ProductReviewId: {ReviewId}.", reviewId);
-                return null;
-            }
-
+            else
             _logger.LogInformation("ProductReview found. ProductReviewId: {ReviewId}.", reviewId);
-            return _mapper.Map<ProductReviewDto>(review);
+
+            return review?.ProductReviewToProductReviewDto();
         }
 
 
@@ -48,17 +44,14 @@ namespace ProductService.Application.Services
         {
             _logger.LogInformation("Creating new productReview. Title: {Title}.", createDto.Title);
 
-            ProductReview review = _mapper.Map<ProductReview>(createDto);
-            review.Id = Guid.Empty;
-            review.CreatedAt = DateTime.UtcNow;
-            review.UserId = userId;
-            review.UserName = userName;
+            ProductReview review = ProductReview.Create(createDto.Title, createDto.ProductId, createDto.Rating, createDto.Comment, userId, userName);
 
-            ProductReview createdReview = await _productReviewRepository.InsertAsync(review,ct);
-            _logger.LogInformation("ProductReview created. ProductReviewId: {ReviewId}.", createdReview.Id);
+             await _productReviewRepository.AddAsync(review,ct);
+            await _productReviewRepository.SaveChangesAsync(ct);
 
+            _logger.LogInformation("ProductReview created. ProductReviewId: {ReviewId}.", review.Id);
 
-            return _mapper.Map<ProductReviewDto>(createdReview);
+            return review.ProductReviewToProductReviewDto();
         }
 
 
@@ -67,26 +60,24 @@ namespace ProductService.Application.Services
         {
             _logger.LogInformation("Updating productReview. ProductReviewId: {reviewId}.", reviewId);
 
-            ProductReview? reviewDb = await _productReviewRepository.FindByIdAsync(reviewId, ct);
-            if (reviewDb is null)
+            ProductReview? review = await _productReviewRepository.FindByIdAsync(reviewId, ct);
+            if (review is null)
             {
                 _logger.LogWarning("Cannot update. ProductReview not found. ProductReviewId: {ReviewId}.", reviewId);
                 return null;
             }
 
-            _mapper.Map<UpdateProductReviewDto, ProductReview>(updateDto, reviewDb);
-
-            reviewDb.UpdatedAt = DateTime.UtcNow;
+            review.Update(updateDto.Title, updateDto.Rating, updateDto.Comment);
 
             await _productReviewRepository.SaveChangesAsync(ct);
             _logger.LogInformation("ProductReview updated. ProductReviewId: {ReviewId}.", reviewId);
 
-            return _mapper.Map<ProductReviewDto>(reviewDb);
+            return review.ProductReviewToProductReviewDto();
         }
 
 
 
-        public async Task<ProductReviewDto?> DeleteProductReviewAsync(Guid reviewId, CancellationToken ct = default)
+        public async Task<bool> DeleteProductReviewAsync(Guid reviewId, CancellationToken ct = default)
         {
             _logger.LogInformation("Deleting productReview. ProductReviewId: {reviewId}.", reviewId);
 
@@ -94,21 +85,20 @@ namespace ProductService.Application.Services
             if (review is null)
             {
                 _logger.LogWarning("Cannot delete. ProductReview not found. ProductReviewId: {ReviewId}.", reviewId);
-                return null;
+                return false;
             }
 
-            ProductReviewDto deletedReview = _mapper.Map<ProductReviewDto>(review);
 
             _productReviewRepository.Remove(review);
             await _productReviewRepository.SaveChangesAsync(ct);
             _logger.LogInformation("ProductReview deleted. ProductReviewId: {ReviewId}.", reviewId);
 
-            return deletedReview;
+            return true;
         }
 
 
 
-        public async Task<ProductReviewDto?> DeleteOwnProductReviewAsync(Guid reviewId, Guid userId, CancellationToken ct = default)
+        public async Task<bool> DeleteOwnProductReviewAsync(Guid reviewId, Guid userId, CancellationToken ct = default)
         {
             _logger.LogInformation("Deleting own productReview. ProductReviewId: {reviewId}, UserId: {UserId}.", reviewId, userId);
 
@@ -116,22 +106,21 @@ namespace ProductService.Application.Services
             if (review is null)
             {
                 _logger.LogWarning("Cannot delete. ProductReview not found. ProductReviewId: {ReviewId}, UserId: {UserId}.", reviewId, userId);
-                return null;
+                return false;
             }
 
             if (review.UserId != userId)
             {
                 _logger.LogWarning("Cannot delete. User is not owner  ProductReviewId: {ReviewId}, UserId: {UserId}.", reviewId, userId);
-                return null;
+                return false;
             }
 
-            ProductReviewDto deletedReview = _mapper.Map<ProductReviewDto>(review);
 
             _productReviewRepository.Remove(review);
             await _productReviewRepository.SaveChangesAsync(ct);
             _logger.LogInformation("ProductReview deleted. ProductReviewId: {ReviewId}.", reviewId);
 
-            return deletedReview;
+            return true;
         }
 
 
@@ -143,7 +132,7 @@ namespace ProductService.Application.Services
             IReadOnlyList<ProductReview> productReviews = await _productReviewRepository.GetAllProductReviewsByProductIdAsync(productId, ct);
             _logger.LogInformation("Retrived all productReviews by productId. Count: {Count}, ProductId: {ProductId}.", productReviews.Count,productId);
 
-            return _mapper.Map<List<ProductReviewDto>>(productReviews);
+            return [..productReviews.Select(x => x.ProductReviewToProductReviewDto())];
         }
 
 

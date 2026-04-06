@@ -197,23 +197,23 @@ namespace ProductService.UnitTests.Controllers
 
         [Fact]
         [Trait("Category", "Unit")]
-        public async Task DeleteProduct_ReturnsOk_WhenExists()
+        public async Task DeleteProduct_ReturnsNoContent_WhenExists()
         {
             Guid productId = Guid.NewGuid();
-            ProductDto expectedDto = new() { Id = productId, Title = "MacBook Pro" };
+ 
 
             Mock<IProductService> productServiceMock = new();
 
             productServiceMock
                 .Setup(p => p.DeleteProductAsync(productId, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(expectedDto);
+                .ReturnsAsync(true);
 
             ProductController controller = new(productServiceMock.Object);
 
             var result = await controller.DeleteProduct(productId, It.IsAny<CancellationToken>());
 
 
-            (result as OkObjectResult)!.Value.Should().BeEquivalentTo(expectedDto);
+            result.Should().BeOfType<NoContentResult>();
 
             productServiceMock.Verify(p => p.DeleteProductAsync(productId, It.IsAny<CancellationToken>()), Times.Once);
         }
@@ -230,7 +230,7 @@ namespace ProductService.UnitTests.Controllers
 
             productServiceMock
                 .Setup(p => p.DeleteProductAsync(productId, It.IsAny<CancellationToken>()))
-                .ReturnsAsync((ProductDto?)null);
+                .ReturnsAsync(false);
 
             ProductController controller = new(productServiceMock.Object);
 

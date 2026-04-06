@@ -43,7 +43,8 @@ namespace CartService.Api.Grpc.GrpcClients
             var response = await _client.ProductsQuantityCheckFromCartAsync(request, cancellationToken: ct);
 
             IReadOnlyList<ProductQuantityCheckResponseDto> badProducts = [.. response.Products.Select(p => new ProductQuantityCheckResponseDto
-            { Id = Guid.Parse(p.Id),
+            { 
+              Id = Guid.Parse(p.Id),
               Title = p.Title,
               QuantityInStock = p.QuantityInStock,
             })];

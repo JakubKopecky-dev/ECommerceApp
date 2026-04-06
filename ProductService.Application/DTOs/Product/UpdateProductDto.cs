@@ -4,21 +4,14 @@ namespace ProductService.Application.DTOs.Product
 {
     public sealed record UpdateProductDto
     {
-        [MinLength(2)]
+        [Length(2,150)]
         public string Title { get; init; } = "";
 
-        [MaxLength(2000)]
         public string Description { get; init; } = "";
-
-        public uint QuantityInStock { get; init; }
-
-        public bool IsActive { get; init; }
-
-        public uint SoldCount { get; init; }
 
         public decimal Price { get; init; }
 
-        //[Url]
+        [Url]
         public string ImageUrl { get; init; } = "";
 
         public Guid BrandId { get; init; }

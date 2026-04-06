@@ -7,6 +7,7 @@ using DeliveryService.Api.Controllers;
 using DeliveryService.Application.DTOs.Courier;
 using DeliveryService.Application.Interfaces.Services;
 using FluentAssertions;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 
@@ -202,20 +203,19 @@ namespace DeliveryService.UnitTests.Controllers
         {
             Guid courierId = Guid.NewGuid();
 
-            CourierDto expectedDto = new() { Id = courierId, Name = "DHL" };
-
             Mock<ICourierService> courierServiceMock = new();
 
             courierServiceMock
                 .Setup(c => c.DeleteCourierAsync(courierId, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(expectedDto);
+                .ReturnsAsync(true);
 
             CourierController controller = new(courierServiceMock.Object);
 
 
             var result = await controller.DeleteCourier(courierId, It.IsAny<CancellationToken>());
 
-            (result as OkObjectResult)!.Value.Should().BeEquivalentTo(expectedDto);
+
+            result.Should().BeOfType<NoContentResult>();
 
             courierServiceMock.Verify(c => c.DeleteCourierAsync(courierId, It.IsAny<CancellationToken>()), Times.Once);
         }
@@ -232,7 +232,7 @@ namespace DeliveryService.UnitTests.Controllers
 
             courierServiceMock
                 .Setup(c => c.DeleteCourierAsync(courierId, It.IsAny<CancellationToken>()))
-                .ReturnsAsync((CourierDto?)null);
+                .ReturnsAsync(false);
 
             CourierController controller = new(courierServiceMock.Object);
 

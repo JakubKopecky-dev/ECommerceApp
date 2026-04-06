@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using ProductService.Application.Interfaces.Services;
-using ProductService.Application.Mapping;
 using ProductService.Application.Services;
 using ProductServiceService = ProductService.Application.Services.ProductService;
 
@@ -17,8 +16,6 @@ namespace ProductService.Application
             services.AddScoped<IProductReviewService, ProductReviewService>();
             services.AddScoped<IProductService, ProductServiceService>();
             
-            // Register AutoMapper
-            services.AddAutoMapper(cfg => { },typeof(AutomapperConfigurationProfile));
 
             return services;
         }

@@ -17,43 +17,14 @@ namespace CartService.Persistence.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.8")
+                .HasAnnotation("ProductVersion", "10.0.5")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("CartService.Domain.Common.AuditEventCartLog", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<string>("Data")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("EntityName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("EventType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("InsertedDate")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("AuditEventCartLogs");
-                });
-
-            modelBuilder.Entity("CartService.Domain.Entity.Cart", b =>
+            modelBuilder.Entity("CartService.Domain.Entities.Cart", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -73,10 +44,9 @@ namespace CartService.Persistence.Migrations
                     b.ToTable("Carts");
                 });
 
-            modelBuilder.Entity("CartService.Domain.Entity.CartItem", b =>
+            modelBuilder.Entity("CartService.Domain.Entities.CartItem", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("CartId")
@@ -90,7 +60,8 @@ namespace CartService.Persistence.Migrations
 
                     b.Property<string>("ProductName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
 
                     b.Property<long>("Quantity")
                         .HasColumnType("bigint");
@@ -109,9 +80,9 @@ namespace CartService.Persistence.Migrations
                     b.ToTable("CartItems");
                 });
 
-            modelBuilder.Entity("CartService.Domain.Entity.CartItem", b =>
+            modelBuilder.Entity("CartService.Domain.Entities.CartItem", b =>
                 {
-                    b.HasOne("CartService.Domain.Entity.Cart", "Cart")
+                    b.HasOne("CartService.Domain.Entities.Cart", "Cart")
                         .WithMany("Items")
                         .HasForeignKey("CartId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -120,7 +91,7 @@ namespace CartService.Persistence.Migrations
                     b.Navigation("Cart");
                 });
 
-            modelBuilder.Entity("CartService.Domain.Entity.Cart", b =>
+            modelBuilder.Entity("CartService.Domain.Entities.Cart", b =>
                 {
                     b.Navigation("Items");
                 });

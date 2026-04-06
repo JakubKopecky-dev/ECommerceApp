@@ -145,7 +145,6 @@ namespace NotificationService.UnitTests.Controllers
                 Title = "New order",
                 Message = "Order is created",
                 Type = NotificationType.OrderCreated,
-                CreatedAt = DateTime.UtcNow
             };
 
             NotificationDto expectedDto = new()

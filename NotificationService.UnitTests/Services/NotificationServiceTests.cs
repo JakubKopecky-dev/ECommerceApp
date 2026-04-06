@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using AutoMapper;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
+using NotificationService.Application;
 using NotificationService.Application.DTOs;
 using NotificationService.Application.Interfaces.Repositories;
 using NotificationService.Application.Services;
@@ -25,30 +25,26 @@ namespace NotificationService.UnitTests.Services
 
             List<Notification> notifications =
             [
-                new() { Id = Guid.NewGuid(), UserId = userId, Title = "New order", Message = "Order is created", Type = NotificationType.OrderCreated },
-                new() { Id = Guid.NewGuid(), UserId = userId, Title = "Delivery status changed", Message = "New delivery status", Type = NotificationType.DeliveryStatusChanged }
+                Notification.Create("New order",userId ,"Order is created", NotificationType.OrderCreated),
+                Notification.Create("Delivery status changed",userId ,"New delivery status", NotificationType.DeliveryStatusChanged),
             ];
 
             List<NotificationDto> expectedDto =
             [
-                new() { Id = notifications[0].Id, UserId = userId, Title = "New order", Message = "Order is created", Type = NotificationType.OrderCreated },
-                new() { Id = notifications[1].Id, UserId = userId, Title = "Delivery status changed", Message = "New delivery status", Type = NotificationType.DeliveryStatusChanged }
+               notifications[0].NotificationToNotificationDto(),
+               notifications[1].NotificationToNotificationDto()
             ];
 
             Mock<INotificationRepository> notificationRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
 
             notificationRepositoryMock
                 .Setup(n => n.GetAllNotificationsByUserIdAsync(userId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(notifications);
 
-            mapperMock
-                .Setup(m => m.Map<List<NotificationDto>>(notifications))
-                .Returns(expectedDto);
+
 
             NotificationServiceService service = new(
                 notificationRepositoryMock.Object,
-                mapperMock.Object,
                 new Mock<ILogger<NotificationServiceService>>().Object
             );
 
@@ -58,7 +54,6 @@ namespace NotificationService.UnitTests.Services
             result.Should().BeEquivalentTo(expectedDto);
 
             notificationRepositoryMock.Verify(n => n.GetAllNotificationsByUserIdAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<List<NotificationDto>>(notifications), Times.Once);
         }
 
 
@@ -72,19 +67,13 @@ namespace NotificationService.UnitTests.Services
             List<NotificationDto> expectedDto = [];
 
             Mock<INotificationRepository> notificationRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
 
             notificationRepositoryMock
                 .Setup(n => n.GetAllNotificationsByUserIdAsync(userId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(notifications);
 
-            mapperMock
-                .Setup(m => m.Map<List<NotificationDto>>(notifications))
-                .Returns(expectedDto);
-
             NotificationServiceService service = new(
                 notificationRepositoryMock.Object,
-                mapperMock.Object,
                 new Mock<ILogger<NotificationServiceService>>().Object
             );
 
@@ -94,7 +83,6 @@ namespace NotificationService.UnitTests.Services
             result.Should().BeEmpty();
 
             notificationRepositoryMock.Verify(n => n.GetAllNotificationsByUserIdAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<List<NotificationDto>>(notifications), Times.Once);
         }
 
 
@@ -103,35 +91,28 @@ namespace NotificationService.UnitTests.Services
         [Trait("Category", "Unit")]
         public async Task GetNotificationAsync_ReturnsNotificationDto_WhenExists()
         {
-            Guid notificationId = Guid.NewGuid();
 
-            Notification notification = new() { Id = notificationId, UserId = Guid.NewGuid(), Title = "New order", Message = "Order is created", Type = NotificationType.OrderCreated };
-            NotificationDto expectedDto = new() { Id = notificationId, UserId = notification.UserId, Title = "New order", Message = "Order is created", Type = NotificationType.OrderCreated };
+            Notification notification = Notification.Create("New order", Guid.NewGuid(), "Order is created", NotificationType.OrderCreated);
+;
+            NotificationDto expectedDto = notification.NotificationToNotificationDto();
 
             Mock<INotificationRepository> notificationRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
 
             notificationRepositoryMock
-                .Setup(n => n.FindByIdAsync(notificationId, It.IsAny<CancellationToken>()))
+                .Setup(n => n.FindByIdAsync(notification.Id, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(notification);
 
-            mapperMock
-                .Setup(m => m.Map<NotificationDto>(notification))
-                .Returns(expectedDto);
 
             NotificationServiceService service = new(
                 notificationRepositoryMock.Object,
-                mapperMock.Object,
                 new Mock<ILogger<NotificationServiceService>>().Object
             );
 
-
-            NotificationDto? result = await service.GetNotificationAsync(notificationId);
+            NotificationDto? result = await service.GetNotificationAsync(notification.Id);
 
             result.Should().BeEquivalentTo(expectedDto);
 
-            notificationRepositoryMock.Verify(n => n.FindByIdAsync(notificationId, It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<NotificationDto>(notification), Times.Once);
+            notificationRepositoryMock.Verify(n => n.FindByIdAsync(notification.Id, It.IsAny<CancellationToken>()), Times.Once);
         }
 
 
@@ -143,7 +124,6 @@ namespace NotificationService.UnitTests.Services
             Guid notificationId = Guid.NewGuid();
 
             Mock<INotificationRepository> notificationRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
 
             notificationRepositoryMock
                 .Setup(n => n.FindByIdAsync(notificationId, It.IsAny<CancellationToken>()))
@@ -151,7 +131,6 @@ namespace NotificationService.UnitTests.Services
 
             NotificationServiceService service = new(
                 notificationRepositoryMock.Object,
-                mapperMock.Object,
                 new Mock<ILogger<NotificationServiceService>>().Object
             );
 
@@ -161,7 +140,6 @@ namespace NotificationService.UnitTests.Services
             result.Should().BeNull();
 
             notificationRepositoryMock.Verify(n => n.FindByIdAsync(notificationId, It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<NotificationDto>(It.IsAny<Notification>()), Times.Never);
         }
 
 
@@ -172,39 +150,32 @@ namespace NotificationService.UnitTests.Services
         {
             CreateNofiticationDto createDto = new() { UserId = Guid.NewGuid(), Title = "New order", Message = "Order is created", Type = NotificationType.OrderCreated };
 
-            Notification notification = new() { Id = Guid.Empty, UserId = createDto.UserId, Title = createDto.Title, Message = createDto.Message, Type = createDto.Type };
-            Notification createdNotification = new() { Id = Guid.NewGuid(), UserId = createDto.UserId, Title = createDto.Title, Message = createDto.Message, Type = createDto.Type };
-            NotificationDto expectedDto = new() { Id = createdNotification.Id, UserId = createDto.UserId, Title = createDto.Title, Message = createDto.Message, Type = createDto.Type };
+            Notification notification = Notification.Create(createDto.Title,createDto.UserId,createDto.Message,createDto.Type);
+            NotificationDto expectedDto = notification.NotificationToNotificationDto();
 
             Mock<INotificationRepository> notificationRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
 
-            mapperMock
-                .Setup(m => m.Map<Notification>(createDto))
-                .Returns(notification);
 
             notificationRepositoryMock
-                .Setup(n => n.InsertAsync(notification, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(createdNotification);
+                .Setup(n => n.AddAsync(It.IsAny<Notification>(), It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
 
-            mapperMock
-                .Setup(m => m.Map<NotificationDto>(createdNotification))
-                .Returns(expectedDto);
+            notificationRepositoryMock
+                .Setup(n => n.SaveChangesAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
 
             NotificationServiceService service = new(
                 notificationRepositoryMock.Object,
-                mapperMock.Object,
                 new Mock<ILogger<NotificationServiceService>>().Object
             );
 
 
             NotificationDto result = await service.CreateNotificationAsync(createDto);
 
-            result.Should().BeEquivalentTo(expectedDto);
+            result.Should().BeEquivalentTo(expectedDto, x => x.Excluding(x => x.Id).Excluding(x => x.CreatedAt));
 
-            mapperMock.Verify(m => m.Map<Notification>(createDto), Times.Once);
-            notificationRepositoryMock.Verify(n => n.InsertAsync(notification, It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<NotificationDto>(createdNotification), Times.Once);
+            notificationRepositoryMock.Verify(n => n.AddAsync(It.IsAny<Notification>(), It.IsAny<CancellationToken>()), Times.Once);
+            notificationRepositoryMock.Verify(n => n.SaveChangesAsync(It.IsAny<CancellationToken>()),Times.Once);
         }
     }
 }

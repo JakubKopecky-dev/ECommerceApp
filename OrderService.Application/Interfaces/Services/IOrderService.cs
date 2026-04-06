@@ -6,7 +6,7 @@ namespace OrderService.Application.Interfaces.Services
     {
         Task<OrderDto?> ChangeOrderStatusAsync(Guid orderId, ChangeOrderStatusDto statusDto, CancellationToken ct = default);
         Task<OrderDto> CreateOrderAsync(CreateOrderDto createDto, CancellationToken ct = default);
-        Task<OrderDto?> DeleteOrderAsync(Guid orderId, CancellationToken ct = default);
+        Task<bool> DeleteOrderAsync(Guid orderId, CancellationToken ct = default);
         Task<IReadOnlyList<OrderDto>> GetAllOrdersAsync(CancellationToken ct = default);
         Task<IReadOnlyList<OrderDto>> GetAllOrdersByUserIdAsync(Guid userId, CancellationToken ct = default);
         Task<OrderExtendedDto?> GetOrderByIdAsync(Guid orderId, CancellationToken ct = default);

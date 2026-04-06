@@ -7,7 +7,7 @@ namespace ProductService.Application.Interfaces.Services
     {
         Task<ProductDto?> ActivateProductAsync(Guid productId, CancellationToken ct = default);
         Task<ProductExtendedDto> CreateProductAsync(CreateProductDto createDto, CancellationToken ct = default);
-        Task<ProductDto?> DeleteProductAsync(Guid productId, CancellationToken ct = default);
+        Task<bool> DeleteProductAsync(Guid productId, CancellationToken ct = default);
         Task<IReadOnlyList<ProductDto>> GetAllActiveProductsAsync(CancellationToken ct = default);
         Task<IReadOnlyList<ProductDto>> GetAllInactiveProductsAsync(CancellationToken ct = default);
         Task<IReadOnlyList<ProductDto>> GetAllProductsAsync(CancellationToken ct = default);

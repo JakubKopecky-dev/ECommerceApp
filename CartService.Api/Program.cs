@@ -24,7 +24,6 @@ builder.WebHost.ConfigureKestrel(options =>
     });
 });
 
-#region Register services (Dependecy Injection)
 
 // Persistence (DbContext, Repository)
 builder.Services.AddPersistenceServices(builder.Configuration);
@@ -43,15 +42,11 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 // Swagger
-builder.Services.AddSwaggerWithJwt(builder.Environment);
+builder.Services.AddOpenApiWithJwt();
 
 
-#endregion
 
 var app = builder.Build();
-
-
-#region Middleware pipeline
 
 var env = app.Services.GetRequiredService<IWebHostEnvironment>();
 
@@ -59,13 +54,18 @@ var env = app.Services.GetRequiredService<IWebHostEnvironment>();
 if (!env.IsEnvironment("Test"))
     app.ApplyMigrations();
 
-// Swagger
 if (builder.Configuration.GetValue<bool>("EnableSwagger"))
 {
-    app.UseSwagger();
+    app.MapOpenApi();
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("./CartService/swagger.json", "Cart Service - v1");
+        options.RoutePrefix = "swagger";
+
+        if (app.Environment.IsDevelopment())
+            options.SwaggerEndpoint("/openapi/v1.json", "Cart Service - v1");
+        else
+            options.SwaggerEndpoint("/cart/openapi/v1.json", "Cart Service - v1");
+
     });
 }
 
@@ -83,10 +83,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 
-#endregion
 
 app.Run();
 
-
-public partial class Program { };
 

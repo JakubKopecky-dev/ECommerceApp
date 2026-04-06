@@ -30,13 +30,11 @@ namespace CartService.IntegrationTests
         }
 
 
-
         [Fact]
         [Trait("Category", "Integration")]
         public async Task CreateCartItem_ReturnsCreatedAndPersists()
         {
             Guid userId = Guid.NewGuid();
-            Guid cartId = Guid.NewGuid();
             Guid productId = Guid.NewGuid();
 
             ProductDto expectedProduct = new() { Title = "iPhone 16", Price = 1299, QuantityInStock = 10 };
@@ -55,13 +53,13 @@ namespace CartService.IntegrationTests
 
             using var scope = factory.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<CartDbContext>();
-            db.Carts.Add(new Cart { Id = cartId, UserId = userId, Items = [] });
+            Cart cart = CartTestHelper.CreateCart(userId);
+            db.Carts.Add(cart);
             db.SaveChanges();
 
             var client = CreateAuthenticatedClient(factory, userId);
 
-            CreateCartItemDto request = new() { CartId = cartId, ProductId = productId, Quantity = 2 };
-
+            CreateCartItemDto request = new() { CartId = cart.Id, ProductId = productId, Quantity = 2 };
 
             var response = await client.PostAsJsonAsync("api/CartItem", request);
 
@@ -79,13 +77,11 @@ namespace CartService.IntegrationTests
         }
 
 
-
         [Fact]
         [Trait("Category", "Integration")]
         public async Task CreateCartItem_ReturnsNotFound_WhenProductMissing()
         {
             Guid userId = Guid.NewGuid();
-            Guid cartId = Guid.NewGuid();
             Guid productId = Guid.NewGuid();
 
             var factory = _factory.WithWebHostBuilder(builder =>
@@ -102,12 +98,12 @@ namespace CartService.IntegrationTests
 
             using var scope = factory.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<CartDbContext>();
-            db.Carts.Add(new Cart { Id = cartId, UserId = userId, Items = [] });
+            Cart cart = CartTestHelper.CreateCart(userId);
+            db.Carts.Add(cart);
             db.SaveChanges();
 
             var client = CreateAuthenticatedClient(factory, userId);
-            CreateCartItemDto request = new() { CartId = cartId, ProductId = productId, Quantity = 2 };
-
+            CreateCartItemDto request = new() { CartId = cart.Id, ProductId = productId, Quantity = 2 };
 
             var response = await client.PostAsJsonAsync("api/CartItem", request);
 
@@ -119,13 +115,11 @@ namespace CartService.IntegrationTests
         }
 
 
-
         [Fact]
         [Trait("Category", "Integration")]
         public async Task CreateCartItem_ReturnsBadRequest_WhenOutOfStock()
         {
             Guid userId = Guid.NewGuid();
-            Guid cartId = Guid.NewGuid();
             Guid productId = Guid.NewGuid();
 
             ProductDto lowStockProduct = new() { Title = "iPhone 11", Price = 1000, QuantityInStock = 1 };
@@ -144,12 +138,12 @@ namespace CartService.IntegrationTests
 
             using var scope = factory.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<CartDbContext>();
-            db.Carts.Add(new Cart { Id = cartId, UserId = userId, Items = [] });
+            Cart cart = CartTestHelper.CreateCart(userId);
+            db.Carts.Add(cart);
             db.SaveChanges();
 
             var client = CreateAuthenticatedClient(factory, userId);
-            CreateCartItemDto request = new() { CartId = cartId, ProductId = productId, Quantity = 5 };
-
+            CreateCartItemDto request = new() { CartId = cart.Id, ProductId = productId, Quantity = 5 };
 
             var response = await client.PostAsJsonAsync("api/CartItem", request);
 
@@ -161,17 +155,13 @@ namespace CartService.IntegrationTests
         }
 
 
-
         [Fact]
         [Trait("Category", "Integration")]
         public async Task CreateCartItem_IncreasesQuantity_WhenAlreadyExists()
         {
             Guid userId = Guid.NewGuid();
-            Guid cartId = Guid.NewGuid();
             Guid productId = Guid.NewGuid();
 
-            Cart cart = new() { Id = Guid.NewGuid() };
-            CartItem existingItem = new() { Id = Guid.NewGuid(), CartId = cartId, ProductId = productId, Quantity = 2, UnitPrice = 1200, ProductName = "iPhone 16" };
             ProductDto existingProduct = new() { Title = "iPhone 16", Price = 1200, QuantityInStock = 10 };
 
             var factory = _factory.WithWebHostBuilder(builder =>
@@ -188,12 +178,13 @@ namespace CartService.IntegrationTests
 
             using var scope = factory.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<CartDbContext>();
-            db.Carts.Add(new Cart { Id = cartId, UserId = userId, Items = { existingItem } });
+            CartItem existingItem = CartTestHelper.CreateCartItem(Guid.NewGuid(), productId, "iPhone 16", 1200m, 2);
+            Cart cart = CartTestHelper.CreateCart(userId, [existingItem]);
+            db.Carts.Add(cart);
             db.SaveChanges();
 
             var client = CreateAuthenticatedClient(factory, userId);
-            CreateCartItemDto request = new() { CartId = cartId, ProductId = productId, Quantity = 3 };
-
+            CreateCartItemDto request = new() { CartId = cart.Id, ProductId = productId, Quantity = 3 };
 
             var response = await client.PostAsJsonAsync("api/CartItem", request);
 
@@ -204,7 +195,5 @@ namespace CartService.IntegrationTests
             updated!.Id.Should().Be(existingItem.Id);
             updated.Quantity.Should().Be(5); // 2 + 3
         }
-
-
     }
 }

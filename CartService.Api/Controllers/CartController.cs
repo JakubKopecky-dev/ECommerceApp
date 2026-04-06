@@ -15,7 +15,7 @@ namespace CartService.Api.Controllers
     {
         private readonly ICartService _cartService = cartService;
 
-        
+
 
         /// <summary>
         /// Retrieves the current user's shopping cart or creates a new cart if one does not exist.
@@ -30,7 +30,7 @@ namespace CartService.Api.Controllers
             if (!Guid.TryParse(userIdString, out Guid userId))
                 return Unauthorized();
 
-            CartExtendedDto cart = await _cartService.GetOrCreateCartByUserIdAsync(userId,ct);
+            CartExtendedDto cart = await _cartService.GetOrCreateCartByUserIdAsync(userId, ct);
 
             return Ok(cart);
         }
@@ -38,12 +38,11 @@ namespace CartService.Api.Controllers
 
 
         /// <summary>
-        /// Deletes the current user's shopping cart.
+        /// Deletes the current user's shopping cart, if one exists.
         /// </summary>
-        /// <param name="ct">A cancellation token that can be used to cancel the operation.</param>
-        /// <returns>An <see cref="OkObjectResult"/> containing the deleted cart if the operation succeeds; <see
-        /// cref="NotFoundResult"/> if no cart exists for the user; or <see cref="UnauthorizedResult"/> if the user is
-        /// not authenticated.</returns>
+        /// <param name="ct">A cancellation token that can be used to cancel the delete operation.</param>
+        /// <returns>An HTTP 204 No Content response if the cart was successfully deleted; an HTTP 404 Not Found response if no
+        /// cart exists for the user; or an HTTP 401 Unauthorized response if the user is not authenticated.</returns>
         [HttpDelete]
         public async Task<IActionResult> DeleteCart(CancellationToken ct)
         {
@@ -51,9 +50,9 @@ namespace CartService.Api.Controllers
             if (!Guid.TryParse(userIdString, out Guid userId))
                 return Unauthorized();
 
-            CartDto? cart = await _cartService.DeleteCartByUserIdAsync(userId, ct);
+            bool isDeleted = await _cartService.DeleteCartByUserIdAsync(userId, ct);
 
-            return cart is not null ? Ok(cart) : NotFound();
+            return isDeleted ? NoContent() : NotFound();
         }
 
 
@@ -69,13 +68,13 @@ namespace CartService.Api.Controllers
         /// <returns>An <see cref="IActionResult"/> representing the result of the checkout operation. Returns an unauthorized
         /// result if the user is not authenticated.</returns>
         [HttpPost("checkout")]
-        public async Task<IActionResult> CheckoutCart(CartCheckoutRequestDto cartCheckoutRequestDto,CancellationToken ct)
+        public async Task<IActionResult> CheckoutCart(CartCheckoutRequestDto cartCheckoutRequestDto, CancellationToken ct)
         {
             string? userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (!Guid.TryParse(userIdString, out Guid userId))
                 return Unauthorized();
 
-            var result = await _cartService.CheckoutCartByUserIdAsync(userId,cartCheckoutRequestDto, ct);
+            var result = await _cartService.CheckoutCartByUserIdAsync(userId, cartCheckoutRequestDto, ct);
 
             return result.ToActionResult(this);
         }

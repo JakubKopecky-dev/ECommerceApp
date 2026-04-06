@@ -36,7 +36,6 @@ namespace CartService.IntegrationTests
             };
 
 
-
         [Fact]
         [Trait("Category", "Integration")]
         public async Task CheckoutCart_ReturnsOk_AndDeletesCart()
@@ -64,15 +63,14 @@ namespace CartService.IntegrationTests
 
             using var scope = factory.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<CartDbContext>();
-            Cart cart = new() { Id = Guid.NewGuid(), UserId = userId, Items = [] };
-            cart.Items = [new() { Id = Guid.NewGuid(), ProductId = Guid.NewGuid(), Quantity = 2, UnitPrice = 999 }];
+            CartItem item = CartTestHelper.CreateCartItem(Guid.NewGuid(), Guid.NewGuid(), "iPhone 16", 999m, 2);
+            Cart cart = CartTestHelper.CreateCart(userId, [item]);
             db.Carts.Add(cart);
             db.SaveChanges();
 
             var client = factory.CreateClient();
             TestAuthHandler.FixedUserId = userId;
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
-
 
             var response = await client.PostAsJsonAsync("api/Cart/checkout", CreateValidRequest());
 
@@ -87,7 +85,6 @@ namespace CartService.IntegrationTests
             var deletedCart = await db2.Carts.SingleOrDefaultAsync(c => c.UserId == userId);
             deletedCart.Should().BeNull();
         }
-
 
 
         [Fact]
@@ -118,7 +115,6 @@ namespace CartService.IntegrationTests
         }
 
 
-
         [Fact]
         [Trait("Category", "Integration")]
         public async Task CheckoutCart_ReturnsCartNotFound_WhenCartEmpty()
@@ -139,19 +135,18 @@ namespace CartService.IntegrationTests
 
             using var scope = factory.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<CartDbContext>();
-            db.Carts.Add(new Cart { Id = Guid.NewGuid(), UserId = userId, Items = [] });
+            Cart cart = CartTestHelper.CreateCart(userId);
+            db.Carts.Add(cart);
             db.SaveChanges();
 
             var client = factory.CreateClient();
             TestAuthHandler.FixedUserId = userId;
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
 
-
             var response = await client.PostAsJsonAsync("api/Cart/checkout", CreateValidRequest());
 
             response.StatusCode.Should().Be(HttpStatusCode.NotFound);
         }
-
 
 
         [Fact]
@@ -165,7 +160,6 @@ namespace CartService.IntegrationTests
             {
                 builder.ConfigureServices(services =>
                 {
-                    // Order client – happy path (všechno se vytvoří)
                     var orderClientMock = new Mock<IOrderReadClient>();
                     orderClientMock
                         .Setup(c => c.CreateOrderAndDeliveryAsync(
@@ -179,7 +173,6 @@ namespace CartService.IntegrationTests
                         });
                     services.AddScoped<IOrderReadClient>(_ => orderClientMock.Object);
 
-                    // Product client – simulujeme, že 1 produkt není dostupný
                     var productClientMock = new Mock<IProductReadClient>();
                     productClientMock
                         .Setup(c => c.CheckProductAvailabilityAsync(
@@ -192,15 +185,14 @@ namespace CartService.IntegrationTests
 
             using var scope = factory.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<CartDbContext>();
-            Cart cart = new() { Id = Guid.NewGuid(), UserId = userId, Items = [] };
-            cart.Items = [new() { Id = Guid.NewGuid(), ProductId = Guid.NewGuid(), Quantity = 2, UnitPrice = 999 }];
+            CartItem item = CartTestHelper.CreateCartItem(Guid.NewGuid(), Guid.NewGuid(), "iPhone 16", 999m, 2);
+            Cart cart = CartTestHelper.CreateCart(userId, [item]);
             db.Carts.Add(cart);
             db.SaveChanges();
 
             var client = factory.CreateClient();
             TestAuthHandler.FixedUserId = userId;
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
-
 
             var response = await client.PostAsJsonAsync("api/Cart/checkout", CreateValidRequest());
 
@@ -213,7 +205,6 @@ namespace CartService.IntegrationTests
             root.GetProperty("message").GetString().Should().Be("Some items in your cart are out of stock.");
             root.GetProperty("products").EnumerateArray().Should().NotBeEmpty();
         }
-
 
 
         [Fact]
@@ -236,8 +227,8 @@ namespace CartService.IntegrationTests
 
             using var scope = factory.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<CartDbContext>();
-            Cart cart = new() { Id = Guid.NewGuid(), UserId = userId, Items = [] };
-            cart.Items = [new() { Id = Guid.NewGuid(), ProductId = Guid.NewGuid(), Quantity = 2, UnitPrice = 999 }];
+            CartItem item = CartTestHelper.CreateCartItem(Guid.NewGuid(), Guid.NewGuid(), "iPhone 16", 999m, 2);
+            Cart cart = CartTestHelper.CreateCart(userId, [item]);
             db.Carts.Add(cart);
             db.SaveChanges();
 
@@ -249,7 +240,6 @@ namespace CartService.IntegrationTests
 
             response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         }
-
 
 
         [Fact]
@@ -272,8 +262,8 @@ namespace CartService.IntegrationTests
 
             using var scope = factory.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<CartDbContext>();
-            Cart cart = new() { Id = Guid.NewGuid(), UserId = userId, Items = [] };
-            cart.Items = [new() { Id = Guid.NewGuid(), ProductId = Guid.NewGuid(), Quantity = 2, UnitPrice = 999}];
+            CartItem item = CartTestHelper.CreateCartItem(Guid.NewGuid(), Guid.NewGuid(), "iPhone 16", 999m, 2);
+            Cart cart = CartTestHelper.CreateCart(userId, [item]);
             db.Carts.Add(cart);
             db.SaveChanges();
 
@@ -281,12 +271,10 @@ namespace CartService.IntegrationTests
             TestAuthHandler.FixedUserId = userId;
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
 
-
             var response = await client.PostAsJsonAsync("api/Cart/checkout", CreateValidRequest());
 
             response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         }
-
 
 
         [Fact]
@@ -309,8 +297,8 @@ namespace CartService.IntegrationTests
 
             using var scope = factory.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<CartDbContext>();
-            Cart cart = new() { Id = Guid.NewGuid(), UserId = userId, Items = [] };
-            cart.Items = [new() { Id = Guid.NewGuid(), ProductId = Guid.NewGuid(), Quantity = 2, UnitPrice = 999 }];
+            CartItem item = CartTestHelper.CreateCartItem(Guid.NewGuid(), Guid.NewGuid(), "iPhone 16", 999m, 2);
+            Cart cart = CartTestHelper.CreateCart(userId, [item]);
             db.Carts.Add(cart);
             db.SaveChanges();
 
@@ -318,13 +306,9 @@ namespace CartService.IntegrationTests
             TestAuthHandler.FixedUserId = userId;
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Test");
 
-
             var response = await client.PostAsJsonAsync("api/Cart/checkout", CreateValidRequest());
 
             response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         }
-
-
-
     }
 }

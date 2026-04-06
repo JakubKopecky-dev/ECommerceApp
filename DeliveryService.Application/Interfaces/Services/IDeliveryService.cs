@@ -6,7 +6,7 @@ namespace DeliveryService.Application.Interfaces.Services
     {
         Task<DeliveryDto?> ChangeDeliveryStatusAsync(Guid deliveryId, ChangeDeliveryStatusDto changeDto, CancellationToken ct = default);
         Task<DeliveryDto> CreateDeliveryAsync(CreateUpdateDeliveryDto createDto, CancellationToken ct = default);
-        Task<DeliveryDto?> DeleteDeliveryAsync(Guid deliveryId, CancellationToken ct = default);
+        Task<bool> DeleteDeliveryAsync(Guid deliveryId, CancellationToken ct = default);
         Task<DeliveryExtendedDto?> GetDeliveryByOrderIdAsync(Guid orderId, CancellationToken ct = default);
         Task<DeliveryDto?> UpdateDeliveryAsync(Guid deliveryId, CreateUpdateDeliveryDto updateDto, CancellationToken ct = default);
     }

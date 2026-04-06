@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using NotificationService.Application.Interfaces.Repositories;
 using NotificationService.Domain.Entities;
+using NotificationService.Persistence.Repositories;
 
 namespace NotificationService.Persistence.Repository
 {

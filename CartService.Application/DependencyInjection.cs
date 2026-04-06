@@ -1,5 +1,4 @@
 ﻿using CartService.Application.Interfaces.Services;
-using CartService.Application.Mapping;
 using CartService.Application.Services;
 using Microsoft.Extensions.DependencyInjection;
 using CartServiceService = CartService.Application.Services.CartService;
@@ -15,9 +14,6 @@ namespace CartService.Application
             services.AddScoped<ICartItemService, CartItemService>();
             services.AddScoped<ICartService, CartServiceService>();
 
-
-            // Register AutoMapper
-            services.AddAutoMapper(cfg => { }, typeof(AutomapperConfigurationProfile));
 
             return services;
         }

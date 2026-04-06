@@ -10,5 +10,9 @@ namespace CartService.Application.Common
     {
         public static Result<TValue, TError> Ok(TValue value) => new(true, value, default);
         public static Result<TValue, TError> Fail(TError error) => new(false, default, error);
+
+        public static Result<TValue, TError> NoContent() => new(true, default, default);
+
+
     }
 }

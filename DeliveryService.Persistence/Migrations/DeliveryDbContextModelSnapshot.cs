@@ -17,57 +17,27 @@ namespace DeliveryService.Persistence.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.8")
+                .HasAnnotation("ProductVersion", "10.0.5")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("DeliveryService.Domain.Common.AuditEventDeliveryLog", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<string>("Data")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("EntityName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("EventType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("InsertedDate")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("AuditEventLog-Delivery", (string)null);
-                });
-
-            modelBuilder.Entity("DeliveryService.Domain.Entity.Courier", b =>
+            modelBuilder.Entity("DeliveryService.Domain.Entities.Courier", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Email")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
                     b.Property<string>("PhoneNumber")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -80,15 +50,10 @@ namespace DeliveryService.Persistence.Migrations
                     b.ToTable("Couriers");
                 });
 
-            modelBuilder.Entity("DeliveryService.Domain.Entity.Delivery", b =>
+            modelBuilder.Entity("DeliveryService.Domain.Entities.Delivery", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("City")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("CourierId")
                         .HasColumnType("uniqueidentifier");
@@ -99,42 +64,30 @@ namespace DeliveryService.Persistence.Migrations
                     b.Property<DateTime?>("DeliveredAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("FirstName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("LastName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<Guid>("OrderId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("PhoneNumber")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PostalCode")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("State")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
-                    b.Property<string>("Street")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("TrackingNumber")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -148,18 +101,100 @@ namespace DeliveryService.Persistence.Migrations
                     b.ToTable("Deliveries");
                 });
 
-            modelBuilder.Entity("DeliveryService.Domain.Entity.Delivery", b =>
+            modelBuilder.Entity("DeliveryService.Domain.Entities.Courier", b =>
                 {
-                    b.HasOne("DeliveryService.Domain.Entity.Courier", "Courier")
+                    b.OwnsOne("DeliveryService.Domain.ValueObjects.Email", "Email", b1 =>
+                        {
+                            b1.Property<Guid>("CourierId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("nvarchar(100)")
+                                .HasColumnName("Email");
+
+                            b1.HasKey("CourierId");
+
+                            b1.ToTable("Couriers");
+
+                            b1.WithOwner()
+                                .HasForeignKey("CourierId");
+                        });
+
+                    b.Navigation("Email");
+                });
+
+            modelBuilder.Entity("DeliveryService.Domain.Entities.Delivery", b =>
+                {
+                    b.HasOne("DeliveryService.Domain.Entities.Courier", "Courier")
                         .WithMany("Deliveries")
                         .HasForeignKey("CourierId")
-                        .OnDelete(DeleteBehavior.Restrict)
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("DeliveryService.Domain.ValueObjects.Email", "Email", b1 =>
+                        {
+                            b1.Property<Guid>("DeliveryId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(100)
+                                .HasColumnType("nvarchar(100)")
+                                .HasColumnName("Email");
+
+                            b1.HasKey("DeliveryId");
+
+                            b1.ToTable("Deliveries");
+
+                            b1.WithOwner()
+                                .HasForeignKey("DeliveryId");
+                        });
+
+                    b.OwnsOne("DeliveryService.Domain.ValueObjects.Address", "Address", b1 =>
+                        {
+                            b1.Property<Guid>("DeliveryId")
+                                .HasColumnType("uniqueidentifier");
+
+                            b1.Property<string>("City")
+                                .IsRequired()
+                                .HasMaxLength(50)
+                                .HasColumnType("nvarchar(50)");
+
+                            b1.Property<string>("PostalCode")
+                                .IsRequired()
+                                .HasMaxLength(10)
+                                .HasColumnType("nvarchar(10)");
+
+                            b1.Property<string>("State")
+                                .IsRequired()
+                                .HasMaxLength(30)
+                                .HasColumnType("nvarchar(30)");
+
+                            b1.Property<string>("Street")
+                                .IsRequired()
+                                .HasMaxLength(50)
+                                .HasColumnType("nvarchar(50)");
+
+                            b1.HasKey("DeliveryId");
+
+                            b1.ToTable("Deliveries");
+
+                            b1.WithOwner()
+                                .HasForeignKey("DeliveryId");
+                        });
+
+                    b.Navigation("Address")
                         .IsRequired();
 
                     b.Navigation("Courier");
+
+                    b.Navigation("Email")
+                        .IsRequired();
                 });
 
-            modelBuilder.Entity("DeliveryService.Domain.Entity.Courier", b =>
+            modelBuilder.Entity("DeliveryService.Domain.Entities.Courier", b =>
                 {
                     b.Navigation("Deliveries");
                 });

@@ -30,7 +30,6 @@ namespace NotificationService.Api.Consumers
                 UserId = message.UserId,
                 Title = "Order created",
                 Message = $"Your order #{message.OrderId} was successfully created. Total: {message.TotalPrice} $.",
-                CreatedAt = message.CreatedAt,
                 Type = NotificationType.OrderCreated
             };
 

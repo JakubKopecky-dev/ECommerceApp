@@ -81,7 +81,6 @@ namespace NotificationService.IntegrationTests.Controllers
                 UserId = Guid.NewGuid(),
                 Title = "Order created",
                 Message = "Order is created",
-                CreatedAt = DateTime.UtcNow,
                 Type = NotificationType.OrderCreated
             };
 

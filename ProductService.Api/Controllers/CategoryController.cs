@@ -55,9 +55,9 @@ namespace ProductService.Api.Controllers
         [HttpDelete("{categoryId}")]
         public async Task<IActionResult> DeleteCategory(Guid categoryId, CancellationToken ct)
         {
-            CategoryDto? category = await _categoryService.DeleteCategoryAsync(categoryId, ct);
+            bool isDeleted = await _categoryService.DeleteCategoryAsync(categoryId, ct);
 
-            return category is not null ? Ok(category) : NotFound();
+            return isDeleted ? NoContent() : NotFound();
         }
 
 

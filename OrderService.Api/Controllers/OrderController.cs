@@ -73,9 +73,9 @@ namespace OrderService.Api.Controllers
         [HttpDelete("{orderId}")]
         public async Task<IActionResult> DeleteOrder(Guid orderId, CancellationToken ct)
         {
-            OrderDto? order = await _orderService.DeleteOrderAsync(orderId, ct);
+            bool isDeleted = await _orderService.DeleteOrderAsync(orderId, ct);
 
-            return order is not null ? Ok(order) : NotFound();
+            return isDeleted ? NoContent() : NotFound();
         }
 
 

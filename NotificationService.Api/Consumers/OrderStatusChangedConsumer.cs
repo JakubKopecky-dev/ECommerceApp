@@ -27,7 +27,6 @@ namespace NotificationService.Api.Consumers
                 UserId = message.UserId,
                 Title = "Order status changed",
                 Message = $"The status of your order #{message.OrderId} has been updated to {message.NewStatus}.",
-                CreatedAt = message.UpdatedAt,
                 Type = NotificationType.OrderStatusChanged,
             };
 

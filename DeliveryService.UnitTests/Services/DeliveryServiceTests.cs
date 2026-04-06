@@ -1,47 +1,59 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-using AutoMapper;
+﻿using DeliveryService.Application;
 using DeliveryService.Application.DTOs.Delivery;
 using DeliveryService.Application.Interfaces.External;
 using DeliveryService.Application.Interfaces.Repositories;
+using DeliveryService.Domain.Common;
 using DeliveryService.Domain.Entities;
 using DeliveryService.Domain.Enums;
+using DeliveryService.Domain.ValueObjects;
 using FluentAssertions;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Shared.Contracts.Events;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using DeliveryServiceService = DeliveryService.Application.Services.DeliveryService;
 
 namespace DeliveryService.UnitTests.Services
 {
     public class DeliveryServiceTests
     {
+
+        private static Courier MockCourier() => Courier.Create("DHL", null, null);
+
+
+        private static Address MockAddress() => new("Nusle 50", "Prague 4", "140 00", "Czech Republic");
+        private static Delivery MockDelivery(Guid orderId, Guid courierId) =>
+            Delivery.Create(orderId, courierId,new Email("aa@b.com"), "Petr", "Novak", "123456789", MockAddress(), null);
+
+
         [Fact]
         [Trait("Category", "Unit")]
         public async Task GetDeliveryByOrderIdAsync_ReturnsDeliveryExtendedDto_WhenExists()
         {
             Guid orderId = Guid.NewGuid();
 
-            Courier courier = new() { Id = Guid.NewGuid(), Name = "DHL" };
-            Delivery delivery = new() { Id = Guid.NewGuid(), OrderId = orderId, Courier = courier };
-            DeliveryExtendedDto expectedDto = new() { Id = delivery.Id, OrderId = orderId, Courier = new() };
+            Courier courier = MockCourier();
+
+            Delivery delivery = MockDelivery(orderId, courier.Id);
+
+
+            typeof(Delivery)
+            .GetProperty(nameof(Delivery.Courier))!
+            .SetValue(delivery, courier);
+
+            DeliveryExtendedDto expectedDto = delivery.DeliveryToDeliveryExtendedDto();
 
             Mock<IDeliveryRepository> deliveryRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
 
             deliveryRepositoryMock
                 .Setup(d => d.FindDeliveryByOrderIdIncludeCourierAsync(orderId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(delivery);
 
-            mapperMock
-                .Setup(m => m.Map<DeliveryExtendedDto>(delivery))
-                .Returns(expectedDto);
-
             DeliveryServiceService service = new(
                 deliveryRepositoryMock.Object,
-                mapperMock.Object,
                 new Mock<ILogger<DeliveryServiceService>>().Object,
                 new Mock<IPublishEndpoint>().Object,
                 new Mock<IOrderReadClient>().Object
@@ -53,7 +65,6 @@ namespace DeliveryService.UnitTests.Services
             result.Should().BeEquivalentTo(expectedDto);
 
             deliveryRepositoryMock.Verify(d => d.FindDeliveryByOrderIdIncludeCourierAsync(orderId, It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<DeliveryExtendedDto>(delivery), Times.Once);
         }
 
 
@@ -65,7 +76,6 @@ namespace DeliveryService.UnitTests.Services
             Guid orderId = Guid.NewGuid();
 
             Mock<IDeliveryRepository> deliveryRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
 
             deliveryRepositoryMock
                 .Setup(d => d.FindDeliveryByOrderIdIncludeCourierAsync(orderId, It.IsAny<CancellationToken>()))
@@ -73,7 +83,6 @@ namespace DeliveryService.UnitTests.Services
 
             DeliveryServiceService service = new(
                 deliveryRepositoryMock.Object,
-                mapperMock.Object,
                 new Mock<ILogger<DeliveryServiceService>>().Object,
                 new Mock<IPublishEndpoint>().Object,
                 new Mock<IOrderReadClient>().Object
@@ -85,7 +94,6 @@ namespace DeliveryService.UnitTests.Services
             result.Should().BeNull();
 
             deliveryRepositoryMock.Verify(d => d.FindDeliveryByOrderIdIncludeCourierAsync(orderId, It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<DeliveryExtendedDto>(It.IsAny<Delivery>()), Times.Never);
         }
 
 
@@ -94,31 +102,36 @@ namespace DeliveryService.UnitTests.Services
         [Trait("Category", "Unit")]
         public async Task CreateDeliveryAsync_ReturnsDeliveryDto()
         {
-            CreateUpdateDeliveryDto createDto = new() { OrderId = Guid.NewGuid() };
-
-            Courier courier = new() { Id = Guid.NewGuid(), Name = "DHL" };
-            Delivery delivery = new() {Id = Guid.Empty, OrderId = createDto.OrderId, Courier = courier , CreatedAt = DateTime.UtcNow};
-            Delivery createdDelivery = new() { Id = Guid.NewGuid(), OrderId = createDto.OrderId, Courier = courier, CreatedAt = delivery.CreatedAt};
-            DeliveryDto expectedDto = new() { Id = createdDelivery.Id, OrderId = createDto.OrderId, CreatedAt =  createdDelivery.CreatedAt};
+            Courier courier = MockCourier();
+            CreateUpdateDeliveryDto createDto = new()
+            {
+                OrderId = Guid.NewGuid(),
+                CourierId = courier.Id,
+                Email = "aa@b.com",
+                FirstName = "Petr",
+                LastName = "Novak",
+                PhoneNumber = "123456789",
+                Street = "Nusle 50",
+                City = "Prague 4",
+                PostalCode = "140 00",
+                State = "Czech Republic"
+            };
+            Delivery delivery = MockDelivery(createDto.OrderId, courier.Id);
+            DeliveryDto expectedDto = delivery.DeliveryToDeliveryDto();
 
             Mock<IDeliveryRepository> deliveryRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
-
-            mapperMock
-                .Setup(m => m.Map<Delivery>(createDto))
-                .Returns(delivery);
 
             deliveryRepositoryMock
-                .Setup(d => d.InsertAsync(It.IsAny<Delivery>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(createdDelivery);
+                .Setup(d => d.AddAsync(It.IsAny<Delivery>(), It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
 
-            mapperMock
-                .Setup(m => m.Map<DeliveryDto>(createdDelivery))
-                .Returns(expectedDto);
+            deliveryRepositoryMock
+                .Setup(d => d.SaveChangesAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
+
 
             DeliveryServiceService service = new(
                 deliveryRepositoryMock.Object,
-                mapperMock.Object,
                 new Mock<ILogger<DeliveryServiceService>>().Object,
                 new Mock<IPublishEndpoint>().Object,
                 new Mock<IOrderReadClient>().Object
@@ -127,11 +140,9 @@ namespace DeliveryService.UnitTests.Services
 
             DeliveryDto result = await service.CreateDeliveryAsync(createDto, It.IsAny<CancellationToken>());
 
-            result.Should().BeEquivalentTo(expectedDto);
+            result.Should().BeEquivalentTo(expectedDto, o => o.Excluding(x => x.Id).Excluding(x => x.CreatedAt));
 
-            mapperMock.Verify(m => m.Map<Delivery>(createDto), Times.Once);
-            deliveryRepositoryMock.Verify(d => d.InsertAsync(It.IsAny<Delivery>(), It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<Delivery>(createDto), Times.Once);
+            deliveryRepositoryMock.Verify(d => d.AddAsync(It.IsAny<Delivery>(), It.IsAny<CancellationToken>()), Times.Once);
         }
 
 
@@ -140,49 +151,55 @@ namespace DeliveryService.UnitTests.Services
         [Trait("Category", "Unit")]
         public async Task UpdateDeliveryAsync_ReturnsDeliveryDto_WhenExists()
         {
-            Guid deliveryId = Guid.NewGuid();
-            CreateUpdateDeliveryDto updateDto = new() { OrderId = Guid.NewGuid() };
+            Guid orderId = Guid.NewGuid();
 
-            Courier courier = new() { Id = Guid.NewGuid(), Name = "DHL" };
-            Delivery deliveryDb = new() { Id = deliveryId, Courier = courier, UpdatedAt = DateTime.UtcNow };
-            DeliveryDto expectedDto = new() { Id = deliveryId, OrderId = updateDto.OrderId, UpdatedAt = deliveryDb.UpdatedAt };
+            Courier courier = MockCourier();
+
+            CreateUpdateDeliveryDto updateDto = new()
+            {
+                OrderId = orderId,
+                CourierId = courier.Id,
+                Email = "aa@b.com",
+                FirstName = "Jan",
+                LastName = "Novak",
+                PhoneNumber = "123456789",
+                Street = "Nusle 50",
+                City = "Prague 4",
+                PostalCode = "140 00",
+                State = "Czech Republic",
+            };
+
+            Delivery delivery = MockDelivery(orderId, courier.Id);
+            DeliveryDto expectedDto = delivery.DeliveryToDeliveryDto() with { FirstName = updateDto.FirstName };
 
             Mock<IDeliveryRepository> deliveryRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
 
             deliveryRepositoryMock
-                .Setup(d => d.FindByIdAsync(deliveryId, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(deliveryDb);
-
-            mapperMock
-                .Setup(m => m.Map<CreateUpdateDeliveryDto, Delivery>(updateDto, deliveryDb))
-                .Returns(deliveryDb);
+                .Setup(d => d.FindByIdAsync(delivery.Id, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(delivery);
 
             deliveryRepositoryMock
                 .Setup(d => d.SaveChangesAsync(It.IsAny<CancellationToken>()))
                 .Returns(Task.CompletedTask);
 
-            mapperMock
-                .Setup(m => m.Map<DeliveryDto>(deliveryDb))
-                .Returns(expectedDto);
+
 
             DeliveryServiceService service = new(
                 deliveryRepositoryMock.Object,
-                mapperMock.Object,
                 new Mock<ILogger<DeliveryServiceService>>().Object,
                 new Mock<IPublishEndpoint>().Object,
                 new Mock<IOrderReadClient>().Object
             );
 
 
-            DeliveryDto? result = await service.UpdateDeliveryAsync(deliveryId, updateDto, It.IsAny<CancellationToken>());
+            DeliveryDto? result = await service.UpdateDeliveryAsync(delivery.Id, updateDto, It.IsAny<CancellationToken>());
 
-            result.Should().BeEquivalentTo(expectedDto);
+            result.Should().BeEquivalentTo(expectedDto, o => o.Excluding(x => x.UpdatedAt));
+            result!.UpdatedAt.Should().NotBeNull();
+            result.FirstName.Should().Be(updateDto.FirstName);
 
-            deliveryRepositoryMock.Verify(d => d.FindByIdAsync(deliveryId, It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<CreateUpdateDeliveryDto, Delivery>(updateDto, deliveryDb), Times.Once);
+            deliveryRepositoryMock.Verify(d => d.FindByIdAsync(delivery.Id, It.IsAny<CancellationToken>()), Times.Once);
             deliveryRepositoryMock.Verify(d => d.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<DeliveryDto>(deliveryDb), Times.Once);
         }
 
 
@@ -195,7 +212,6 @@ namespace DeliveryService.UnitTests.Services
             CreateUpdateDeliveryDto updateDto = new() { OrderId = Guid.NewGuid() };
 
             Mock<IDeliveryRepository> deliveryRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
 
             deliveryRepositoryMock
                 .Setup(r => r.FindByIdAsync(deliveryId, It.IsAny<CancellationToken>()))
@@ -203,7 +219,6 @@ namespace DeliveryService.UnitTests.Services
 
             DeliveryServiceService service = new(
                 deliveryRepositoryMock.Object,
-                mapperMock.Object,
                 new Mock<ILogger<DeliveryServiceService>>().Object,
                 new Mock<IPublishEndpoint>().Object,
                 new Mock<IOrderReadClient>().Object
@@ -215,33 +230,26 @@ namespace DeliveryService.UnitTests.Services
             result.Should().BeNull();
 
             deliveryRepositoryMock.Verify(d => d.FindByIdAsync(deliveryId, It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<CreateUpdateDeliveryDto, Delivery>(updateDto, It.IsAny<Delivery>()), Times.Never);
             deliveryRepositoryMock.Verify(d => d.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
-            mapperMock.Verify(m => m.Map<DeliveryDto>(It.IsAny<Delivery>()), Times.Never);
         }
 
 
 
         [Fact]
         [Trait("Category", "Unit")]
-        public async Task DeleteDeliveryAsync_ReturnsDeliveryDto_WhenExists()
+        public async Task DeleteDeliveryAsync_ReturnsTrue_WhenExists()
         {
-            Guid deliveryId = Guid.NewGuid();
+            Guid orderId = Guid.NewGuid();
 
-            Courier courier = new() { Id = Guid.NewGuid(), Name = "DHL" };
-            Delivery delivery = new() { Id = deliveryId, Courier = courier };
-            DeliveryDto expectedDto = new() { Id = deliveryId, CourierId = courier.Id };
+            Courier courier = MockCourier();
+            Delivery delivery = MockDelivery(orderId, courier.Id);
+
 
             Mock<IDeliveryRepository> deliveryRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
 
             deliveryRepositoryMock
-                .Setup(d => d.FindByIdAsync(deliveryId, It.IsAny<CancellationToken>()))
+                .Setup(d => d.FindByIdAsync(delivery.Id, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(delivery);
-
-            mapperMock
-                .Setup(m => m.Map<DeliveryDto>(delivery))
-                .Returns(expectedDto);
 
             deliveryRepositoryMock
                 .Setup(d => d.SaveChangesAsync(It.IsAny<CancellationToken>()))
@@ -249,19 +257,17 @@ namespace DeliveryService.UnitTests.Services
 
             DeliveryServiceService service = new(
                 deliveryRepositoryMock.Object,
-                mapperMock.Object,
                 new Mock<ILogger<DeliveryServiceService>>().Object,
                 new Mock<IPublishEndpoint>().Object,
                 new Mock<IOrderReadClient>().Object
             );
 
 
-            DeliveryDto? result = await service.DeleteDeliveryAsync(deliveryId, It.IsAny<CancellationToken>());
+            bool result = await service.DeleteDeliveryAsync(delivery.Id, It.IsAny<CancellationToken>());
 
-            result.Should().BeEquivalentTo(expectedDto);
+            result.Should().BeTrue();
 
-            deliveryRepositoryMock.Verify(d => d.FindByIdAsync(deliveryId, It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<DeliveryDto>(delivery),Times.Once);
+            deliveryRepositoryMock.Verify(d => d.FindByIdAsync(delivery.Id, It.IsAny<CancellationToken>()), Times.Once);
             deliveryRepositoryMock.Verify(d => d.Remove(delivery), Times.Once);
             deliveryRepositoryMock.Verify(d => d.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
@@ -270,12 +276,11 @@ namespace DeliveryService.UnitTests.Services
 
         [Fact]
         [Trait("Category", "Unit")]
-        public async Task DeleteDeliveryAsync_ReturnsNull_WhenNotExists()
+        public async Task DeleteDeliveryAsync_ReturnsFalse_WhenNotExists()
         {
             Guid deliveryId = Guid.NewGuid();
 
             Mock<IDeliveryRepository> deliveryRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
 
             deliveryRepositoryMock
                 .Setup(r => r.FindByIdAsync(deliveryId, It.IsAny<CancellationToken>()))
@@ -283,19 +288,17 @@ namespace DeliveryService.UnitTests.Services
 
             DeliveryServiceService service = new(
                 deliveryRepositoryMock.Object,
-                mapperMock.Object,
                 new Mock<ILogger<DeliveryServiceService>>().Object,
                 new Mock<IPublishEndpoint>().Object,
                 new Mock<IOrderReadClient>().Object
             );
 
 
-            DeliveryDto? result = await service.DeleteDeliveryAsync(deliveryId, It.IsAny<CancellationToken>());
+            bool result = await service.DeleteDeliveryAsync(deliveryId, It.IsAny<CancellationToken>());
 
-            result.Should().BeNull();
+            result.Should().BeFalse();
 
             deliveryRepositoryMock.Verify(d => d.FindByIdAsync(deliveryId, It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<DeliveryDto>(It.IsAny<Delivery>()), Times.Never);
             deliveryRepositoryMock.Verify(d => d.Remove(It.IsAny<Delivery>()), Times.Never);
             deliveryRepositoryMock.Verify(d => d.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
         }
@@ -306,42 +309,40 @@ namespace DeliveryService.UnitTests.Services
         [Trait("Category", "Unit")]
         public async Task ChangeDeliveryStatusAsync_ReturnsUpdated_WhenPendingToInProgress()
         {
-            Guid deliveryId = Guid.NewGuid();
+            Guid orderId = Guid.NewGuid();
 
-            Courier courier = new() { Id = Guid.NewGuid(), Name = "DHL" };
-            Delivery delivery = new() { Id = deliveryId, Status = DeliveryStatus.Pending, OrderId = Guid.NewGuid(), Courier = courier };
+            Courier courier = MockCourier();
+            Delivery delivery = MockDelivery(orderId, courier.Id);
             ChangeDeliveryStatusDto changeDto = new() { Status = DeliveryStatus.InProgress };
-            DeliveryDto expectedDto = new() { Id = deliveryId, Status = DeliveryStatus.InProgress };
+            DeliveryDto expectedDto = delivery.DeliveryToDeliveryDto() with { Status = DeliveryStatus.InProgress };
 
             Mock<IDeliveryRepository> deliveryRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
             Mock<IPublishEndpoint> publishEndpointMock = new();
             Mock<IOrderReadClient> orderReadClientMock = new();
 
             deliveryRepositoryMock
-                .Setup(d => d.FindByIdAsync(deliveryId, It.IsAny<CancellationToken>()))
+                .Setup(d => d.FindByIdAsync(delivery.Id, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(delivery);
 
-            mapperMock
-                .Setup(m => m.Map<DeliveryDto>(delivery))
-                .Returns(expectedDto);
+            deliveryRepositoryMock
+                .Setup(d => d.SaveChangesAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
 
             DeliveryServiceService service = new(
                 deliveryRepositoryMock.Object,
-                mapperMock.Object,
                 new Mock<ILogger<DeliveryServiceService>>().Object,
                 publishEndpointMock.Object,
                 orderReadClientMock.Object
             );
 
 
-            DeliveryDto? result = await service.ChangeDeliveryStatusAsync(deliveryId, changeDto, It.IsAny<CancellationToken>());
+            DeliveryDto? result = await service.ChangeDeliveryStatusAsync(delivery.Id, changeDto, It.IsAny<CancellationToken>());
 
-            result.Should().BeEquivalentTo(expectedDto);
+            result.Should().BeEquivalentTo(expectedDto, o => o.Excluding(x => x.UpdatedAt));
+            result!.UpdatedAt.Should().NotBeNull();
 
-            deliveryRepositoryMock.Verify(d => d.FindByIdAsync(deliveryId, It.IsAny<CancellationToken>()), Times.Once);
+            deliveryRepositoryMock.Verify(d => d.FindByIdAsync(delivery.Id, It.IsAny<CancellationToken>()), Times.Once);
             deliveryRepositoryMock.Verify(d => d.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<DeliveryDto>(delivery), Times.Once);
             publishEndpointMock.Verify(p => p.Publish(It.IsAny<DeliveryDeliveredEvent>(), It.IsAny<CancellationToken>()), Times.Never);
             publishEndpointMock.Verify(p => p.Publish(It.IsAny<DeliveryCanceledEvent>(), It.IsAny<CancellationToken>()), Times.Never);
             orderReadClientMock.Verify(c => c.GetUserIdByOrderIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -353,43 +354,42 @@ namespace DeliveryService.UnitTests.Services
         [Trait("Category", "Unit")]
         public async Task ChangeDeliveryStatusAsync_PublishesDeliveredEvent_WhenInProgressToDelivered()
         {
-            Guid deliveryId = Guid.NewGuid();
             Guid orderId = Guid.NewGuid();
 
-            Courier courier = new() { Id = Guid.NewGuid(), Name = "DHL" };
-            Delivery delivery = new() { Id = deliveryId, Status = DeliveryStatus.InProgress, OrderId = orderId, Courier = courier };
+            Courier courier = MockCourier();
+            Delivery delivery = MockDelivery(orderId, courier.Id);
+            delivery.ChangeStatus(DeliveryStatus.InProgress);
             ChangeDeliveryStatusDto changeDto = new() { Status = DeliveryStatus.Delivered };
-            DeliveryDto expectedDto = new() { Id = deliveryId, Status = DeliveryStatus.Delivered };
+            DeliveryDto expectedDto = delivery.DeliveryToDeliveryDto() with { Status = DeliveryStatus.Delivered };
 
             Mock<IDeliveryRepository> deliveryRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
             Mock<IPublishEndpoint> publishEndpointMock = new();
             Mock<IOrderReadClient> orderReadClientMock = new();
 
             deliveryRepositoryMock
-                .Setup(d => d.FindByIdAsync(deliveryId, It.IsAny<CancellationToken>()))
+                .Setup(d => d.FindByIdAsync(delivery.Id, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(delivery);
 
-            mapperMock
-                .Setup(m => m.Map<DeliveryDto>(delivery))
-                .Returns(expectedDto);
+            deliveryRepositoryMock
+                .Setup(d => d.SaveChangesAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
 
             DeliveryServiceService service = new(
                 deliveryRepositoryMock.Object,
-                mapperMock.Object,
                 new Mock<ILogger<DeliveryServiceService>>().Object,
                 publishEndpointMock.Object,
                 orderReadClientMock.Object
             );
 
 
-            DeliveryDto? result = await service.ChangeDeliveryStatusAsync(deliveryId, changeDto, It.IsAny<CancellationToken>());
+            DeliveryDto? result = await service.ChangeDeliveryStatusAsync(delivery.Id, changeDto, It.IsAny<CancellationToken>());
 
-            result.Should().BeEquivalentTo(expectedDto);
+            result.Should().BeEquivalentTo(expectedDto, o => o.Excluding(x => x.UpdatedAt).Excluding(x => x.DeliveredAt));
+            result!.UpdatedAt.Should().NotBeNull();
+            result.DeliveredAt.Should().NotBeNull();
 
-            deliveryRepositoryMock.Verify(d => d.FindByIdAsync(deliveryId, It.IsAny<CancellationToken>()), Times.Once);
+            deliveryRepositoryMock.Verify(d => d.FindByIdAsync(delivery.Id, It.IsAny<CancellationToken>()), Times.Once);
             deliveryRepositoryMock.Verify(d => d.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<DeliveryDto>(delivery), Times.Once);
             publishEndpointMock.Verify(p => p.Publish(It.IsAny<DeliveryDeliveredEvent>(), It.IsAny<CancellationToken>()), Times.Once);
             publishEndpointMock.Verify(p => p.Publish(It.IsAny<DeliveryCanceledEvent>(), It.IsAny<CancellationToken>()), Times.Never);
             orderReadClientMock.Verify(c => c.GetUserIdByOrderIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -401,49 +401,46 @@ namespace DeliveryService.UnitTests.Services
         [Trait("Category", "Unit")]
         public async Task ChangeDeliveryStatusAsync_PublishesCanceledEvent_WhenPendingToCanceled_AndUserExists()
         {
-            Guid deliveryId = Guid.NewGuid();
             Guid orderId = Guid.NewGuid();
             Guid userId = Guid.NewGuid();
 
-            Courier courier = new() { Id = Guid.NewGuid(), Name = "DHL" };
-            Delivery delivery = new() { Id = deliveryId, Status = DeliveryStatus.Pending, OrderId = orderId, Courier = courier };
+            Courier courier = MockCourier();
+            Delivery delivery = MockDelivery(orderId, courier.Id);
             ChangeDeliveryStatusDto changeDto = new() { Status = DeliveryStatus.Canceled };
-            DeliveryDto expectedDto = new() { Id = deliveryId, Status = DeliveryStatus.Canceled };
+            DeliveryDto expectedDto = delivery.DeliveryToDeliveryDto() with { Status = DeliveryStatus.Canceled };
 
             Mock<IDeliveryRepository> deliveryRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
             Mock<IPublishEndpoint> publishEndpointMock = new();
             Mock<IOrderReadClient> orderReadClientMock = new();
 
             deliveryRepositoryMock
-                .Setup(d => d.FindByIdAsync(deliveryId, It.IsAny<CancellationToken>()))
+                .Setup(d => d.FindByIdAsync(delivery.Id, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(delivery);
+
+            deliveryRepositoryMock
+                .Setup(d => d.SaveChangesAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
 
             orderReadClientMock
                 .Setup(c => c.GetUserIdByOrderIdAsync(orderId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(userId);
 
-            mapperMock
-                .Setup(m => m.Map<DeliveryDto>(delivery))
-                .Returns(expectedDto);
-
             DeliveryServiceService service = new(
                 deliveryRepositoryMock.Object,
-                mapperMock.Object,
                 new Mock<ILogger<DeliveryServiceService>>().Object,
                 publishEndpointMock.Object,
                 orderReadClientMock.Object
             );
 
 
-            DeliveryDto? result = await service.ChangeDeliveryStatusAsync(deliveryId, changeDto, It.IsAny<CancellationToken>());
+            DeliveryDto? result = await service.ChangeDeliveryStatusAsync(delivery.Id, changeDto, It.IsAny<CancellationToken>());
 
-            result.Should().BeEquivalentTo(expectedDto);
+            result.Should().BeEquivalentTo(expectedDto, o => o.Excluding(x => x.UpdatedAt));
+            result!.UpdatedAt.Should().NotBeNull();
 
-            deliveryRepositoryMock.Verify(d => d.FindByIdAsync(deliveryId, It.IsAny<CancellationToken>()), Times.Once);
+            deliveryRepositoryMock.Verify(d => d.FindByIdAsync(delivery.Id, It.IsAny<CancellationToken>()), Times.Once);
             deliveryRepositoryMock.Verify(d => d.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
             orderReadClientMock.Verify(c => c.GetUserIdByOrderIdAsync(orderId, It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<DeliveryDto>(delivery), Times.Once);
             publishEndpointMock.Verify(p => p.Publish(It.IsAny<DeliveryCanceledEvent>(), It.IsAny<CancellationToken>()), Times.Once);
             publishEndpointMock.Verify(p => p.Publish(It.IsAny<DeliveryDeliveredEvent>(), It.IsAny<CancellationToken>()), Times.Never);
         }
@@ -454,49 +451,47 @@ namespace DeliveryService.UnitTests.Services
         [Trait("Category", "Unit")]
         public async Task ChangeDeliveryStatusAsync_PublishesCanceledEvent_WhenInProgressToCanceled_AndUserExists()
         {
-            Guid deliveryId = Guid.NewGuid();
             Guid orderId = Guid.NewGuid();
             Guid userId = Guid.NewGuid();
 
-            Courier courier = new() { Id = Guid.NewGuid(), Name = "DHL" };
-            Delivery delivery = new() { Id = deliveryId, Status = DeliveryStatus.InProgress, OrderId = orderId, Courier = courier };
+            Courier courier = MockCourier();
+            Delivery delivery = MockDelivery(orderId, courier.Id);
+            delivery.ChangeStatus(DeliveryStatus.InProgress);
             ChangeDeliveryStatusDto changeDto = new() { Status = DeliveryStatus.Canceled };
-            DeliveryDto expectedDto = new() { Id = deliveryId, Status = DeliveryStatus.Canceled };
+            DeliveryDto expectedDto = delivery.DeliveryToDeliveryDto() with { Status = DeliveryStatus.Canceled };
 
             Mock<IDeliveryRepository> deliveryRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
             Mock<IPublishEndpoint> publishEndpointMock = new();
             Mock<IOrderReadClient> orderReadClientMock = new();
 
             deliveryRepositoryMock
-                .Setup(d => d.FindByIdAsync(deliveryId, It.IsAny<CancellationToken>()))
+                .Setup(d => d.FindByIdAsync(delivery.Id, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(delivery);
+
+            deliveryRepositoryMock
+                .Setup(d => d.SaveChangesAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
 
             orderReadClientMock
                 .Setup(c => c.GetUserIdByOrderIdAsync(orderId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(userId);
 
-            mapperMock
-                .Setup(m => m.Map<DeliveryDto>(delivery))
-                .Returns(expectedDto);
-
             DeliveryServiceService service = new(
                 deliveryRepositoryMock.Object,
-                mapperMock.Object,
                 new Mock<ILogger<DeliveryServiceService>>().Object,
                 publishEndpointMock.Object,
                 orderReadClientMock.Object
             );
 
 
-            DeliveryDto? result = await service.ChangeDeliveryStatusAsync(deliveryId, changeDto, It.IsAny<CancellationToken>());
+            DeliveryDto? result = await service.ChangeDeliveryStatusAsync(delivery.Id, changeDto, It.IsAny<CancellationToken>());
 
-            result.Should().BeEquivalentTo(expectedDto);
+            result.Should().BeEquivalentTo(expectedDto, o => o.Excluding(x => x.UpdatedAt));
+            result!.UpdatedAt.Should().NotBeNull();
 
-            deliveryRepositoryMock.Verify(d => d.FindByIdAsync(deliveryId, It.IsAny<CancellationToken>()), Times.Once);
+            deliveryRepositoryMock.Verify(d => d.FindByIdAsync(delivery.Id, It.IsAny<CancellationToken>()), Times.Once);
             deliveryRepositoryMock.Verify(d => d.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
             orderReadClientMock.Verify(c => c.GetUserIdByOrderIdAsync(orderId, It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<DeliveryDto>(delivery), Times.Once);
             publishEndpointMock.Verify(p => p.Publish(It.IsAny<DeliveryCanceledEvent>(), It.IsAny<CancellationToken>()), Times.Once);
             publishEndpointMock.Verify(p => p.Publish(It.IsAny<DeliveryDeliveredEvent>(), It.IsAny<CancellationToken>()), Times.Never);
         }
@@ -511,7 +506,6 @@ namespace DeliveryService.UnitTests.Services
             ChangeDeliveryStatusDto changeDto = new() { Status = DeliveryStatus.InProgress };
 
             Mock<IDeliveryRepository> deliveryRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
             Mock<IPublishEndpoint> publishEndpointMock = new();
             Mock<IOrderReadClient> orderReadClientMock = new();
 
@@ -521,7 +515,6 @@ namespace DeliveryService.UnitTests.Services
 
             DeliveryServiceService service = new(
                 deliveryRepositoryMock.Object,
-                mapperMock.Object,
                 new Mock<ILogger<DeliveryServiceService>>().Object,
                 publishEndpointMock.Object,
                 orderReadClientMock.Object
@@ -534,7 +527,6 @@ namespace DeliveryService.UnitTests.Services
 
             deliveryRepositoryMock.Verify(d => d.FindByIdAsync(deliveryId, It.IsAny<CancellationToken>()), Times.Once);
             deliveryRepositoryMock.Verify(d => d.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
-            mapperMock.Verify(m => m.Map<DeliveryDto>(It.IsAny<Delivery>()), Times.Never);
             publishEndpointMock.Verify(p => p.Publish(It.IsAny<DeliveryDeliveredEvent>(), It.IsAny<CancellationToken>()), Times.Never);
             publishEndpointMock.Verify(p => p.Publish(It.IsAny<DeliveryCanceledEvent>(), It.IsAny<CancellationToken>()), Times.Never);
             orderReadClientMock.Verify(c => c.GetUserIdByOrderIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -544,84 +536,68 @@ namespace DeliveryService.UnitTests.Services
 
         [Fact]
         [Trait("Category", "Unit")]
-        public async Task ChangeDeliveryStatusAsync_ReturnsNull_WhenInvalidTransition_FromPendingToDelivered()
+        public async Task ChangeDeliveryStatusAsync_ThrowsDomainException_WhenInvalidTransition_FromPendingToDelivered()
         {
-            Guid deliveryId = Guid.NewGuid();
+            Guid orderId = Guid.NewGuid();
 
-            Courier courier = new() { Id = Guid.NewGuid(), Name = "DHL" };
-            Delivery delivery = new() { Id = deliveryId, Status = DeliveryStatus.Pending, OrderId = Guid.NewGuid(), Courier = courier };
+            Courier courier = MockCourier();
+            Delivery delivery = MockDelivery(orderId, courier.Id);
             ChangeDeliveryStatusDto changeDto = new() { Status = DeliveryStatus.Delivered };
 
             Mock<IDeliveryRepository> deliveryRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
-            Mock<IPublishEndpoint> publishEndpointMock = new();
-            Mock<IOrderReadClient> orderReadClientMock = new();
 
             deliveryRepositoryMock
-                .Setup(d => d.FindByIdAsync(deliveryId, It.IsAny<CancellationToken>()))
+                .Setup(d => d.FindByIdAsync(delivery.Id, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(delivery);
 
             DeliveryServiceService service = new(
                 deliveryRepositoryMock.Object,
-                mapperMock.Object,
                 new Mock<ILogger<DeliveryServiceService>>().Object,
-                publishEndpointMock.Object,
-                orderReadClientMock.Object
+                new Mock<IPublishEndpoint>().Object,
+                new Mock<IOrderReadClient>().Object
             );
 
 
-            DeliveryDto? result = await service.ChangeDeliveryStatusAsync(deliveryId, changeDto, It.IsAny<CancellationToken>());
+            await service.Invoking(s => s.ChangeDeliveryStatusAsync(delivery.Id, changeDto, It.IsAny<CancellationToken>()))
+                .Should().ThrowAsync<DomainException>();
 
-            result.Should().BeNull();
-
-            deliveryRepositoryMock.Verify(d => d.FindByIdAsync(deliveryId, It.IsAny<CancellationToken>()), Times.Once);
+            deliveryRepositoryMock.Verify(d => d.FindByIdAsync(delivery.Id, It.IsAny<CancellationToken>()), Times.Once);
             deliveryRepositoryMock.Verify(d => d.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
-            mapperMock.Verify(m => m.Map<DeliveryDto>(It.IsAny<Delivery>()), Times.Never);
-            publishEndpointMock.Verify(p => p.Publish(It.IsAny<DeliveryDeliveredEvent>(), It.IsAny<CancellationToken>()), Times.Never);
-            publishEndpointMock.Verify(p => p.Publish(It.IsAny<DeliveryCanceledEvent>(), It.IsAny<CancellationToken>()), Times.Never);
-            orderReadClientMock.Verify(c => c.GetUserIdByOrderIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
         }
 
 
 
         [Fact]
         [Trait("Category", "Unit")]
-        public async Task ChangeDeliveryStatusAsync_ReturnsNull_WhenInvalidTransition_FromDeliveredToInProgress()
+        public async Task ChangeDeliveryStatusAsync_ThrowsDomainException_WhenInvalidTransition_FromDeliveredToInProgress()
         {
-            Guid deliveryId = Guid.NewGuid();
+            Guid orderId = Guid.NewGuid();
 
-            Courier courier = new() { Id = Guid.NewGuid(), Name = "DHL" };
-            Delivery delivery = new() { Id = deliveryId, Status = DeliveryStatus.Delivered, OrderId = Guid.NewGuid(), Courier = courier };
+            Courier courier = MockCourier();
+            Delivery delivery = MockDelivery(orderId, courier.Id);
+            delivery.ChangeStatus(DeliveryStatus.InProgress);
+            delivery.ChangeStatus(DeliveryStatus.Delivered);
             ChangeDeliveryStatusDto changeDto = new() { Status = DeliveryStatus.InProgress };
 
             Mock<IDeliveryRepository> deliveryRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
-            Mock<IPublishEndpoint> publishEndpointMock = new();
-            Mock<IOrderReadClient> orderReadClientMock = new();
 
             deliveryRepositoryMock
-                .Setup(d => d.FindByIdAsync(deliveryId, It.IsAny<CancellationToken>()))
+                .Setup(d => d.FindByIdAsync(delivery.Id, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(delivery);
 
             DeliveryServiceService service = new(
                 deliveryRepositoryMock.Object,
-                mapperMock.Object,
                 new Mock<ILogger<DeliveryServiceService>>().Object,
-                publishEndpointMock.Object,
-                orderReadClientMock.Object
+                new Mock<IPublishEndpoint>().Object,
+                new Mock<IOrderReadClient>().Object
             );
 
 
-            DeliveryDto? result = await service.ChangeDeliveryStatusAsync(deliveryId, changeDto, It.IsAny<CancellationToken>());
+            await service.Invoking(s => s.ChangeDeliveryStatusAsync(delivery.Id, changeDto, It.IsAny<CancellationToken>()))
+                .Should().ThrowAsync<DomainException>();
 
-            result.Should().BeNull();
-
-            deliveryRepositoryMock.Verify(d => d.FindByIdAsync(deliveryId, It.IsAny<CancellationToken>()), Times.Once);
+            deliveryRepositoryMock.Verify(d => d.FindByIdAsync(delivery.Id, It.IsAny<CancellationToken>()), Times.Once);
             deliveryRepositoryMock.Verify(d => d.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
-            mapperMock.Verify(m => m.Map<DeliveryDto>(It.IsAny<Delivery>()), Times.Never);
-            publishEndpointMock.Verify(p => p.Publish(It.IsAny<DeliveryDeliveredEvent>(), It.IsAny<CancellationToken>()), Times.Never);
-            publishEndpointMock.Verify(p => p.Publish(It.IsAny<DeliveryCanceledEvent>(), It.IsAny<CancellationToken>()), Times.Never);
-            orderReadClientMock.Verify(c => c.GetUserIdByOrderIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
         }
 
 
@@ -630,21 +606,23 @@ namespace DeliveryService.UnitTests.Services
         [Trait("Category", "Unit")]
         public async Task ChangeDeliveryStatusAsync_ReturnsNull_WhenCanceled_AndUserNotExists()
         {
-            Guid deliveryId = Guid.NewGuid();
             Guid orderId = Guid.NewGuid();
 
-            Courier courier = new() { Id = Guid.NewGuid(), Name = "DHL" };
-            Delivery delivery = new() { Id = deliveryId, Status = DeliveryStatus.Pending, OrderId = orderId, Courier = courier };
+            Courier courier = MockCourier();
+            Delivery delivery = MockDelivery(orderId, courier.Id);
             ChangeDeliveryStatusDto changeDto = new() { Status = DeliveryStatus.Canceled };
 
             Mock<IDeliveryRepository> deliveryRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
             Mock<IPublishEndpoint> publishEndpointMock = new();
             Mock<IOrderReadClient> orderReadClientMock = new();
 
             deliveryRepositoryMock
-                .Setup(d => d.FindByIdAsync(deliveryId, It.IsAny<CancellationToken>()))
+                .Setup(d => d.FindByIdAsync(delivery.Id, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(delivery);
+
+            deliveryRepositoryMock
+                .Setup(d => d.SaveChangesAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
 
             orderReadClientMock
                 .Setup(c => c.GetUserIdByOrderIdAsync(orderId, It.IsAny<CancellationToken>()))
@@ -652,26 +630,21 @@ namespace DeliveryService.UnitTests.Services
 
             DeliveryServiceService service = new(
                 deliveryRepositoryMock.Object,
-                mapperMock.Object,
                 new Mock<ILogger<DeliveryServiceService>>().Object,
                 publishEndpointMock.Object,
                 orderReadClientMock.Object
             );
 
 
-            DeliveryDto? result = await service.ChangeDeliveryStatusAsync(deliveryId, changeDto, It.IsAny<CancellationToken>());
+            DeliveryDto? result = await service.ChangeDeliveryStatusAsync(delivery.Id, changeDto, It.IsAny<CancellationToken>());
 
             result.Should().BeNull();
 
-            deliveryRepositoryMock.Verify(d => d.FindByIdAsync(deliveryId, It.IsAny<CancellationToken>()), Times.Once);
+            deliveryRepositoryMock.Verify(d => d.FindByIdAsync(delivery.Id, It.IsAny<CancellationToken>()), Times.Once);
             deliveryRepositoryMock.Verify(d => d.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
             orderReadClientMock.Verify(c => c.GetUserIdByOrderIdAsync(orderId, It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<DeliveryDto>(It.IsAny<Delivery>()), Times.Never);
             publishEndpointMock.Verify(p => p.Publish(It.IsAny<DeliveryCanceledEvent>(), It.IsAny<CancellationToken>()), Times.Never);
             publishEndpointMock.Verify(p => p.Publish(It.IsAny<DeliveryDeliveredEvent>(), It.IsAny<CancellationToken>()), Times.Never);
         }
-
-
-
     }
 }

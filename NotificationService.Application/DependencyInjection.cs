@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using NotificationService.Application.Interfaces.Services;
-using NotificationService.Application.Mapping;
 using NotificationServiceService = NotificationService.Application.Services.NotificationService;
 
 namespace NotificationService.Application
@@ -11,7 +10,6 @@ namespace NotificationService.Application
         {
             services.AddScoped<INotificationService, NotificationServiceService>();
 
-            services.AddAutoMapper(config => { }, typeof(AutomapperConfigurationProfile));
 
             return services;
         }

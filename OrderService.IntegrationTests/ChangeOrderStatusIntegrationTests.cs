@@ -1,11 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
+﻿using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Text;
-using System.Threading.Tasks;
 using FluentAssertions;
 using MassTransit.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -34,12 +29,11 @@ namespace OrderService.IntegrationTests
         private static HttpRequestMessage PatchJson(string url, object payload) =>
             new(HttpMethod.Patch, url) { Content = JsonContent.Create(payload) };
 
-        private static async Task<Guid> SeedOrderAsync(OrderDbContext db, OrderStatus current)
+        private static async Task<Guid> SeedOrderAsync(OrderDbContext db, OrderStatus status)
         {
-            Order order = new() { Id = Guid.NewGuid(), UserId = Guid.NewGuid(), Status = (OrderStatus)(int)current, Items = [] };
-
-            OrderItem item = new() { Id = Guid.NewGuid(), ProductId = Guid.NewGuid(), Quantity = 1, UnitPrice = 1200, Order = order };
-            order.Items.Add(item);
+            Order order = OrderTestHelper.CreateOrder(Guid.NewGuid(), status);
+            OrderItem item = OrderTestHelper.CreateOrderItem(order.Id, Guid.NewGuid(), "iPhone 16", 1200m, 1);
+            OrderTestHelper.AddItems(order, [item]);
 
             db.Orders.Add(order);
             await db.SaveChangesAsync();
@@ -47,12 +41,10 @@ namespace OrderService.IntegrationTests
         }
 
 
-
         [Fact]
         [Trait("Category", "Integration")]
         public async Task ChangeStatus_ReturnsOk_AndPublishesEvent_WhenValidTransition_Created_To_Paid()
         {
-            // Arrange: Created -> Paid
             Guid orderId;
             using var scope = _factory.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<OrderDbContext>();
@@ -75,7 +67,6 @@ namespace OrderService.IntegrationTests
         }
 
 
-
         [Fact]
         [Trait("Category", "Integration")]
         public async Task ChangeStatus_ReturnsNotFound_WhenOrderMissing()
@@ -89,12 +80,10 @@ namespace OrderService.IntegrationTests
         }
 
 
-
         [Fact]
         [Trait("Category", "Integration")]
         public async Task ChangeStatus_ReturnsNotFound_WhenInvalidTransition_Completed_To_Accepted()
         {
-            // Arrange: Completed -> Accepted (downgrade)
             Guid orderId;
             using var scope = _factory.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<OrderDbContext>();
@@ -109,12 +98,10 @@ namespace OrderService.IntegrationTests
         }
 
 
-
         [Fact]
         [Trait("Category", "Integration")]
         public async Task ChangeStatus_ReturnsNotFound_WhenTargetCompleted_ButDeliveryNotFound()
         {
-            // Arrange: Shipped -> Completed, ale delivery vrátí null
             Guid orderId;
             using var scope = _factory.Services.CreateScope();
             var db = scope.ServiceProvider.GetRequiredService<OrderDbContext>();
@@ -125,7 +112,6 @@ namespace OrderService.IntegrationTests
                 .Setup(c => c.GetDeliveryStatusByOrderIdAsync(orderId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Shared.Contracts.Enums.DeliveryStatus?)null);
 
-
             var client = CreateAdminClient();
             var payload = new { status = (int)OrderStatus.Completed };
 
@@ -135,15 +121,12 @@ namespace OrderService.IntegrationTests
         }
 
 
-
         [Fact]
         [Trait("Category", "Integration")]
         public async Task ChangeStatus_ReturnsNotFound_WhenTargetCompleted_ButDeliveryNotDelivered()
         {
-            // Arrange: Shipped -> Completed, but delivery is not Delivered
             Guid orderId;
             using var scope = _factory.Services.CreateScope();
-
             var db = scope.ServiceProvider.GetRequiredService<OrderDbContext>();
             orderId = await SeedOrderAsync(db, OrderStatus.Shipped);
 
@@ -159,7 +142,6 @@ namespace OrderService.IntegrationTests
 
             response.StatusCode.Should().Be(HttpStatusCode.NotFound);
         }
-
 
 
         [Fact]
@@ -191,8 +173,5 @@ namespace OrderService.IntegrationTests
             var harness = scopeVerify.ServiceProvider.GetRequiredService<ITestHarness>();
             (await harness.Published.Any<OrderStatusChangedEvent>()).Should().BeTrue();
         }
-
-
-
     }
 }

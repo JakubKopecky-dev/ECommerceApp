@@ -25,7 +25,6 @@ builder.WebHost.ConfigureKestrel(options =>
     });
 });
 
-#region Register services (Dependency Injection)
 
 // Persistence (DbContext)
 builder.Services.AddPersistenceServices(builder.Configuration);
@@ -41,14 +40,12 @@ builder.Services.AddControllers().AddJsonOptions(options =>
     options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 // Swagger
-builder.Services.AddSwaggerWithJwt(builder.Environment);
+builder.Services.AddOpenApiWithJwt();
 
 
-#endregion
 
 var app = builder.Build();
 
-#region Middleware pipeline
 
 var env = app.Services.GetRequiredService<IWebHostEnvironment>();
 
@@ -59,10 +56,15 @@ if (!env.IsEnvironment("Test"))
 // Swagger
 if (builder.Configuration.GetValue<bool>("EnableSwagger"))
 {
-    app.UseSwagger();
+    app.MapOpenApi();
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("./UserService/swagger.json", "UserService - v1");
+        options.RoutePrefix = "swagger";
+
+        if (app.Environment.IsDevelopment())
+            options.SwaggerEndpoint("/openapi/v1.json", "UserService - v1");
+        else
+            options.SwaggerEndpoint("/user/openapi/v1.json", "UserService - v1");
     });
 }
 
@@ -84,9 +86,7 @@ if (!env.IsEnvironment("Test"))
     await RoleSeeder.SeedRolesAsync(app.Services);
 
 
-#endregion
-
 
 app.Run();
 
-public partial class Program { };
+

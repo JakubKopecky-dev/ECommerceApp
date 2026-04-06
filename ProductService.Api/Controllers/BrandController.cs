@@ -56,9 +56,9 @@ namespace ProductService.Api.Controllers
         [HttpDelete("{brandId}")]
         public async Task<IActionResult> DeleteBrand(Guid brandId, CancellationToken ct)
         {
-            BrandDto? brand = await _brandService.DeleteBrandAsync(brandId, ct);
+            bool isDeleted = await _brandService.DeleteBrandAsync(brandId, ct);
 
-            return brand is not null ? Ok(brand) : NotFound();
+            return isDeleted ? NoContent() : NotFound();
         }
 
 

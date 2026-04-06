@@ -55,9 +55,9 @@ namespace OrderService.Api.Controllers
         [HttpDelete("{orderItemId}")]
         public async Task<IActionResult> DeleteOrderItem(Guid orderItemId, CancellationToken ct)
         {
-            OrderItemDto? orderItem = await _orderItemService.DeleteOrderItemAsync(orderItemId, ct);
+            bool isDeleted = await _orderItemService.DeleteOrderItemAsync(orderItemId, ct);
 
-            return orderItem is not null ? Ok(orderItem) : NotFound();
+            return isDeleted? NoContent() : NotFound();
         }
 
 

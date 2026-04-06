@@ -4,15 +4,13 @@ namespace ProductService.Application.DTOs.Product
 {
     public sealed record CreateProductDto
     {
-        [MaxLength(500)]
+        [MaxLength(150)]
         public string Title { get; init; } = "";
 
-        [MaxLength(2000)]
         public string Description { get; init; } = "";
 
         public uint QuantityInStock { get; init; }
 
-        public bool IsActive { get; init; }
 
         public decimal Price { get; init; }
         

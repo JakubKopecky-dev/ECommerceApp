@@ -1,21 +1,36 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using AutoMapper;
-using FluentAssertions;
+﻿using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Moq;
 using ProductService.Application.DTOs.Brand;
 using ProductService.Application.Interfaces.Repositories;
 using ProductService.Application.Services;
 using ProductService.Domain.Entities;
+using System.Reflection;
 
 namespace ProductService.UnitTests.Services
 {
     public class BrandServiceTests
     {
+        private static BrandService CreateService(
+            Mock<IBrandRepository> brandRepositoryMock,
+            Mock<IProductRepository>? productRepositoryMock = null,
+            Mock<IProductReviewRepository>? productReviewRepositoryMock = null)
+        {
+            return new BrandService(
+                brandRepositoryMock.Object,
+                (productRepositoryMock ?? new Mock<IProductRepository>()).Object,
+                (productReviewRepositoryMock ?? new Mock<IProductReviewRepository>()).Object,
+                new Mock<ILogger<BrandService>>().Object
+            );
+        }
+
+        private static void AddProducts(Brand brand, IEnumerable<Product> products)
+        {
+            var field = typeof(Brand).GetField("_products", BindingFlags.NonPublic | BindingFlags.Instance);
+            var list = (List<Product>)field!.GetValue(brand)!;
+            list.AddRange(products);
+        }
+
 
         [Fact]
         [Trait("Category", "Unit")]
@@ -23,120 +38,63 @@ namespace ProductService.UnitTests.Services
         {
             List<Brand> brands =
             [
-                new() {Id =Guid.NewGuid(),Title = "Apple"},
-                new() {Id = Guid.NewGuid(), Title = "ASUS"}
-            ];
-
-            List<BrandDto> expectedDto =
-            [
-                new() {Id = brands[0].Id, Title = "Apple"},
-                new() {Id = brands[1].Id,Title = "ASUS"}
+                Brand.Create("Apple", "Tech company"),
+                Brand.Create("ASUS", "Tech company")
             ];
 
             Mock<IBrandRepository> brandRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
-
             brandRepositoryMock
                 .Setup(b => b.GetAllAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(brands);
 
-            mapperMock
-                .Setup(m => m.Map<List<BrandDto>>(brands))
-                .Returns(expectedDto);
-
-            BrandService service = new(
-                brandRepositoryMock.Object,
-                new Mock<IProductRepository>().Object,
-                new Mock<IProductReviewRepository>().Object,
-                mapperMock.Object,
-                new Mock<ILogger<BrandService>>().Object
-                );
-
+            var service = CreateService(brandRepositoryMock);
 
             IReadOnlyList<BrandDto> result = await service.GetAllBrandsAsync();
 
-            result.Should().BeEquivalentTo(expectedDto);
-
-            brandRepositoryMock.Verify(b => b.GetAllAsync(It.IsAny<CancellationToken>()));
-            mapperMock.Verify(m => m.Map<List<BrandDto>>(brands), Times.Once);
+            result.Should().HaveCount(2);
+            brandRepositoryMock.Verify(b => b.GetAllAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
-
 
 
         [Fact]
         [Trait("Category", "Unit")]
         public async Task GetAllBrandsAsync_ReturnsEmptyList_WhenNotExists()
         {
-            List<Brand> brands = [];
-            List<BrandDto> expectedDto = [];
-
             Mock<IBrandRepository> brandRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
-
             brandRepositoryMock
                 .Setup(b => b.GetAllAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(brands);
+                .ReturnsAsync([]);
 
-            mapperMock
-                .Setup(m => m.Map<List<BrandDto>>(brands))
-                .Returns(expectedDto);
-
-            BrandService service = new(
-                brandRepositoryMock.Object,
-                new Mock<IProductRepository>().Object,
-                new Mock<IProductReviewRepository>().Object,
-                mapperMock.Object,
-                new Mock<ILogger<BrandService>>().Object
-                );
-
+            var service = CreateService(brandRepositoryMock);
 
             IReadOnlyList<BrandDto> result = await service.GetAllBrandsAsync();
 
-            result.Should().BeEquivalentTo(expectedDto);
-
-            brandRepositoryMock.Verify(b => b.GetAllAsync(It.IsAny<CancellationToken>()));
-            mapperMock.Verify(m => m.Map<List<BrandDto>>(brands), Times.Once);
+            result.Should().BeEmpty();
+            brandRepositoryMock.Verify(b => b.GetAllAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
-
 
 
         [Fact]
         [Trait("Category", "Unit")]
         public async Task GetBrandByIdAsync_ReturnsBrandDto_WhenExists()
         {
-            Guid brandId = Guid.NewGuid();
-
-            Brand brand = new() { Id = brandId, Title = "Apple" };
-            BrandDto expectedDto = new() { Id = brandId, Title = "Apple" };
+            Brand brand = Brand.Create("Apple", "Tech company");
+            Guid brandId = brand.Id;
 
             Mock<IBrandRepository> brandRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
-
             brandRepositoryMock
                 .Setup(b => b.FindByIdAsync(brandId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(brand);
 
-            mapperMock
-                .Setup(m => m.Map<BrandDto>(brand))
-                .Returns(expectedDto);
-
-            BrandService service = new(
-                brandRepositoryMock.Object,
-                new Mock<IProductRepository>().Object,
-                new Mock<IProductReviewRepository>().Object,
-                mapperMock.Object,
-                new Mock<ILogger<BrandService>>().Object
-                );
-
+            var service = CreateService(brandRepositoryMock);
 
             BrandDto? result = await service.GetBrandByIdAsync(brandId);
 
-            result.Should().BeEquivalentTo(expectedDto);
-
+            result.Should().NotBeNull();
+            result!.Id.Should().Be(brandId);
+            result.Title.Should().Be("Apple");
             brandRepositoryMock.Verify(b => b.FindByIdAsync(brandId, It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<BrandDto>(brand), Times.Once);
         }
-
 
 
         [Fact]
@@ -146,124 +104,75 @@ namespace ProductService.UnitTests.Services
             Guid brandId = Guid.NewGuid();
 
             Mock<IBrandRepository> brandRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
-
             brandRepositoryMock
                 .Setup(b => b.FindByIdAsync(brandId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Brand?)null);
 
-            BrandService service = new(
-                brandRepositoryMock.Object,
-                new Mock<IProductRepository>().Object,
-                new Mock<IProductReviewRepository>().Object,
-                mapperMock.Object,
-                new Mock<ILogger<BrandService>>().Object
-                );
-
+            var service = CreateService(brandRepositoryMock);
 
             BrandDto? result = await service.GetBrandByIdAsync(brandId);
 
             result.Should().BeNull();
-
             brandRepositoryMock.Verify(b => b.FindByIdAsync(brandId, It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<BrandDto>(It.IsAny<Brand>()), Times.Never);
         }
-
 
 
         [Fact]
         [Trait("Category", "Unit")]
-        public async Task CreateBrandAsync_RetursBrandDto()
+        public async Task CreateBrandAsync_ReturnsBrandDto()
         {
-            CreateUpdateBrandDto createDto = new() { Title = "Apple" };
+            CreateUpdateBrandDto createDto = new() { Title = "Apple", Description = "Tech company" };
 
-            Brand brand = new() { Id = Guid.Empty, Title = "Apple", CreatedAt = DateTime.UtcNow };
-            Brand createdBrand = new() { Id = Guid.NewGuid(), Title = "Apple", CreatedAt = brand.CreatedAt };
-            BrandDto expectedDto = new() { Id = createdBrand.Id, Title = "Apple", CreatedAt = brand.CreatedAt };
-
-            Mock<IMapper> mapperMock = new();
             Mock<IBrandRepository> brandRepositoryMock = new();
-
-            mapperMock
-                .Setup(m => m.Map<Brand>(createDto))
-                .Returns(brand);
+            brandRepositoryMock
+                .Setup(b => b.AddAsync(It.IsAny<Brand>(), It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
 
             brandRepositoryMock
-                .Setup(b => b.InsertAsync(brand, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(createdBrand);
+                .Setup(b => b.SaveChangesAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
 
-            mapperMock
-                .Setup(m => m.Map<BrandDto>(createdBrand))
-                .Returns(expectedDto);
-
-            BrandService service = new(
-                brandRepositoryMock.Object,
-                new Mock<IProductRepository>().Object,
-                new Mock<IProductReviewRepository>().Object,
-                mapperMock.Object,
-                new Mock<ILogger<BrandService>>().Object
-                );
-
+            var service = CreateService(brandRepositoryMock);
 
             BrandDto result = await service.CreateBrandAsync(createDto);
 
-            result.Should().BeEquivalentTo(expectedDto);
+            result.Should().NotBeNull();
+            result.Title.Should().Be(createDto.Title);
+            result.Description.Should().Be(createDto.Description);
 
-            mapperMock.Verify(m => m.Map<Brand>(createDto), Times.Once);
-            brandRepositoryMock.Verify(b => b.InsertAsync(brand, It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<BrandDto>(createdBrand), Times.Once);
+            brandRepositoryMock.Verify(b => b.AddAsync(It.IsAny<Brand>(), It.IsAny<CancellationToken>()), Times.Once);
+            brandRepositoryMock.Verify(b => b.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
-
 
 
         [Fact]
         [Trait("Category", "Unit")]
         public async Task UpdateBrandAsync_ReturnsBrandDto_WhenExists()
         {
-            Guid brandId = Guid.NewGuid();
-            CreateUpdateBrandDto updateDto = new() { Title = "Asus", Description = "Company" };
-
-            Brand brandDb = new() { Id = brandId, Title = "Apple", Description = "Comp", UpdatedAt = DateTime.UtcNow };
-            BrandDto expectedDto = new() { Id = brandId, Title = updateDto.Title, Description = updateDto.Description, UpdatedAt = brandDb.UpdatedAt };
+            Brand brand = Brand.Create("Apple", "Tech company");
+            Guid brandId = brand.Id;
+            CreateUpdateBrandDto updateDto = new() { Title = "ASUS", Description = "Another tech company" };
 
             Mock<IBrandRepository> brandRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
-
             brandRepositoryMock
                 .Setup(b => b.FindByIdAsync(brandId, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(brandDb);
-
-            mapperMock
-                .Setup(m => m.Map<CreateUpdateBrandDto, Brand>(updateDto, brandDb))
-                .Returns(brandDb);
+                .ReturnsAsync(brand);
 
             brandRepositoryMock
                 .Setup(b => b.SaveChangesAsync(It.IsAny<CancellationToken>()))
                 .Returns(Task.CompletedTask);
 
-            mapperMock
-                .Setup(m => m.Map<BrandDto>(brandDb))
-                .Returns(expectedDto);
-
-            BrandService service = new(
-                brandRepositoryMock.Object,
-                new Mock<IProductRepository>().Object,
-                new Mock<IProductReviewRepository>().Object,
-                mapperMock.Object,
-                new Mock<ILogger<BrandService>>().Object
-                );
-
+            var service = CreateService(brandRepositoryMock);
 
             BrandDto? result = await service.UpdateBrandAsync(brandId, updateDto);
 
-            result.Should().BeEquivalentTo(expectedDto);
+            result.Should().NotBeNull();
+            result!.Title.Should().Be(updateDto.Title);
+            result.Description.Should().Be(updateDto.Description);
 
             brandRepositoryMock.Verify(b => b.FindByIdAsync(brandId, It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<CreateUpdateBrandDto, Brand>(updateDto, brandDb), Times.Once);
             brandRepositoryMock.Verify(b => b.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<BrandDto>(brandDb), Times.Once);
         }
-
 
 
         [Fact]
@@ -271,147 +180,72 @@ namespace ProductService.UnitTests.Services
         public async Task UpdateBrandAsync_ReturnsNull_WhenNotExists()
         {
             Guid brandId = Guid.NewGuid();
-            CreateUpdateBrandDto updateDto = new() { Title = "Asus", Description = "Company" };
+            CreateUpdateBrandDto updateDto = new() { Title = "ASUS", Description = "Company" };
 
             Mock<IBrandRepository> brandRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
-
             brandRepositoryMock
                 .Setup(b => b.FindByIdAsync(brandId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Brand?)null);
 
-            BrandService service = new(
-                brandRepositoryMock.Object,
-                new Mock<IProductRepository>().Object,
-                new Mock<IProductReviewRepository>().Object,
-                mapperMock.Object,
-                new Mock<ILogger<BrandService>>().Object
-                );
-
+            var service = CreateService(brandRepositoryMock);
 
             BrandDto? result = await service.UpdateBrandAsync(brandId, updateDto);
 
             result.Should().BeNull();
 
             brandRepositoryMock.Verify(b => b.FindByIdAsync(brandId, It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<CreateUpdateBrandDto, Brand>(updateDto, It.IsAny<Brand>()), Times.Never);
             brandRepositoryMock.Verify(b => b.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
-            mapperMock.Verify(m => m.Map<BrandDto>(It.IsAny<Brand>()), Times.Never);
         }
-
 
 
         [Fact]
         [Trait("Category", "Unit")]
-        public async Task DeleteBrandAsync_ReturnsBrandDto_WhenExists()
+        public async Task DeleteBrandAsync_ReturnsTrue_WhenExists()
         {
-            Guid brandId = Guid.NewGuid();
-
-            Brand brand = new() { Id = brandId, Title = "Apple" };
-            Product product1 = new() { Id = Guid.NewGuid(), Brand = brand, Title = "iPhone 17", Categories = [new() { Id = Guid.NewGuid(), Title = "Phone" }] };
-            Product product2 = new() { Id = Guid.NewGuid(), Brand = brand, Title = "MacBook Air", Categories = [new() { Id = Guid.NewGuid(), Title = "Laptop" }] };
-            ProductReview review1 = new() { Id = Guid.NewGuid(), Product = product1, UserId = Guid.NewGuid() };
-            ProductReview review2 = new() { Id = Guid.NewGuid(), Product = product1, UserId = Guid.NewGuid() };
-            product1.Reviews.Add(review1);
-            product1.Reviews.Add(review2);
-            brand.Products.Add(product1);
-            brand.Products.Add(product2);
-
-            BrandDto expectedDto = new() { Id = brandId, Title = "Apple" };
+            Brand brand = Brand.Create("Apple", "Tech company");
+            Guid brandId = brand.Id;
 
             Mock<IBrandRepository> brandRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
-            Mock<IProductRepository> productRepositoryMock = new();
-            Mock<IProductReviewRepository> productReviewRepositoryMock = new();
-
             brandRepositoryMock
                 .Setup(b => b.FindBrandByIdWithIncludes(brandId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(brand);
-
-            mapperMock
-                .Setup(m => m.Map<BrandDto>(brand))
-                .Returns(expectedDto);
-
-            productReviewRepositoryMock
-                .Setup(r => r.DeleteAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
-                .Returns(Task.CompletedTask);
-
-            productRepositoryMock
-                .Setup(p => p.UpdateAsync(It.IsAny<Product>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync((Product p, CancellationToken _) => p);
-
-            productRepositoryMock
-                .Setup(p => p.DeleteAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
-                .Returns(Task.CompletedTask);
 
             brandRepositoryMock
                 .Setup(b => b.SaveChangesAsync(It.IsAny<CancellationToken>()))
                 .Returns(Task.CompletedTask);
 
-            BrandService service = new(
-                brandRepositoryMock.Object,
-                productRepositoryMock.Object,
-                productReviewRepositoryMock.Object,
-                mapperMock.Object,
-                new Mock<ILogger<BrandService>>().Object
-                );
+            var service = CreateService(brandRepositoryMock);
 
+            bool result = await service.DeleteBrandAsync(brandId);
 
-            BrandDto? result = await service.DeleteBrandAsync(brandId);
-
-            result.Should().BeEquivalentTo(expectedDto);
-            product1.Categories.Should().BeEmpty();
-            product2.Categories.Should().BeEmpty();
+            result.Should().BeTrue();
 
             brandRepositoryMock.Verify(b => b.FindBrandByIdWithIncludes(brandId, It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<BrandDto>(brand), Times.Once);
-            productReviewRepositoryMock.Verify(r => r.DeleteAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
-            productRepositoryMock.Verify(p => p.UpdateAsync(It.IsAny<Product>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
-            productRepositoryMock.Verify(p => p.DeleteAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Exactly(2));
             brandRepositoryMock.Verify(b => b.Remove(brand), Times.Once);
             brandRepositoryMock.Verify(b => b.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
 
 
-
         [Fact]
         [Trait("Category", "Unit")]
-        public async Task DeleteBrandAsync_ReturnsNull_WhenNotExists()
+        public async Task DeleteBrandAsync_ReturnsFalse_WhenNotExists()
         {
             Guid brandId = Guid.NewGuid();
 
             Mock<IBrandRepository> brandRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
-            Mock<IProductRepository> productRepositoryMock = new();
-            Mock<IProductReviewRepository> productReviewRepositoryMock = new();
-
             brandRepositoryMock
                 .Setup(b => b.FindBrandByIdWithIncludes(brandId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Brand?)null);
 
-            BrandService service = new(
-                brandRepositoryMock.Object,
-                productRepositoryMock.Object,
-                productReviewRepositoryMock.Object,
-                mapperMock.Object,
-                new Mock<ILogger<BrandService>>().Object
-                );
+            var service = CreateService(brandRepositoryMock);
 
+            bool result = await service.DeleteBrandAsync(brandId);
 
-            BrandDto? result = await service.DeleteBrandAsync(brandId);
-
-            result.Should().BeNull();
+            result.Should().BeFalse();
 
             brandRepositoryMock.Verify(b => b.FindBrandByIdWithIncludes(brandId, It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<BrandDto>(It.IsAny<Brand>()), Times.Never);
-            productReviewRepositoryMock.Verify(r => r.DeleteAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
-            productRepositoryMock.Verify(p => p.UpdateAsync(It.IsAny<Product>(), It.IsAny<CancellationToken>()), Times.Never);
-            productRepositoryMock.Verify(p => p.DeleteAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
             brandRepositoryMock.Verify(b => b.Remove(It.IsAny<Brand>()), Times.Never);
             brandRepositoryMock.Verify(b => b.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
         }
-
-
-
     }
 }

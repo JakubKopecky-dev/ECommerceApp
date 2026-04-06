@@ -23,7 +23,6 @@ builder.WebHost.ConfigureKestrel(options =>
     });
 });
 
-#region Register services (Dependency Injection)
 
 // Persistence (DbContext, Repository)
 builder.Services.AddPersistenceServices(builder.Configuration);
@@ -45,14 +44,12 @@ options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddSignalR();
 
 // Swagger
-builder.Services.AddSwaggerWithJwt(builder.Environment);
+builder.Services.AddOpenApiWithJwt();
 
-#endregion
 
 var app = builder.Build();
 
 
-#region Middleware pipeline
 
 var env = app.Services.GetRequiredService<IWebHostEnvironment>();
 
@@ -63,10 +60,15 @@ if (!env.IsEnvironment("Test"))
 // Swagger
 if (builder.Configuration.GetValue<bool>("EnableSwagger"))
 {
-    app.UseSwagger();
+    app.MapOpenApi();
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("./NotificationService/swagger.json", "NotificationService - v1");
+        options.RoutePrefix = "swagger";
+
+        if (app.Environment.IsDevelopment())
+            options.SwaggerEndpoint("/openapi/v1.json", "NotificationService - v1");
+        else
+            options.SwaggerEndpoint("/notification/openapi/v1.json", "NotificationService - v1");
     });
 }
 
@@ -86,11 +88,9 @@ app.MapControllers();
 // Notification hubu map
 app.MapHub<NotificationHub>("/hubs/notifications");
 
-#endregion
 
 
 app.Run();
 
 
-public partial class Program { };
 

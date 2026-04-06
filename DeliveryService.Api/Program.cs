@@ -23,12 +23,11 @@ builder.WebHost.ConfigureKestrel(options =>
     });
 });
 
-#region Register Services (Dependency Injection)
 
 // Persistence (DbContext, Repositories)
 builder.Services.AddPersistenceServices(builder.Configuration);
 
-// Application (Services, AutoMapper)
+// Application (Services)
 builder.Services.AddApplicationServices();
 
 //Authentication
@@ -48,14 +47,11 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 // Swagger
-builder.Services.AddSwaggerWithJwt(builder.Environment);
-
-#endregion
+builder.Services.AddOpenApiWithJwt();
 
 
 var app = builder.Build();
 
-#region Middleware pipeline
 
 var env = app.Services.GetRequiredService<IWebHostEnvironment>();
 
@@ -63,13 +59,17 @@ var env = app.Services.GetRequiredService<IWebHostEnvironment>();
 if (!env.IsEnvironment("Test"))
     app.ApplyMigrations();
 
-// Swagger
 if (builder.Configuration.GetValue<bool>("EnableSwagger"))
 {
-    app.UseSwagger();
+    app.MapOpenApi();
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("./DeliveryService/swagger.json", "DeliveryService - v1");
+        options.RoutePrefix = "swagger";
+
+        if (app.Environment.IsDevelopment())
+            options.SwaggerEndpoint("/openapi/v1.json", "DeliveryService - v1");
+        else
+            options.SwaggerEndpoint("/delivery/openapi/v1.json", "DeliveryService - v1");
     });
 }
 
@@ -89,12 +89,9 @@ app.MapControllers();
 // gRPC map
 app.MapGrpcService<DeliveryGrpcService>();
 
-#endregion
 
 
 app.Run();
 
 
-
-public partial class Program { };
 

@@ -17,43 +17,14 @@ namespace OrderService.Persistence.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.8")
+                .HasAnnotation("ProductVersion", "10.0.5")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("OrderService.Domain.Common.AuditEventOrderLog", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<string>("Data")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("EntityName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("EventType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("InsertedDate")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("AuditEventOrderLogs");
-                });
-
-            modelBuilder.Entity("OrderService.Domain.Entity.Order", b =>
+            modelBuilder.Entity("OrderService.Domain.Entities.Order", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -66,7 +37,8 @@ namespace OrderService.Persistence.Migrations
                         .HasColumnType("int");
 
                     b.Property<string>("Note")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -86,10 +58,9 @@ namespace OrderService.Persistence.Migrations
                     b.ToTable("Orders");
                 });
 
-            modelBuilder.Entity("OrderService.Domain.Entity.OrderItem", b =>
+            modelBuilder.Entity("OrderService.Domain.Entities.OrderItem", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -103,7 +74,8 @@ namespace OrderService.Persistence.Migrations
 
                     b.Property<string>("ProductName")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
 
                     b.Property<long>("Quantity")
                         .HasColumnType("bigint");
@@ -122,9 +94,9 @@ namespace OrderService.Persistence.Migrations
                     b.ToTable("OrderItems");
                 });
 
-            modelBuilder.Entity("OrderService.Domain.Entity.OrderItem", b =>
+            modelBuilder.Entity("OrderService.Domain.Entities.OrderItem", b =>
                 {
-                    b.HasOne("OrderService.Domain.Entity.Order", "Order")
+                    b.HasOne("OrderService.Domain.Entities.Order", "Order")
                         .WithMany("Items")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -133,7 +105,7 @@ namespace OrderService.Persistence.Migrations
                     b.Navigation("Order");
                 });
 
-            modelBuilder.Entity("OrderService.Domain.Entity.Order", b =>
+            modelBuilder.Entity("OrderService.Domain.Entities.Order", b =>
                 {
                     b.Navigation("Items");
                 });

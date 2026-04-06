@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using ProductService.Application.DTOs.Product;
 using ProductService.Application.Interfaces.Repositories;
 using ProductService.Application.Interfaces.Services;
@@ -9,12 +8,11 @@ using Shared.Contracts.DTOs;
 
 namespace ProductService.Application.Services
 {
-    public class ProductService(IProductRepository productRepository, ICategoryRepository categoryRepository, IProductReviewRepository productReviewRepository, IMapper mapper, ILogger<ProductService> logger) : IProductService
+    public class ProductService(IProductRepository productRepository, ICategoryRepository categoryRepository, IProductReviewRepository productReviewRepository, ILogger<ProductService> logger) : IProductService
     {
         private readonly IProductRepository _productRepository = productRepository;
         private readonly ICategoryRepository _categoryRepository = categoryRepository;
         private readonly IProductReviewRepository _productReviewRepository = productReviewRepository;
-        private readonly IMapper _mapper = mapper;
         private readonly ILogger<ProductService> _logger = logger;
 
 
@@ -26,7 +24,7 @@ namespace ProductService.Application.Services
             IReadOnlyList<Product> products = await _productRepository.GetAllAsync(ct);
             _logger.LogInformation("Retrieved all products. Count: {Count}.", products.Count);
 
-            return _mapper.Map<List<ProductDto>>(products);
+            return [.. products.Select(x => x.ProductToProductDto())];
         }
 
 
@@ -43,7 +41,7 @@ namespace ProductService.Application.Services
 
             _logger.LogInformation("Product found. ProductId: {ProductId}.", productId);
 
-            return _mapper.Map<ProductExtendedDto>(product);
+            return product.ProductToProductExtendedDto();
         }
 
 
@@ -52,33 +50,20 @@ namespace ProductService.Application.Services
         {
             _logger.LogInformation("Creating new product. Title: {Title}.", createDto.Title);
 
-            Product product = _mapper.Map<Product>(createDto);
-            product.Id = Guid.Empty;
-            product.CreatedAt = DateTime.UtcNow;
+            Product product = Product.Create(createDto.Title,createDto.Description,createDto.Price,createDto.ImageUrl,createDto.BrandId);
+            product.AddStock(createDto.QuantityInStock);
 
             List<Category> categories = await _categoryRepository.GetCategoriesByName(createDto.Categories, ct);
 
-            categories.ForEach(product.Categories.Add);
+            product.SetCategories(categories);
 
-            Product createdProduct = await _productRepository.InsertAsync(product, ct);
-            _logger.LogInformation("Product created. ProductId: {ProductId}", createdProduct.Id);
+            await _productRepository.AddAsync(product, ct);
+            await _productRepository.SaveChangesAsync(ct);
+
+            _logger.LogInformation("Product created. ProductId: {ProductId}", product.Id);
 
 
-            return new ProductExtendedDto
-            {
-                Id = createdProduct.Id,
-                Title = createdProduct.Title,
-                Description = createdProduct.Description,
-                QuantityInStock = createdProduct.QuantityInStock,
-                IsActive = createdProduct.IsActive,
-                SoldCount = createdProduct.SoldCount,
-                Price = createdProduct.Price,
-                ImageUrl = createdProduct.ImageUrl,
-                CreatedAt = createdProduct.CreatedAt,
-                UpdatedAt = createdProduct.UpdatedAt,
-                BrandId = createdProduct.BrandId,
-                Categories = [.. createdProduct.Categories.Select(c => c.Title)]
-            }; 
+            return product.ProductToProductExtendedDto();
         }
 
 
@@ -87,30 +72,24 @@ namespace ProductService.Application.Services
         {
             _logger.LogInformation("Updating product. ProductId: {ProductId}", productId);
 
-            Product? productDb = await _productRepository.FindProductByIdIncludeCategoriesAsync(productId, ct);
-            if (productDb is null)
+            Product? product = await _productRepository.FindProductByIdIncludeCategoriesAsync(productId, ct);
+            if (product is null)
             {
                 _logger.LogWarning("Cannot update. Product not found. ProductId: {ProductId}", productId);
                 return null;
             }
 
-            _mapper.Map<UpdateProductDto, Product>(updateDto, productDb);
-
-            productDb.UpdatedAt = DateTime.UtcNow;
+            product.Update(updateDto.Title, updateDto.Description, updateDto.Price, updateDto.ImageUrl, updateDto.BrandId);
 
             IReadOnlyList<Category> categories = await _categoryRepository.GetCategoriesByTitle(updateDto.Categories, ct);
 
-            foreach (Category c in productDb.Categories.Except(categories).ToList())
-                productDb.Categories.Remove(c);
-
-            foreach (Category c in categories.Except(productDb.Categories).ToList())
-                productDb.Categories.Add(c);
+            product.SetCategories(categories);
 
 
             await _productRepository.SaveChangesAsync(ct);
             _logger.LogInformation("Product updated. ProductId: {ProductId}.", productId);
 
-            return _mapper.Map<ProductExtendedDto>(productDb);
+            return product.ProductToProductExtendedDto();
         }
 
 
@@ -126,13 +105,12 @@ namespace ProductService.Application.Services
                 return null;
             }
 
-            product.UpdatedAt = DateTime.UtcNow;
-            product.IsActive = false;
+            product.Deactivate();
 
             await _productRepository.SaveChangesAsync(ct);
             _logger.LogInformation("Product inactivated. ProductId: {ProductId}.", productId);
 
-            return _mapper.Map<ProductDto>(product);
+            return product.ProductToProductDto();
         }
 
 
@@ -148,18 +126,17 @@ namespace ProductService.Application.Services
                 return null;
             }
 
-            product.UpdatedAt = DateTime.UtcNow;
-            product.IsActive = true;
+            product.Activate();
 
             await _productRepository.SaveChangesAsync(ct);
             _logger.LogInformation("Product activated. ProductId: {ProductId}.", productId);
 
-            return _mapper.Map<ProductDto>(product);
+            return product.ProductToProductDto();
         }
 
 
 
-        public async Task<ProductDto?> DeleteProductAsync(Guid productId, CancellationToken ct = default)
+        public async Task<bool> DeleteProductAsync(Guid productId, CancellationToken ct = default)
         {
             _logger.LogInformation("Deleting product. ProductId: {ProductId}.", productId);
 
@@ -167,29 +144,15 @@ namespace ProductService.Application.Services
             if (product is null)
             {
                 _logger.LogWarning("Cannot delete. Product not foud. ProductId: {ProductId}.", productId);
-                return null;
+                return false;
             }
 
-            ProductDto deletedProduct = _mapper.Map<ProductDto>(product);
 
-            if (product.Reviews.Count > 0)
-            {
-                _logger.LogInformation("Deleting all related reviews before deleting product. ProductId: {ProductId}, Review count: {Count}.", productId, product.Reviews.Count);
-                
-                var deletedTasks = product.Reviews.Select(r => _productReviewRepository.DeleteAsync(r.Id, ct));
-                await Task.WhenAll(deletedTasks);
-                _logger.LogInformation("All related reviews deleted.");
-            }
-
-            _logger.LogInformation("Clearing all related categories before deleting product. ProductId: {ProductId}", productId);
-
-            product.Categories.Clear();
             _productRepository.Remove(product);
-
             await _productRepository.SaveChangesAsync(ct);
-            _logger.LogInformation("All related categories cleared and product deleted. ProductId: {ProductId}.", productId);
+            _logger.LogInformation("Product deleted. ProductId: {ProductId}.", productId);
 
-            return deletedProduct;
+            return true;
         }
 
 
@@ -201,7 +164,7 @@ namespace ProductService.Application.Services
             IReadOnlyList<Product> products = await _productRepository.GetAllProductsByBrandIdAsync(brandId, ct);
             _logger.LogInformation("Retrieved all products by BrandId. Count: {Count}, BrandId: {BrandId}.", products.Count, brandId);
 
-            return _mapper.Map<List<ProductDto>>(products);
+            return [.. products.Select(x => x.ProductToProductDto())];
         }
 
 
@@ -213,7 +176,7 @@ namespace ProductService.Application.Services
             IReadOnlyList<Product> products = await _productRepository.GetAllProductsByCategoriesAsync(categories, ct);
             _logger.LogInformation("Retrieved all products by categories. Count: {Count}, Categories: {Categories}.", products.Count, string.Join(", ", categories));
 
-            return _mapper.Map<List<ProductDto>>(products);
+            return [.. products.Select(x => x.ProductToProductDto())];
         }
 
 
@@ -225,7 +188,7 @@ namespace ProductService.Application.Services
             IReadOnlyList<Product> products = await _productRepository.GetAllActiveProductsAsync(ct);
             _logger.LogInformation("Retrieved all active products. Count: {Count}.", products.Count);
 
-            return _mapper.Map<List<ProductDto>>(products);
+            return [.. products.Select(x => x.ProductToProductDto())];
         }
 
 
@@ -237,7 +200,7 @@ namespace ProductService.Application.Services
             IReadOnlyList<Product> products = await _productRepository.GetAllInactiveProductsAsync(ct);
             _logger.LogInformation("Retrieved all inactive products. Count: {Count}.", products.Count);
 
-            return _mapper.Map<List<ProductDto>>(products);
+            return [.. products.Select(x => x.ProductToProductDto())];
         }
 
 
@@ -283,7 +246,7 @@ namespace ProductService.Application.Services
             {
                 if (productsInStockById.TryGetValue(orderItem.ProductId, out Product? product))
                 {
-                    product.QuantityInStock -= orderItem.Quantity;
+                    product.ReduceStock(orderItem.Quantity);
 
                 }
             }

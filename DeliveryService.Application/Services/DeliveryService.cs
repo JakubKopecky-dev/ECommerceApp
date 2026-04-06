@@ -1,44 +1,28 @@
-﻿using System.Net.Http.Headers;
-using System.Net.Http.Json;
-using AutoMapper;
-using DeliveryService.Application.DTOs.Delivery;
+﻿using DeliveryService.Application.DTOs.Delivery;
 using DeliveryService.Application.DTOs.External;
 using DeliveryService.Application.Interfaces.External;
 using DeliveryService.Application.Interfaces.Repositories;
 using DeliveryService.Application.Interfaces.Services;
 using DeliveryService.Domain.Entities;
 using DeliveryService.Domain.Enums;
+using DeliveryService.Domain.Events;
+using DeliveryService.Domain.ValueObjects;
 using MassTransit;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Shared.Contracts.Events;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
 
 namespace DeliveryService.Application.Services
 {
-    public class DeliveryService(IDeliveryRepository deliveryRepository, IMapper mapper, ILogger<DeliveryService> logger, IPublishEndpoint publishEndpoint, IOrderReadClient orderReadClient) : IDeliveryService
+    public class DeliveryService(IDeliveryRepository deliveryRepository, ILogger<DeliveryService> logger, IPublishEndpoint publishEndpoint, IOrderReadClient orderReadClient) : IDeliveryService
     {
         private readonly IDeliveryRepository _deliveryRepository = deliveryRepository;
-        private readonly IMapper _mapper = mapper;
         private readonly ILogger<DeliveryService> _logger = logger;
         private readonly IPublishEndpoint _publishEndpoint = publishEndpoint;
         private readonly IOrderReadClient _orderReadClient = orderReadClient;
-
-
-
-
-        private static bool IsStatusChangeValid(DeliveryStatus current, DeliveryStatus next)
-        {
-            return (current, next) switch
-            {
-                (DeliveryStatus.Pending, DeliveryStatus.InProgress) => true,
-                (DeliveryStatus.InProgress, DeliveryStatus.Delivered) => true,
-                (DeliveryStatus.Pending, DeliveryStatus.Canceled) => true,
-                (DeliveryStatus.InProgress, DeliveryStatus.Canceled) => true,
-                _ => false
-            };
-        }
-
 
 
         public async Task<DeliveryExtendedDto?> GetDeliveryByOrderIdAsync(Guid orderId, CancellationToken ct = default)
@@ -47,14 +31,11 @@ namespace DeliveryService.Application.Services
 
             Delivery? delivery = await _deliveryRepository.FindDeliveryByOrderIdIncludeCourierAsync(orderId, ct);
             if (delivery is null)
-            {
                 _logger.LogWarning("Delivery not found. OrderId: {OrderId}.", orderId);
-                return null;
-            }
+            else
+                _logger.LogInformation("Delivery found. DeliveryId: {DeliveryId}, OrderId: {OrderId}.", delivery.Id, orderId);
 
-            _logger.LogInformation("Delivery found. DeliveryId: {DeliveryId}, OrderId: {OrderId}.", delivery.Id, orderId);
-
-            return _mapper.Map<DeliveryExtendedDto>(delivery);
+            return delivery?.DeliveryToDeliveryExtendedDto();
         }
 
 
@@ -63,15 +44,17 @@ namespace DeliveryService.Application.Services
         {
             _logger.LogInformation("Creating new delivery. OrderId: {OrderId}.", createDto.OrderId);
 
-            Delivery delivery = _mapper.Map<Delivery>(createDto);
-            delivery.Id = Guid.Empty;
-            delivery.CreatedAt = DateTime.UtcNow;
-            delivery.Status = DeliveryStatus.Pending;
+            Address address = new(createDto.Street, createDto.City, createDto.PostalCode, createDto.State);
 
-            Delivery createdDelivery = await _deliveryRepository.InsertAsync(delivery, ct);
-            _logger.LogInformation("Delivery created. DelivryId: {DeliveryId}, OrderId: {OrderId}.", createdDelivery.Id, createdDelivery.OrderId);
+            Delivery delivery = Delivery.Create(createDto.OrderId, createDto.CourierId, new Email(createDto.Email), createDto.FirstName,
+                createDto.LastName, createDto.PhoneNumber, address, createDto.TrackingNumber);
 
-            return _mapper.Map<DeliveryDto>(createdDelivery);
+            await _deliveryRepository.AddAsync(delivery, ct);
+            await _deliveryRepository.SaveChangesAsync(ct);
+
+            _logger.LogInformation("Delivery created. DelivryId: {DeliveryId}, OrderId: {OrderId}.", delivery.Id, delivery.OrderId);
+
+            return delivery.DeliveryToDeliveryDto();
         }
 
 
@@ -80,26 +63,27 @@ namespace DeliveryService.Application.Services
         {
             _logger.LogInformation("Updating delivry. DeliveryId: {DeliveryId}.", deliveryId);
 
-            Delivery? deliveryDb = await _deliveryRepository.FindByIdAsync(deliveryId, ct);
-            if (deliveryDb is null)
+            Delivery? delivery = await _deliveryRepository.FindByIdAsync(deliveryId, ct);
+            if (delivery is null)
             {
                 _logger.LogWarning("Cannot update. Delivery not found. DeliveryId: {DeliveryId}.", deliveryId);
                 return null;
             }
 
-            _mapper.Map<CreateUpdateDeliveryDto, Delivery>(updateDto, deliveryDb);
+            Address address = new(updateDto.Street, updateDto.City, updateDto.PostalCode, updateDto.State);
+            delivery.Update(updateDto.OrderId, updateDto.CourierId, new Email(updateDto.Email), updateDto.FirstName, updateDto.LastName,
+                updateDto.PhoneNumber, address, updateDto.TrackingNumber);
 
-            deliveryDb.UpdatedAt = DateTime.UtcNow;
 
             await _deliveryRepository.SaveChangesAsync(ct);
             _logger.LogInformation("Delivery updated. DeliveryId: {DeliveryId}.", deliveryId);
 
-            return _mapper.Map<DeliveryDto>(deliveryDb);
+            return delivery.DeliveryToDeliveryDto();
         }
 
 
 
-        public async Task<DeliveryDto?> DeleteDeliveryAsync(Guid deliveryId, CancellationToken ct = default)
+        public async Task<bool> DeleteDeliveryAsync(Guid deliveryId, CancellationToken ct = default)
         {
             _logger.LogInformation("Deleting delivery. DeliveryId: {DeliveryId}.", deliveryId);
 
@@ -107,16 +91,14 @@ namespace DeliveryService.Application.Services
             if (delivery is null)
             {
                 _logger.LogWarning("Cannot delete. Delivery not found. DeliveryId: {DeliveryId}.", deliveryId);
-                return null;
+                return false;
             }
-
-            DeliveryDto deletedDelivery = _mapper.Map<DeliveryDto>(delivery);
 
             _deliveryRepository.Remove(delivery);
             await _deliveryRepository.SaveChangesAsync(ct);
             _logger.LogInformation("Delivery deleted. DeliveryId: {DeliveryId}.", deliveryId);
 
-            return deletedDelivery;
+            return true;
         }
 
 
@@ -132,49 +114,35 @@ namespace DeliveryService.Application.Services
                 return null;
             }
 
-            DeliveryStatus currentStatus = delivery.Status;
 
-            if (!IsStatusChangeValid(currentStatus, changeDto.Status))
-            {
-                _logger.LogInformation("Cannot change deliveryStatus. DeliveryId: {DeliveryId}.", deliveryId);
-                return null;
-            }
-
-            delivery.Status = changeDto.Status;
-            delivery.UpdatedAt = DateTime.UtcNow;
-
-            if (changeDto.Status == DeliveryStatus.Delivered)
-                delivery.DeliveredAt = DateTime.UtcNow;
+            delivery.ChangeStatus(changeDto.Status);
 
             await _deliveryRepository.SaveChangesAsync(ct);
             _logger.LogInformation("DeliveryStatus changed. DeliveryId: {DeliveryId}.", deliveryId);
 
-
-            // changing status on order to completed
-            if (delivery.Status == DeliveryStatus.Delivered)
+            foreach (var domainEvent in delivery.PopDomainEvents())
             {
-                DeliveryDeliveredEvent deliveryDeliveredEvent = new() { OrderId = delivery.OrderId };
-                await _publishEndpoint.Publish(deliveryDeliveredEvent, ct);
-            }
-            
-            
-            // notification user delivery canceled
-            if (delivery.Status == DeliveryStatus.Canceled)
-            {
-                Guid? userId = await _orderReadClient.GetUserIdByOrderIdAsync(delivery.OrderId,ct);
-
-                if (userId is null)
+                if (domainEvent is DeliveryDeliveredDomainEvent delivered)
                 {
-                    _logger.LogWarning("Cannot sent notification. Order not found. OrderId: {OrderId}.", delivery.OrderId);
-                    return null;
+                    // changing status on order to completed
+                    await _publishEndpoint.Publish(new DeliveryDeliveredEvent { OrderId = delivered.OrderId }, ct);
                 }
-            
 
-                DeliveryCanceledEvent deliveryCanceledEvent = new() { UserId = userId.Value, OrderId = delivery.OrderId };
-                await _publishEndpoint.Publish(deliveryCanceledEvent, ct);
+                if (domainEvent is DeliveryCanceledDomainEvent canceled)
+                {
+                    Guid? userId = await _orderReadClient.GetUserIdByOrderIdAsync(canceled.OrderId, ct);
+                    if (userId is null)
+                    {
+                        _logger.LogWarning("Cannot send notification. Order not found. OrderId: {OrderId}.", canceled.OrderId);
+                        return null;
+                    }
+
+                    // notification user delivery canceled
+                    await _publishEndpoint.Publish(new DeliveryCanceledEvent { UserId = userId.Value, OrderId = canceled.OrderId }, ct);
+                }
             }
-              
-            return _mapper.Map<DeliveryDto>(delivery);
+
+            return delivery.DeliveryToDeliveryDto();
         }
 
 

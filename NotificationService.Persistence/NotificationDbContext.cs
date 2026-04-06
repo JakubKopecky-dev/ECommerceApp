@@ -7,5 +7,19 @@ namespace NotificationService.Persistence
     {
         public DbSet<Notification> Notifications { get; set; }
 
+
+
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<Notification>()
+                .Property(x => x.Id)
+                .ValueGeneratedNever();
+
+
+        }
+
     }
 }

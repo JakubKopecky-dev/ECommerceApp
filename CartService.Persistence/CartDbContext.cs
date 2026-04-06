@@ -6,10 +6,8 @@ using Microsoft.Extensions.Hosting;
 
 namespace CartService.Persistence
 {
-    public class CartDbContext(DbContextOptions<CartDbContext> options, IHostEnvironment env) : DbContext(options)
+    public class CartDbContext(DbContextOptions<CartDbContext> options) : DbContext(options)
     {
-        private readonly IHostEnvironment _env = env;
-        public DbSet<AuditEventCartLog> AuditEventCartLogs { get; set; }
 
         public DbSet<Cart> Carts { get; set; }
 
@@ -22,79 +20,35 @@ namespace CartService.Persistence
             base.OnModelCreating(modelBuilder);
 
 
-            modelBuilder.Entity<Cart>()
-                 .HasIndex(c => c.UserId)
+            modelBuilder.Entity<Cart>(c =>
+            {
+                c.HasIndex(c => c.UserId)
                  .IsUnique();
 
-
-            modelBuilder.Entity<CartItem>()
-                .Property(i => i.UnitPrice)
-                .HasPrecision(10, 2);
-        }
+                c.Property(c => c.Id)
+                 .ValueGeneratedNever();
+            });
 
 
-
-        // Audit EF
-        public override int SaveChanges()
-        {
-            AuditEntityChanges();
-            return base.SaveChanges();
-        }
-
-        public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-        {
-            AuditEntityChanges();
-            return await base.SaveChangesAsync(cancellationToken);
-        }
-
-        private void AuditEntityChanges()
-        {
-            if (_env.EnvironmentName == "Test")
-                return;
-
-            var entries = ChangeTracker.Entries()
-                .Where(e => e.State == EntityState.Added
-                         || e.State == EntityState.Modified
-                         || e.State == EntityState.Deleted)
-                .ToList();
-
-            foreach (var entry in entries)
+            modelBuilder.Entity<CartItem>(c =>
             {
-                object data;
+                c.Property(i => i.UnitPrice)
+                .HasPrecision(10, 2);
 
-                // For updates, capture only the properties that have changed, including their original and current values
-                if (entry.State == EntityState.Modified)
-                {
-                    var changes = new Dictionary<string, object>();
-                    foreach (var prop in entry.Properties)
-                    {
-                        if (!Equals(prop.OriginalValue, prop.CurrentValue))
-                        {
-                            changes[prop.Metadata.Name] = new
-                            {
-                                Original = prop.OriginalValue,
-                                Current = prop.CurrentValue
-                            };
-                        }
-                    }
-                    data = changes;
-                }
-                else
-                {
-                    // For inserts and deletes, serialize the entire entity
-                    data = entry.Entity;
-                }
 
-                var auditLog = new AuditEventCartLog
-                {
-                    EntityName = entry.Metadata.ClrType.Name,
-                    EventType = entry.State.ToString(),
-                    InsertedDate = DateTime.UtcNow,
-                    Data = System.Text.Json.JsonSerializer.Serialize(data)
-                };
-                AuditEventCartLogs.Add(auditLog);
-            }
+                c.Property(i => i.ProductName)
+                .HasMaxLength(150)
+                .IsRequired();
+
+
+                c.Property(i => i.Id)
+                .ValueGeneratedNever();
+            });
+
         }
+
+
+
 
 
 

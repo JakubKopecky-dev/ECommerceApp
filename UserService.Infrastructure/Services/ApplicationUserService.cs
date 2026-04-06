@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using UserService.Application.DTOs.User;
@@ -9,10 +8,9 @@ using UserService.Infrastructure.Identity;
 
 namespace UserService.Infrastructure.Services
 {
-    public class ApplicationUserService(UserManager<ApplicationUser> userManager, IMapper mapper, ILogger<ApplicationUserService> logger) : IApplicationUserService
+    public class ApplicationUserService(UserManager<ApplicationUser> userManager, ILogger<ApplicationUserService> logger) : IApplicationUserService
     {
         private readonly UserManager<ApplicationUser> _userManager = userManager;
-        private readonly IMapper _mapper = mapper;
         private readonly ILogger<ApplicationUserService> _logger = logger;
 
 
@@ -24,7 +22,7 @@ namespace UserService.Infrastructure.Services
             List<ApplicationUser> users = await _userManager.Users.ToListAsync(ct);
             _logger.LogInformation("Retrieved all users. Count: {Count}.", users.Count);
 
-            return _mapper.Map<List<UserDto>>(users);
+            return [.. users.Select(x => x.UserToUserDto())];
         }
 
 
@@ -33,14 +31,11 @@ namespace UserService.Infrastructure.Services
         {
             ApplicationUser? user = await _userManager.FindByIdAsync(userId.ToString());
             if (user is null)
-            {
                 _logger.LogWarning("User not found. UserId: {UserId}.", userId);
-                return null;
-            }
+            else
+                _logger.LogInformation("User found. UserId: {UserId}.", userId);
 
-            _logger.LogInformation("User found. UserId: {UserId}.", userId);
-
-            return _mapper.Map<UserDto>(user);
+            return user?.UserToUserDto();
         }
 
 
@@ -49,7 +44,9 @@ namespace UserService.Infrastructure.Services
         {
             _logger.LogInformation("Creating new user. UserEmail: {UserEmail}.", createUserDto.Email);
 
-            ApplicationUser user = _mapper.Map<ApplicationUser>(createUserDto);
+            ApplicationUser user = ApplicationUser.Create(createUserDto.Email, createUserDto.FirstName, createUserDto.LastName, createUserDto.PhoneNumber, createUserDto.Street,
+                createUserDto.City, createUserDto.PostalCode, createUserDto.Country, createUserDto.IsAdmin);
+
             var result = await _userManager.CreateAsync(user, createUserDto.Password);
 
             if (result.Succeeded)
@@ -61,7 +58,7 @@ namespace UserService.Infrastructure.Services
 
                 _logger.LogInformation("User created. UserId: {UserId}, UserEmail: {UserEmail}.", user.Id, user.Email);
 
-                return _mapper.Map<UserDto>(user);
+                return user.UserToUserDto();
             }
 
             _logger.LogWarning("User wasn't created.");
@@ -83,7 +80,7 @@ namespace UserService.Infrastructure.Services
                 return null;
             }
 
-            _mapper.Map<UpdateUserDto, ApplicationUser>(updateUserDto, user);
+            user.Update(updateUserDto.FirstName,updateUserDto.LastName,updateUserDto.PhoneNumber,updateUserDto.Street,updateUserDto.City, updateUserDto.PostalCode,updateUserDto.City);
 
             var result = await _userManager.UpdateAsync(user);
 
@@ -91,7 +88,7 @@ namespace UserService.Infrastructure.Services
             {
                 _logger.LogInformation("User updated. UserId: {UserId}", userId);
 
-                return _mapper.Map<UserDto>(user);
+                return user.UserToUserDto();
             }
 
             _logger.LogWarning("User wasn't updated. UserId: {UserId}", userId);
@@ -114,7 +111,7 @@ namespace UserService.Infrastructure.Services
 
             bool wasAdmin = await _userManager.IsInRoleAsync(user, UserRoles.Admin);
 
-            user.IsAdmin = changeDto.IsAdmin;
+            user.ChangeIsAdmin(changeDto.IsAdmin);
 
             var result = await _userManager.UpdateAsync(user);
 
@@ -128,7 +125,7 @@ namespace UserService.Infrastructure.Services
 
                 _logger.LogInformation("User updated. UserId: {UserId}", userId);
 
-                return _mapper.Map<UserDto>(user);
+                return user.UserToUserDto();
             }
 
             _logger.LogWarning("User wasn't updated. UserId: {UserId}", userId);
@@ -138,7 +135,7 @@ namespace UserService.Infrastructure.Services
 
 
 
-        public async Task<UserDto?> DeleteUserAsync(Guid userId)
+        public async Task<bool> DeleteUserAsync(Guid userId)
         {
             _logger.LogInformation("Deleting user. UserId: {UserId}.", userId);
 
@@ -146,10 +143,8 @@ namespace UserService.Infrastructure.Services
             if (user is null)
             {
                 _logger.LogWarning("Cannot delete. User not found.");
-                return null;
+                return false;
             }
-
-            UserDto deletedUser = _mapper.Map<UserDto>(user);
 
             var roles = await _userManager.GetRolesAsync(user);
             if (roles.Any())
@@ -160,11 +155,11 @@ namespace UserService.Infrastructure.Services
             if (result.Succeeded)
             {
                 _logger.LogInformation("User deleted. UserId: {UserId}.", userId);
-                return deletedUser;
+                return true;
             }
 
             _logger.LogWarning("User wasn't deleted. UserId: {UserId}.", userId);
-            return null;
+            return false;
         }
 
 

@@ -15,6 +15,9 @@ namespace DeliveryService.Application.DTOs.Delivery
 
         public DateTime? DeliveredAt { get; init; }
 
+        public string Email { get; init; } = "";
+
+
         public string Street { get; init; } = "";
 
         public string City { get; init; } = "";
@@ -25,6 +28,8 @@ namespace DeliveryService.Application.DTOs.Delivery
 
         public DateTime CreatedAt { get; init; }
 
-        public DateTime UpdatedAt { get; init; }
+        public DateTime? UpdatedAt { get; init; }
+
+        public string? TrackingNumber { get; init; }
     }
 }

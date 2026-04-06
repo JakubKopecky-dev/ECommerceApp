@@ -1,21 +1,22 @@
-﻿using System;
+﻿using FluentAssertions;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using MockQueryable;
+using MockQueryable.Moq;
+using Moq;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using AutoMapper;
-using FluentAssertions;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using Moq;
-using MockQueryable.Moq;
 using UserService.Application.DTOs.User;
 using UserService.Domain.Enums;
+using UserService.Infrastructure;
 using UserService.Infrastructure.Identity;
 using UserService.Infrastructure.Services;
-using Microsoft.EntityFrameworkCore;
-using MockQueryable;
 
 namespace UserService.UnitTests.Services
 {
@@ -37,6 +38,10 @@ namespace UserService.UnitTests.Services
         }
 
 
+        private static ApplicationUser MockUser(string email) =>
+            ApplicationUser.Create(email, "John", null, null, null, null, null, null, false);
+
+
 
         [Fact]
         [Trait("Category", "Unit")]
@@ -44,14 +49,14 @@ namespace UserService.UnitTests.Services
         {
             List<ApplicationUser> users =
             [
-                new() { Id = Guid.NewGuid(), Email = "a@test.com" },
-                new() { Id = Guid.NewGuid(), Email = "b@test.com" }
+                MockUser("a@test.com"),
+                MockUser("b@test.com")
             ];
 
             List<UserDto> expectedDto =
             [
-                new() { Id = users[0].Id, Email = users[0].Email! },
-                new() { Id = users[1].Id, Email = users[1].Email! }
+                users[0].UserToUserDto(),
+                users[1].UserToUserDto()
             ];
 
             var usersQueryMock = users.BuildMockDbSet();
@@ -63,15 +68,9 @@ namespace UserService.UnitTests.Services
                 .Setup(u => u.Users)
                 .Returns(usersQueryMock.Object);
 
-            Mock<IMapper> mapperMock = new();
-
-            mapperMock
-                .Setup(m => m.Map<List<UserDto>>(It.IsAny<List<ApplicationUser>>()))
-                .Returns(expectedDto);
 
             ApplicationUserService service = new(
                 userManagerMock.Object,
-                mapperMock.Object,
                 new Mock<ILogger<ApplicationUserService>>().Object
             );
 
@@ -81,7 +80,6 @@ namespace UserService.UnitTests.Services
             result.Should().BeEquivalentTo(expectedDto);
 
             userManagerMock.Verify(u => u.Users, Times.Once);
-            mapperMock.Verify(m => m.Map<List<UserDto>>(It.IsAny<List<ApplicationUser>>()), Times.Once);
         }
 
 
@@ -92,8 +90,8 @@ namespace UserService.UnitTests.Services
         {
             Guid userId = Guid.NewGuid();
 
-            ApplicationUser user = new() { Id = userId, Email = "user@test.com" };
-            UserDto expectedDto = new() { Id = userId, Email = user.Email! };
+            ApplicationUser user = MockUser("a@test.com");
+            UserDto expectedDto = user.UserToUserDto();
 
             Mock<UserManager<ApplicationUser>> userManagerMock = CreateUserManagerMock();
 
@@ -101,15 +99,9 @@ namespace UserService.UnitTests.Services
                 .Setup(u => u.FindByIdAsync(userId.ToString()))
                 .ReturnsAsync(user);
 
-            Mock<IMapper> mapperMock = new();
-
-            mapperMock
-                .Setup(m => m.Map<UserDto>(user))
-                .Returns(expectedDto);
 
             ApplicationUserService service = new(
                 userManagerMock.Object,
-                mapperMock.Object,
                 new Mock<ILogger<ApplicationUserService>>().Object
             );
 
@@ -119,7 +111,6 @@ namespace UserService.UnitTests.Services
             result.Should().BeEquivalentTo(expectedDto);
 
             userManagerMock.Verify(u => u.FindByIdAsync(userId.ToString()), Times.Once);
-            mapperMock.Verify(m => m.Map<UserDto>(user), Times.Once);
         }
 
 
@@ -136,11 +127,9 @@ namespace UserService.UnitTests.Services
                 .Setup(u => u.FindByIdAsync(userId.ToString()))
                 .ReturnsAsync((ApplicationUser?)null);
 
-            Mock<IMapper> mapperMock = new();
 
             ApplicationUserService service = new(
                 userManagerMock.Object,
-                mapperMock.Object,
                 new Mock<ILogger<ApplicationUserService>>().Object
             );
 
@@ -150,7 +139,6 @@ namespace UserService.UnitTests.Services
             result.Should().BeNull();
 
             userManagerMock.Verify(u => u.FindByIdAsync(userId.ToString()), Times.Once);
-            mapperMock.Verify(m => m.Map<UserDto>(It.IsAny<ApplicationUser>()), Times.Never);
         }
 
 
@@ -161,42 +149,32 @@ namespace UserService.UnitTests.Services
         {
             CreateUserDto createDto = new() { Email = "new@test.com", Password = "P@ssw0rd" };
 
-            ApplicationUser user = new() { Id = Guid.NewGuid(), Email = createDto.Email };
-            UserDto expectedDto = new() { Id = user.Id, Email = user.Email! };
+            ApplicationUser user = MockUser(createDto.Email);
+            UserDto expectedDto = new() { Email = createDto.Email, IsAdmin = false };
 
             Mock<UserManager<ApplicationUser>> userManagerMock = CreateUserManagerMock();
-            Mock<IMapper> mapperMock = new();
 
-            mapperMock
-                .Setup(m => m.Map<ApplicationUser>(createDto))
-                .Returns(user);
 
             userManagerMock
-                .Setup(u => u.CreateAsync(user, createDto.Password))
+                .Setup(u => u.CreateAsync(It.IsAny<ApplicationUser>(), createDto.Password))
                 .ReturnsAsync(IdentityResult.Success);
 
             userManagerMock
-                .Setup(u => u.AddToRoleAsync(user, UserRoles.User))
+                .Setup(u => u.AddToRoleAsync(It.IsAny<ApplicationUser>(), UserRoles.User))
                 .ReturnsAsync(IdentityResult.Success);
-
-            mapperMock
-                .Setup(m => m.Map<UserDto>(user))
-                .Returns(expectedDto);
 
             ApplicationUserService service = new(
                 userManagerMock.Object,
-                mapperMock.Object,
                 new Mock<ILogger<ApplicationUserService>>().Object
             );
 
 
             UserDto? result = await service.CreateUserAsync(createDto);
 
-            result.Should().BeEquivalentTo(expectedDto);
+            result.Should().BeEquivalentTo(expectedDto, x => x.Excluding(x => x.Id));
 
-            userManagerMock.Verify(u => u.CreateAsync(user, createDto.Password), Times.Once);
-            userManagerMock.Verify(u => u.AddToRoleAsync(user, UserRoles.User), Times.Once);
-            mapperMock.Verify(m => m.Map<UserDto>(user), Times.Once);
+            userManagerMock.Verify(u => u.CreateAsync(It.IsAny<ApplicationUser>(), createDto.Password), Times.Once);
+            userManagerMock.Verify(u => u.AddToRoleAsync(It.IsAny<ApplicationUser>(), UserRoles.User), Times.Once);
         }
 
 
@@ -207,22 +185,17 @@ namespace UserService.UnitTests.Services
         {
             CreateUserDto createDto = new() { Email = "fail@test.com", Password = "123" };
 
-            ApplicationUser user = new() { Id = Guid.NewGuid(), Email = createDto.Email };
+            ApplicationUser user = MockUser(createDto.Email);
 
             Mock<UserManager<ApplicationUser>> userManagerMock = CreateUserManagerMock();
-            Mock<IMapper> mapperMock = new();
 
-            mapperMock
-                .Setup(m => m.Map<ApplicationUser>(createDto))
-                .Returns(user);
 
             userManagerMock
-                .Setup(u => u.CreateAsync(user, createDto.Password))
+                .Setup(u => u.CreateAsync(It.IsAny<ApplicationUser>(), createDto.Password))
                 .ReturnsAsync(IdentityResult.Failed(new IdentityError { Description = "fail" }));
 
             ApplicationUserService service = new(
                 userManagerMock.Object,
-                mapperMock.Object,
                 new Mock<ILogger<ApplicationUserService>>().Object
             );
 
@@ -232,7 +205,6 @@ namespace UserService.UnitTests.Services
             result.Should().BeNull();
 
             userManagerMock.Verify(u => u.AddToRoleAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()), Times.Never);
-            mapperMock.Verify(m => m.Map<UserDto>(It.IsAny<ApplicationUser>()), Times.Never);
         }
 
 
@@ -245,63 +217,28 @@ namespace UserService.UnitTests.Services
 
             UpdateUserDto updateDto = new()
             {
-                FirstName = "John",
-                LastName = "Doe",
-                PhoneNumber = "123456789",
-                Street = "Main St",
-                City = "Prague",
-                PostalCode = "12345",
-                Country = "CZ"
+                FirstName = "Petr", 
             };
 
-            ApplicationUser user = new()
-            {
-                Id = userId,
-                Email = "old@test.com",
-                FirstName = "Old",
-                LastName = "Name",
-                PhoneNumber = "000",
-                Street = "Old St",
-                City = "Old City",
-                PostalCode = "00000",
-                Country = "OldLand"
-            };
+            ApplicationUser user = MockUser("a@b.cz");
 
-            UserDto expectedDto = new()
-            {
-                Id = userId,
-                Email = user.Email!,
-                FirstName = updateDto.FirstName,
-                LastName = updateDto.LastName,
-                PhoneNumber = updateDto.PhoneNumber,
-                Street = updateDto.Street,
-                City = updateDto.City,
-                PostalCode = updateDto.PostalCode,
-                Country = updateDto.Country
-            };
+
+            UserDto expectedDto = new() {Id = user.Id, FirstName = updateDto.FirstName,Email = user.Email!, IsAdmin = user.IsAdmin};
 
             Mock<UserManager<ApplicationUser>> userManagerMock = CreateUserManagerMock();
-            Mock<IMapper> mapperMock = new();
 
             userManagerMock
                 .Setup(u => u.FindByIdAsync(userId.ToString()))
                 .ReturnsAsync(user);
 
-            mapperMock
-                .Setup(m => m.Map(updateDto, user))
-                .Returns(user);
 
             userManagerMock
                 .Setup(u => u.UpdateAsync(user))
                 .ReturnsAsync(IdentityResult.Success);
 
-            mapperMock
-                .Setup(m => m.Map<UserDto>(user))
-                .Returns(expectedDto);
 
             ApplicationUserService service = new(
                 userManagerMock.Object,
-                mapperMock.Object,
                 new Mock<ILogger<ApplicationUserService>>().Object
             );
 
@@ -312,7 +249,6 @@ namespace UserService.UnitTests.Services
 
             userManagerMock.Verify(u => u.FindByIdAsync(userId.ToString()), Times.Once);
             userManagerMock.Verify(u => u.UpdateAsync(user), Times.Once);
-            mapperMock.Verify(m => m.Map<UserDto>(user), Times.Once);
         }
 
 
@@ -335,7 +271,6 @@ namespace UserService.UnitTests.Services
             };
 
             Mock<UserManager<ApplicationUser>> userManagerMock = CreateUserManagerMock();
-            Mock<IMapper> mapperMock = new();
 
             userManagerMock
                 .Setup(u => u.FindByIdAsync(userId.ToString()))
@@ -343,7 +278,6 @@ namespace UserService.UnitTests.Services
 
             ApplicationUserService service = new(
                 userManagerMock.Object,
-                mapperMock.Object,
                 new Mock<ILogger<ApplicationUserService>>().Object
             );
 
@@ -353,7 +287,6 @@ namespace UserService.UnitTests.Services
             result.Should().BeNull();
 
             userManagerMock.Verify(u => u.UpdateAsync(It.IsAny<ApplicationUser>()), Times.Never);
-            mapperMock.Verify(m => m.Map<UserDto>(It.IsAny<ApplicationUser>()), Times.Never);
         }
 
 
@@ -366,11 +299,10 @@ namespace UserService.UnitTests.Services
 
             ChangeIsAdminDto changeDto = new() { IsAdmin = true };
 
-            ApplicationUser user = new() { Id = userId, Email = "user@test.com", IsAdmin = false };
-            UserDto expectedDto = new() { Id = userId, Email = user.Email! };
+            ApplicationUser user = MockUser("a@b.cz");
+            UserDto expectedDto = new() {Id = user.Id,FirstName = user.FirstName,Email = user.Email!, IsAdmin = true};
 
             Mock<UserManager<ApplicationUser>> userManagerMock = CreateUserManagerMock();
-            Mock<IMapper> mapperMock = new();
 
             userManagerMock
                 .Setup(u => u.FindByIdAsync(userId.ToString()))
@@ -388,13 +320,9 @@ namespace UserService.UnitTests.Services
                 .Setup(u => u.AddToRoleAsync(user, UserRoles.Admin))
                 .ReturnsAsync(IdentityResult.Success);
 
-            mapperMock
-                .Setup(m => m.Map<UserDto>(user))
-                .Returns(expectedDto);
 
             ApplicationUserService service = new(
                 userManagerMock.Object,
-                mapperMock.Object,
                 new Mock<ILogger<ApplicationUserService>>().Object
             );
 
@@ -407,7 +335,6 @@ namespace UserService.UnitTests.Services
             userManagerMock.Verify(u => u.IsInRoleAsync(user, UserRoles.Admin), Times.Once);
             userManagerMock.Verify(u => u.UpdateAsync(user), Times.Once);
             userManagerMock.Verify(u => u.AddToRoleAsync(user, UserRoles.Admin), Times.Once);
-            mapperMock.Verify(m => m.Map<UserDto>(user), Times.Once);
         }
 
 
@@ -421,7 +348,6 @@ namespace UserService.UnitTests.Services
             ChangeIsAdminDto changeDto = new() { IsAdmin = true };
 
             Mock<UserManager<ApplicationUser>> userManagerMock = CreateUserManagerMock();
-            Mock<IMapper> mapperMock = new();
 
             userManagerMock
                 .Setup(u => u.FindByIdAsync(userId.ToString()))
@@ -429,7 +355,6 @@ namespace UserService.UnitTests.Services
 
             ApplicationUserService service = new(
                 userManagerMock.Object,
-                mapperMock.Object,
                 new Mock<ILogger<ApplicationUserService>>().Object
             );
 
@@ -439,22 +364,21 @@ namespace UserService.UnitTests.Services
             result.Should().BeNull();
 
             userManagerMock.Verify(u => u.UpdateAsync(It.IsAny<ApplicationUser>()), Times.Never);
-            mapperMock.Verify(m => m.Map<UserDto>(It.IsAny<ApplicationUser>()), Times.Never);
         }
 
 
 
         [Fact]
         [Trait("Category", "Unit")]
-        public async Task DeleteUserAsync_ReturnsUserDto_WhenSucceeded()
+        public async Task DeleteUserAsync_ReturnsTrue_WhenSucceeded()
         {
-            Guid userId = Guid.NewGuid();
 
-            ApplicationUser user = new() { Id = userId, Email = "delete@test.com" };
+            ApplicationUser user = MockUser("delete@test.com");
+            Guid userId = user.Id;
+
             UserDto expectedDto = new() { Id = userId, Email = user.Email! };
 
             Mock<UserManager<ApplicationUser>> userManagerMock = CreateUserManagerMock();
-            Mock<IMapper> mapperMock = new();
 
             userManagerMock
                 .Setup(u => u.FindByIdAsync(userId.ToString()))
@@ -468,36 +392,30 @@ namespace UserService.UnitTests.Services
                 .Setup(u => u.DeleteAsync(user))
                 .ReturnsAsync(IdentityResult.Success);
 
-            mapperMock
-                .Setup(m => m.Map<UserDto>(user))
-                .Returns(expectedDto);
 
             ApplicationUserService service = new(
                 userManagerMock.Object,
-                mapperMock.Object,
                 new Mock<ILogger<ApplicationUserService>>().Object
             );
 
 
-            UserDto? result = await service.DeleteUserAsync(userId);
+            bool result = await service.DeleteUserAsync(userId);
 
-            result.Should().BeEquivalentTo(expectedDto);
+            result.Should().BeTrue();
 
             userManagerMock.Verify(u => u.FindByIdAsync(userId.ToString()), Times.Once);
             userManagerMock.Verify(u => u.DeleteAsync(user), Times.Once);
-            mapperMock.Verify(m => m.Map<UserDto>(user), Times.Once);
         }
 
 
 
         [Fact]
         [Trait("Category", "Unit")]
-        public async Task DeleteUserAsync_ReturnsNull_WhenNotExists()
+        public async Task DeleteUserAsync_ReturnsFalse_WhenNotExists()
         {
             Guid userId = Guid.NewGuid();
 
             Mock<UserManager<ApplicationUser>> userManagerMock = CreateUserManagerMock();
-            Mock<IMapper> mapperMock = new();
 
             userManagerMock
                 .Setup(u => u.FindByIdAsync(userId.ToString()))
@@ -505,17 +423,15 @@ namespace UserService.UnitTests.Services
 
             ApplicationUserService service = new(
                 userManagerMock.Object,
-                mapperMock.Object,
                 new Mock<ILogger<ApplicationUserService>>().Object
             );
 
 
-            UserDto? result = await service.DeleteUserAsync(userId);
+            bool result = await service.DeleteUserAsync(userId);
 
-            result.Should().BeNull();
+            result.Should().BeFalse();
 
             userManagerMock.Verify(u => u.DeleteAsync(It.IsAny<ApplicationUser>()), Times.Never);
-            mapperMock.Verify(m => m.Map<UserDto>(It.IsAny<ApplicationUser>()), Times.Never);
         }
     }
 }

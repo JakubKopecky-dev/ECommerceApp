@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using AutoMapper;
 using FluentAssertions;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
@@ -35,6 +34,11 @@ namespace UserService.UnitTests.Services
         }
 
 
+        private static ApplicationUser MockUser(string email) =>
+            ApplicationUser.Create(email, null, null, null, null, null,null,null, false);
+
+
+
 
         [Fact]
         [Trait("Category", "Unit")]
@@ -54,7 +58,6 @@ namespace UserService.UnitTests.Services
 
             Mock<UserManager<ApplicationUser>> userManagerMock = CreateUserManagerMock();
             Mock<IJwtTokenGenerator> tokenGenMock = new();
-            Mock<IMapper> mapperMock = new();
 
             userManagerMock
                 .Setup(u => u.CreateAsync(It.IsAny<ApplicationUser>(), registerDto.Password))
@@ -72,14 +75,10 @@ namespace UserService.UnitTests.Services
                 .Setup(t => t.GenerateToken(It.IsAny<Guid>(), registerDto.Email, registerDto.Email, It.IsAny<IEnumerable<string>>()))
                 .Returns("jwt-token");
 
-            mapperMock
-                .Setup(m => m.Map<UserDto>(It.IsAny<ApplicationUser>()))
-                .Returns(new UserDto { Id = Guid.NewGuid(), Email = registerDto.Email });
 
             AuthService service = new(
                 userManagerMock.Object,
                 tokenGenMock.Object,
-                mapperMock.Object,
                 new Mock<ILogger<AuthService>>().Object
             );
 
@@ -94,7 +93,6 @@ namespace UserService.UnitTests.Services
             userManagerMock.Verify(u => u.AddToRoleAsync(It.IsAny<ApplicationUser>(), UserRoles.User), Times.Once);
             userManagerMock.Verify(u => u.GetRolesAsync(It.IsAny<ApplicationUser>()), Times.Once);
             tokenGenMock.Verify(t => t.GenerateToken(It.IsAny<Guid>(), registerDto.Email, registerDto.Email, It.IsAny<IEnumerable<string>>()), Times.Once);
-            mapperMock.Verify(m => m.Map<UserDto>(It.IsAny<ApplicationUser>()), Times.Once);
         }
 
 
@@ -107,7 +105,6 @@ namespace UserService.UnitTests.Services
 
             Mock<UserManager<ApplicationUser>> userManagerMock = CreateUserManagerMock();
             Mock<IJwtTokenGenerator> tokenGenMock = new();
-            Mock<IMapper> mapperMock = new();
 
             userManagerMock
                 .Setup(u => u.CreateAsync(It.IsAny<ApplicationUser>(), registerDto.Password))
@@ -116,7 +113,6 @@ namespace UserService.UnitTests.Services
             AuthService service = new(
                 userManagerMock.Object,
                 tokenGenMock.Object,
-                mapperMock.Object,
                 new Mock<ILogger<AuthService>>().Object
             );
 
@@ -127,7 +123,6 @@ namespace UserService.UnitTests.Services
 
             userManagerMock.Verify(u => u.AddToRoleAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()), Times.Never);
             tokenGenMock.Verify(t => t.GenerateToken(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<IEnumerable<string>>()), Times.Never);
-            mapperMock.Verify(m => m.Map<UserDto>(It.IsAny<ApplicationUser>()), Times.Never);
         }
 
 
@@ -137,11 +132,10 @@ namespace UserService.UnitTests.Services
         public async Task LoginUserAsync_ReturnsAuthResponse_WhenSuccess()
         {
             AuthLoginDto loginDto = new() { Email = "user@test.com", Password = "P@ssw0rd" };
-            ApplicationUser user = new() { Id = Guid.NewGuid(), Email = loginDto.Email, UserName = loginDto.Email };
+            ApplicationUser user = MockUser(loginDto.Email);
 
             Mock<UserManager<ApplicationUser>> userManagerMock = CreateUserManagerMock();
             Mock<IJwtTokenGenerator> tokenGenMock = new();
-            Mock<IMapper> mapperMock = new();
 
             userManagerMock
                 .Setup(u => u.FindByEmailAsync(loginDto.Email))
@@ -159,14 +153,10 @@ namespace UserService.UnitTests.Services
                 .Setup(t => t.GenerateToken(user.Id, user.Email!, user.UserName!, It.IsAny<IEnumerable<string>>()))
                 .Returns("jwt-token");
 
-            mapperMock
-                .Setup(m => m.Map<UserDto>(user))
-                .Returns(new UserDto { Id = user.Id, Email = user.Email });
 
             AuthService service = new(
                 userManagerMock.Object,
                 tokenGenMock.Object,
-                mapperMock.Object,
                 new Mock<ILogger<AuthService>>().Object
             );
 
@@ -181,7 +171,6 @@ namespace UserService.UnitTests.Services
             userManagerMock.Verify(u => u.CheckPasswordAsync(user, loginDto.Password), Times.Once);
             userManagerMock.Verify(u => u.GetRolesAsync(user), Times.Once);
             tokenGenMock.Verify(t => t.GenerateToken(user.Id, user.Email!, user.UserName!, It.IsAny<IEnumerable<string>>()), Times.Once);
-            mapperMock.Verify(m => m.Map<UserDto>(user), Times.Once);
         }
 
 
@@ -194,7 +183,6 @@ namespace UserService.UnitTests.Services
 
             Mock<UserManager<ApplicationUser>> userManagerMock = CreateUserManagerMock();
             Mock<IJwtTokenGenerator> tokenGenMock = new();
-            Mock<IMapper> mapperMock = new();
 
             userManagerMock
                 .Setup(u => u.FindByEmailAsync(loginDto.Email))
@@ -203,7 +191,6 @@ namespace UserService.UnitTests.Services
             AuthService service = new(
                 userManagerMock.Object,
                 tokenGenMock.Object,
-                mapperMock.Object,
                 new Mock<ILogger<AuthService>>().Object
             );
 
@@ -214,7 +201,6 @@ namespace UserService.UnitTests.Services
 
             userManagerMock.Verify(u => u.CheckPasswordAsync(It.IsAny<ApplicationUser>(), It.IsAny<string>()), Times.Never);
             tokenGenMock.Verify(t => t.GenerateToken(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<IEnumerable<string>>()), Times.Never);
-            mapperMock.Verify(m => m.Map<UserDto>(It.IsAny<ApplicationUser>()), Times.Never);
         }
 
 
@@ -224,11 +210,10 @@ namespace UserService.UnitTests.Services
         public async Task LoginUserAsync_ReturnsNull_WhenPasswordInvalid()
         {
             AuthLoginDto loginDto = new() { Email = "user@test.com", Password = "wrong" };
-            ApplicationUser user = new() { Id = Guid.NewGuid(), Email = loginDto.Email, UserName = loginDto.Email };
+            ApplicationUser user = ApplicationUser.Create(loginDto.Email,null,null,null,null,null,null,null,false);
 
             Mock<UserManager<ApplicationUser>> userManagerMock = CreateUserManagerMock();
             Mock<IJwtTokenGenerator> tokenGenMock = new();
-            Mock<IMapper> mapperMock = new();
 
             userManagerMock
                 .Setup(u => u.FindByEmailAsync(loginDto.Email))
@@ -241,7 +226,6 @@ namespace UserService.UnitTests.Services
             AuthService service = new(
                 userManagerMock.Object,
                 tokenGenMock.Object,
-                mapperMock.Object,
                 new Mock<ILogger<AuthService>>().Object
             );
 
@@ -251,7 +235,6 @@ namespace UserService.UnitTests.Services
 
             userManagerMock.Verify(u => u.GetRolesAsync(It.IsAny<ApplicationUser>()), Times.Never);
             tokenGenMock.Verify(t => t.GenerateToken(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<IEnumerable<string>>()), Times.Never);
-            mapperMock.Verify(m => m.Map<UserDto>(It.IsAny<ApplicationUser>()), Times.Never);
         }
 
 
@@ -261,25 +244,19 @@ namespace UserService.UnitTests.Services
         public async Task GetCurrentUserAsync_ReturnsUserDto_WhenExists()
         {
             ClaimsPrincipal principal = new(new ClaimsIdentity([new Claim(ClaimTypes.NameIdentifier, Guid.NewGuid().ToString())], "mock"));
-            ApplicationUser user = new() { Id = Guid.NewGuid(), Email = "me@test.com" };
-            UserDto expectedDto = new() { Id = user.Id, Email = user.Email };
+            ApplicationUser user = MockUser("me@test.com");
+            UserDto expectedDto = new() { Id = user.Id, Email = user.Email! };
 
             Mock<UserManager<ApplicationUser>> userManagerMock = CreateUserManagerMock();
             Mock<IJwtTokenGenerator> tokenGenMock = new();
-            Mock<IMapper> mapperMock = new();
 
             userManagerMock
                 .Setup(u => u.GetUserAsync(principal))
                 .ReturnsAsync(user);
 
-            mapperMock
-                .Setup(m => m.Map<UserDto>(user))
-                .Returns(expectedDto);
-
             AuthService service = new(
                 userManagerMock.Object,
                 tokenGenMock.Object,
-                mapperMock.Object,
                 new Mock<ILogger<AuthService>>().Object
             );
 
@@ -288,7 +265,6 @@ namespace UserService.UnitTests.Services
             result.Should().BeEquivalentTo(expectedDto);
 
             userManagerMock.Verify(u => u.GetUserAsync(principal), Times.Once);
-            mapperMock.Verify(m => m.Map<UserDto>(user), Times.Once);
         }
 
 
@@ -301,7 +277,6 @@ namespace UserService.UnitTests.Services
 
             Mock<UserManager<ApplicationUser>> userManagerMock = CreateUserManagerMock();
             Mock<IJwtTokenGenerator> tokenGenMock = new();
-            Mock<IMapper> mapperMock = new();
 
             userManagerMock
                 .Setup(u => u.GetUserAsync(principal))
@@ -310,15 +285,12 @@ namespace UserService.UnitTests.Services
             AuthService service = new(
                 userManagerMock.Object,
                 tokenGenMock.Object,
-                mapperMock.Object,
                 new Mock<ILogger<AuthService>>().Object
             );
 
             UserDto? result = await service.GetCurrentUserAsync(principal);
 
             result.Should().BeNull();
-
-            mapperMock.Verify(m => m.Map<UserDto>(It.IsAny<ApplicationUser>()), Times.Never);
         }
 
 

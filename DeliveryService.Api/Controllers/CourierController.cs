@@ -52,9 +52,9 @@ namespace DeliveryService.Api.Controllers
         [HttpDelete("{courierId}")]
         public async Task<IActionResult> DeleteCourier(Guid courierId, CancellationToken ct)
         {
-            CourierDto? courier = await _courierService.DeleteCourierAsync(courierId, ct);
+            bool deleted = await _courierService.DeleteCourierAsync(courierId, ct);
 
-            return courier is not null ? Ok(courier) : NotFound();
+            return deleted ? NoContent() : NotFound();
         }
 
 

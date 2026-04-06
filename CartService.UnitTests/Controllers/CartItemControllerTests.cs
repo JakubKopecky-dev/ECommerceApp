@@ -194,7 +194,34 @@ namespace CartService.UnitTests.Controllers
 
         [Fact]
         [Trait("Category", "Unit")]
-        public async Task DeleteCartItem_ReturnsOk_WhenExists()
+        public async Task ChangeCartItemQuantity_ReturnsNoContent_WhenQuantityZero()
+        {
+            Guid cartItemId = Guid.NewGuid();
+
+            ChangeQuantityCartItemDto changeDto = new() { Quantity = 0 };
+
+            Result<CartItemDto, CartItemError> serviceResult = Result<CartItemDto, CartItemError>.NoContent();
+
+            Mock<ICartItemService> serviceMock = new();
+
+            serviceMock
+                .Setup(i => i.ChangeCartItemQuantityAsync(cartItemId, changeDto, It.IsAny<CancellationToken>()))
+                .ReturnsAsync(serviceResult);
+
+            CartItemController controller = new(serviceMock.Object);
+
+            var result = await controller.ChangeCartItemQuantity(cartItemId, changeDto, It.IsAny<CancellationToken>());
+
+            result.Should().BeOfType<NoContentResult>();
+
+            serviceMock.Verify(i => i.ChangeCartItemQuantityAsync(cartItemId, changeDto, It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+
+
+        [Fact]
+        [Trait("Category", "Unit")]
+        public async Task DeleteCartItem_ReturnsNoContent_WhenExists()
         {
             Guid cartItemId = Guid.NewGuid();
 
@@ -204,14 +231,14 @@ namespace CartService.UnitTests.Controllers
 
             serviceMock
                 .Setup(i => i.DeleteCartItemAsync(cartItemId, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(expectedDto);
+                .ReturnsAsync(true);
 
             CartItemController controller = new(serviceMock.Object);
 
 
             var result = await controller.DeleteCartItem(cartItemId);
 
-            (result as OkObjectResult)!.Value.Should().BeEquivalentTo(expectedDto);
+            result.Should().BeOfType<NoContentResult>();
 
             serviceMock.Verify(i => i.DeleteCartItemAsync(cartItemId, It.IsAny<CancellationToken>()), Times.Once);
         }
@@ -228,7 +255,7 @@ namespace CartService.UnitTests.Controllers
 
             serviceMock
                 .Setup(i => i.DeleteCartItemAsync(cartItemId, It.IsAny<CancellationToken>()))
-                .ReturnsAsync((CartItemDto?)null);
+                .ReturnsAsync(false);
 
             CartItemController controller = new(serviceMock.Object);
 

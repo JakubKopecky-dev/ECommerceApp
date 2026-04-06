@@ -97,7 +97,7 @@ namespace CartService.UnitTests.Controllers
 
         [Fact]
         [Trait("Category", "Unit")]
-        public async Task DeleteCart_ReturnsOk_WhenCartExists()
+        public async Task DeleteCart_ReturnsNoContent_WhenCartExists()
         {
             Guid userId = Guid.NewGuid();
 
@@ -107,14 +107,14 @@ namespace CartService.UnitTests.Controllers
 
             cartServiceMock
                 .Setup(c => c.DeleteCartByUserIdAsync(userId, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(expectedDto);
+                .ReturnsAsync(true);
 
             CartController controller = CreateControllerWithUser(cartServiceMock, userId);
 
 
             var result = await controller.DeleteCart(It.IsAny<CancellationToken>());
 
-            (result as OkObjectResult)!.Value.Should().BeEquivalentTo(expectedDto);
+            result.Should().BeOfType<NoContentResult>();
 
             cartServiceMock.Verify(c => c.DeleteCartByUserIdAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
         }
@@ -131,7 +131,7 @@ namespace CartService.UnitTests.Controllers
 
             cartServiceMock
                 .Setup(c => c.DeleteCartByUserIdAsync(userId, It.IsAny<CancellationToken>()))
-                .ReturnsAsync((CartDto?)null);
+                .ReturnsAsync(false);
 
             CartController controller = CreateControllerWithUser(cartServiceMock, userId);
 

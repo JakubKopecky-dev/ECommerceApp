@@ -1,4 +1,5 @@
-﻿using NotificationService.Domain.Enums;
+﻿using NotificationService.Domain.Common;
+using NotificationService.Domain.Enums;
 
 namespace NotificationService.Domain.Entities
 {
@@ -15,6 +16,43 @@ namespace NotificationService.Domain.Entities
         public NotificationType Type { get; set; } 
 
         public DateTime CreatedAt { get; set; }
+
+
+        private Notification() { }  
+
+
+        public static Notification Create(string title, Guid userId, string message, NotificationType type)
+        {
+            if (string.IsNullOrWhiteSpace(title))
+                throw new DomainException("Title is required");
+
+            if (string.IsNullOrWhiteSpace(message))
+                throw new DomainException("Message is required");
+
+            if (userId == Guid.Empty)
+                throw new DomainException("UserId is required");
+
+
+            return new()
+            {
+                Id = Guid.NewGuid(),
+                Title = title,
+                Message = message,
+                Type = type,
+                UserId = userId,
+                CreatedAt = DateTime.UtcNow
+            };
+
+        }
+
+
+
+
+
+
+
+
+
     }
 
 }

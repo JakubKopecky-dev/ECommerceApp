@@ -9,7 +9,13 @@ namespace CartService.Api.Extensions
         public static IActionResult ToActionResult<TValue>(this Result<TValue, CartItemError> result, ControllerBase controller)
         {
             if (result.IsSuccess)
+            {
+                if (result.Value is null)
+                    return controller.NoContent();
+
                 return controller.Ok(result.Value);
+            }
+
 
             return result.Error switch
             {
@@ -27,8 +33,8 @@ namespace CartService.Api.Extensions
             if (result.IsSuccess)
                 return controller.CreatedAtAction(actionName, routeValues, result.Value);
 
-            return result.ToActionResult(controller);
 
+            return result.ToActionResult(controller);
         }
 
 

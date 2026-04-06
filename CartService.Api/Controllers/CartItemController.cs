@@ -42,6 +42,8 @@ namespace CartService.Api.Controllers
         public async Task<IActionResult> CreateCartItem([FromBody] CreateCartItemDto createDto, CancellationToken ct)
         {
             var result = await _cartItemService.CreateCartItemOrChangeQuantityAsync(createDto, ct);
+            if (result.IsSuccess && result.Value is null)
+                return NoContent();
 
             return result.ToCreatedAtActionResult(this, nameof(GetCartItem), new { cartItemId = result.Value?.Id });
         }
@@ -75,9 +77,9 @@ namespace CartService.Api.Controllers
         [HttpDelete("{cartItemId}")]
         public async Task<IActionResult> DeleteCartItem(Guid cartItemId)
         {
-            CartItemDto? cartItem = await _cartItemService.DeleteCartItemAsync(cartItemId);
+            bool isDeleted = await _cartItemService.DeleteCartItemAsync(cartItemId);
 
-            return cartItem is not null ? Ok(cartItem) : NotFound();
+            return isDeleted ? NoContent() : NotFound();
         }
 
 

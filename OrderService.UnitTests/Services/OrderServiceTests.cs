@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using FluentAssertions;
+﻿using FluentAssertions;
 using Grpc.Core;
 using MassTransit;
 using Microsoft.Extensions.Logging;
@@ -11,6 +10,7 @@ using OrderService.Application.Interfaces.Repositories;
 using OrderService.Domain.Entities;
 using OrderService.Domain.Enums;
 using Shared.Contracts.Events;
+using System.Reflection;
 using DeliveryStatusContract = Shared.Contracts.Enums.DeliveryStatus;
 using OrderServiceService = OrderService.Application.Services.OrderService;
 
@@ -18,6 +18,29 @@ namespace OrderService.UnitTests.Services
 {
     public class OrderServiceTests
     {
+        private static OrderServiceService CreateService(
+            Mock<IOrderRepository> orderRepositoryMock,
+            Mock<IPublishEndpoint> publishEndpointMock,
+            Mock<IDeliveryReadClient> deliveryReadClientMock,
+            Mock<IPaymentReadClient> paymentReadClientMock)
+        {
+            return new OrderServiceService(
+                orderRepositoryMock.Object,
+                new Mock<ILogger<OrderServiceService>>().Object,
+                publishEndpointMock.Object,
+                deliveryReadClientMock.Object,
+                paymentReadClientMock.Object
+            );
+        }
+
+        private static void AddItems(Order order, IEnumerable<OrderItem> items)
+        {
+            var field = typeof(Order).GetField("_items", BindingFlags.NonPublic | BindingFlags.Instance);
+            var list = (List<OrderItem>)field!.GetValue(order)!;
+            list.AddRange(items);
+        }
+
+
         [Fact]
         [Trait("Category", "Unit")]
         public async Task GetAllOrdersByUserIdAsync_ReturnsOrderDtoList_WhenExists()
@@ -26,46 +49,28 @@ namespace OrderService.UnitTests.Services
 
             List<Order> orders =
             [
-                new() { Id = Guid.NewGuid(), UserId = userId },
-                new() { Id = Guid.NewGuid(), UserId = userId }
-            ];
-
-            List<OrderDto> expectedDto =
-            [
-                new() { Id = orders[0].Id, UserId = userId },
-                new() { Id = orders[1].Id, UserId = userId }
+                Order.Create(userId, null),
+                Order.Create(userId, null)
             ];
 
             Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IOrderItemRepository> orderItemRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
+            Mock<IPublishEndpoint> publishEndpointMock = new();
+            Mock<IDeliveryReadClient> deliveryReadClientMock = new();
+            Mock<IPaymentReadClient> paymentReadClientMock = new();
 
             orderRepositoryMock
                 .Setup(o => o.GetAllOrderByUserIdAsync(userId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(orders);
 
-            mapperMock
-                .Setup(m => m.Map<List<OrderDto>>(orders))
-                .Returns(expectedDto);
-
-            OrderServiceService service = new(
-                orderRepositoryMock.Object,
-                mapperMock.Object,
-                new Mock<ILogger<OrderServiceService>>().Object,
-                new Mock<IPublishEndpoint>().Object,
-                new Mock<IDeliveryReadClient>().Object,
-                new Mock<IPaymentReadClient>().Object
-            );
-
+            var service = CreateService(orderRepositoryMock, publishEndpointMock, deliveryReadClientMock, paymentReadClientMock);
 
             IReadOnlyList<OrderDto> result = await service.GetAllOrdersByUserIdAsync(userId, It.IsAny<CancellationToken>());
 
-            result.Should().BeEquivalentTo(expectedDto);
+            result.Should().HaveCount(2);
+            result.Should().AllSatisfy(o => o.UserId.Should().Be(userId));
 
             orderRepositoryMock.Verify(o => o.GetAllOrderByUserIdAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<List<OrderDto>>(orders), Times.Once);
         }
-
 
 
         [Fact]
@@ -74,38 +79,23 @@ namespace OrderService.UnitTests.Services
         {
             Guid userId = Guid.NewGuid();
 
-            List<Order> orders = [];
-            List<OrderDto> expectedDto = [];
-
             Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
+            Mock<IPublishEndpoint> publishEndpointMock = new();
+            Mock<IDeliveryReadClient> deliveryReadClientMock = new();
+            Mock<IPaymentReadClient> paymentReadClientMock = new();
 
             orderRepositoryMock
                 .Setup(o => o.GetAllOrderByUserIdAsync(userId, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(orders);
+                .ReturnsAsync([]);
 
-            mapperMock
-                .Setup(m => m.Map<List<OrderDto>>(orders))
-                .Returns(expectedDto);
-
-            OrderServiceService service = new(
-                orderRepositoryMock.Object,
-                mapperMock.Object,
-                new Mock<ILogger<OrderServiceService>>().Object,
-                new Mock<IPublishEndpoint>().Object,
-                new Mock<IDeliveryReadClient>().Object,
-                new Mock<IPaymentReadClient>().Object
-            );
-
+            var service = CreateService(orderRepositoryMock, publishEndpointMock, deliveryReadClientMock, paymentReadClientMock);
 
             IReadOnlyList<OrderDto> result = await service.GetAllOrdersByUserIdAsync(userId, It.IsAny<CancellationToken>());
 
-            result.Should().BeEquivalentTo(expectedDto);
+            result.Should().BeEmpty();
 
             orderRepositoryMock.Verify(o => o.GetAllOrderByUserIdAsync(userId, It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<List<OrderDto>>(orders), Times.Once);
         }
-
 
 
         [Fact]
@@ -114,157 +104,102 @@ namespace OrderService.UnitTests.Services
         {
             List<Order> orders =
             [
-                new() { Id = Guid.NewGuid() },
-                new() { Id = Guid.NewGuid() }
-            ];
-
-            List<OrderDto> expectedDto =
-            [
-                new() { Id = orders[0].Id },
-                new() { Id = orders[1].Id }
+                Order.Create(Guid.NewGuid(), null),
+                Order.Create(Guid.NewGuid(), null)
             ];
 
             Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
+            Mock<IPublishEndpoint> publishEndpointMock = new();
+            Mock<IDeliveryReadClient> deliveryReadClientMock = new();
+            Mock<IPaymentReadClient> paymentReadClientMock = new();
 
             orderRepositoryMock
                 .Setup(o => o.GetAllAsync(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(orders);
 
-            mapperMock
-                .Setup(m => m.Map<List<OrderDto>>(orders))
-                .Returns(expectedDto);
-
-            OrderServiceService service = new(
-                orderRepositoryMock.Object,
-                mapperMock.Object,
-                new Mock<ILogger<OrderServiceService>>().Object,
-                new Mock<IPublishEndpoint>().Object,
-                new Mock<IDeliveryReadClient>().Object,
-                new Mock<IPaymentReadClient>().Object
-            );
-
+            var service = CreateService(orderRepositoryMock, publishEndpointMock, deliveryReadClientMock, paymentReadClientMock);
 
             IReadOnlyList<OrderDto> result = await service.GetAllOrdersAsync(It.IsAny<CancellationToken>());
 
-            result.Should().BeEquivalentTo(expectedDto);
+            result.Should().HaveCount(2);
 
             orderRepositoryMock.Verify(o => o.GetAllAsync(It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<List<OrderDto>>(orders), Times.Once);
         }
-
 
 
         [Fact]
         [Trait("Category", "Unit")]
         public async Task GetAllOrdersAsync_ReturnsEmptyList_WhenNotExists()
         {
-            List<Order> orders = [];
-            List<OrderDto> expectedDto = [];
-
             Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
+            Mock<IPublishEndpoint> publishEndpointMock = new();
+            Mock<IDeliveryReadClient> deliveryReadClientMock = new();
+            Mock<IPaymentReadClient> paymentReadClientMock = new();
 
             orderRepositoryMock
                 .Setup(o => o.GetAllAsync(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(orders);
+                .ReturnsAsync([]);
 
-            mapperMock
-                .Setup(m => m.Map<List<OrderDto>>(orders))
-                .Returns(expectedDto);
-
-            OrderServiceService service = new(
-                orderRepositoryMock.Object,
-                mapperMock.Object,
-                new Mock<ILogger<OrderServiceService>>().Object,
-                new Mock<IPublishEndpoint>().Object,
-                new Mock<IDeliveryReadClient>().Object,
-                new Mock<IPaymentReadClient>().Object
-            );
-
+            var service = CreateService(orderRepositoryMock, publishEndpointMock, deliveryReadClientMock, paymentReadClientMock);
 
             IReadOnlyList<OrderDto> result = await service.GetAllOrdersAsync(It.IsAny<CancellationToken>());
 
-            result.Should().BeEquivalentTo(expectedDto);
+            result.Should().BeEmpty();
 
             orderRepositoryMock.Verify(o => o.GetAllAsync(It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<List<OrderDto>>(orders), Times.Once);
         }
-
 
 
         [Fact]
         [Trait("Category", "Unit")]
         public async Task GetOrderByIdAsync_ReturnsOrderExtendedDto_WhenExists()
         {
-            Guid orderId = Guid.NewGuid();
-
-            Order order = new() { Id = orderId, Items = [] };
-            OrderExtendedDto expectedDto = new() { Id = orderId, Items = [] };
+            Order order = Order.Create(Guid.NewGuid(), null);
+            Guid orderId = order.Id;
 
             Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IOrderItemRepository> orderItemRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
+            Mock<IPublishEndpoint> publishEndpointMock = new();
+            Mock<IDeliveryReadClient> deliveryReadClientMock = new();
+            Mock<IPaymentReadClient> paymentReadClientMock = new();
 
             orderRepositoryMock
                 .Setup(o => o.FindOrderByIdIncludeOrderItemAsync(orderId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(order);
 
-            mapperMock
-                .Setup(m => m.Map<OrderExtendedDto>(order))
-                .Returns(expectedDto);
-
-            OrderServiceService service = new(
-                orderRepositoryMock.Object,
-                mapperMock.Object,
-                new Mock<ILogger<OrderServiceService>>().Object,
-                new Mock<IPublishEndpoint>().Object,
-                new Mock<IDeliveryReadClient>().Object,
-                new Mock<IPaymentReadClient>().Object
-            );
-
+            var service = CreateService(orderRepositoryMock, publishEndpointMock, deliveryReadClientMock, paymentReadClientMock);
 
             OrderExtendedDto? result = await service.GetOrderByIdAsync(orderId, It.IsAny<CancellationToken>());
 
-            result.Should().BeEquivalentTo(expectedDto);
+            result.Should().NotBeNull();
+            result!.Id.Should().Be(orderId);
 
             orderRepositoryMock.Verify(o => o.FindOrderByIdIncludeOrderItemAsync(orderId, It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<OrderExtendedDto>(order), Times.Once);
         }
-
 
 
         [Fact]
         [Trait("Category", "Unit")]
-        public async Task GetOrderAsync_ReturnsNull_WhenNotExists()
+        public async Task GetOrderByIdAsync_ReturnsNull_WhenNotExists()
         {
             Guid orderId = Guid.NewGuid();
 
             Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
+            Mock<IPublishEndpoint> publishEndpointMock = new();
+            Mock<IDeliveryReadClient> deliveryReadClientMock = new();
+            Mock<IPaymentReadClient> paymentReadClientMock = new();
 
             orderRepositoryMock
                 .Setup(o => o.FindOrderByIdIncludeOrderItemAsync(orderId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Order?)null);
 
-            OrderServiceService service = new(
-                orderRepositoryMock.Object,
-                mapperMock.Object,
-                new Mock<ILogger<OrderServiceService>>().Object,
-                new Mock<IPublishEndpoint>().Object,
-                new Mock<IDeliveryReadClient>().Object,
-                new Mock<IPaymentReadClient>().Object
-            );
-
+            var service = CreateService(orderRepositoryMock, publishEndpointMock, deliveryReadClientMock, paymentReadClientMock);
 
             OrderExtendedDto? result = await service.GetOrderByIdAsync(orderId, It.IsAny<CancellationToken>());
 
             result.Should().BeNull();
 
             orderRepositoryMock.Verify(o => o.FindOrderByIdIncludeOrderItemAsync(orderId, It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<OrderExtendedDto>(It.IsAny<Order>()), Times.Never);
         }
-
 
 
         [Fact]
@@ -273,58 +208,45 @@ namespace OrderService.UnitTests.Services
         {
             CreateOrderDto createDto = new() { UserId = Guid.NewGuid(), Note = "Wrap as a gift please." };
 
-            Order order = new() { Id = Guid.Empty, UserId = createDto.UserId, CreatedAt = DateTime.UtcNow, Status = OrderStatus.Created };
-            Order createdOrder = new() { Id = Guid.NewGuid(), UserId = createDto.UserId, CreatedAt = order.CreatedAt, Status = OrderStatus.Created };
-            OrderDto expectedDto = new() { Id = createdOrder.Id, UserId = createDto.UserId, Status = OrderStatus.Created, CreatedAt = createdOrder.CreatedAt };
-
             Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
-
-            mapperMock
-                .Setup(m => m.Map<Order>(createDto))
-                .Returns(order);
+            Mock<IPublishEndpoint> publishEndpointMock = new();
+            Mock<IDeliveryReadClient> deliveryReadClientMock = new();
+            Mock<IPaymentReadClient> paymentReadClientMock = new();
 
             orderRepositoryMock
-                .Setup(o => o.InsertAsync(It.IsAny<Order>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(createdOrder);
+                .Setup(o => o.AddAsync(It.IsAny<Order>(), It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
 
-            mapperMock
-                .Setup(m => m.Map<OrderDto>(createdOrder))
-                .Returns(expectedDto);
+            orderRepositoryMock
+                .Setup(o => o.SaveChangesAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
 
-            OrderServiceService service = new(
-                orderRepositoryMock.Object,
-                mapperMock.Object,
-                new Mock<ILogger<OrderServiceService>>().Object,
-                new Mock<IPublishEndpoint>().Object,
-                new Mock<IDeliveryReadClient>().Object,
-                new Mock<IPaymentReadClient>().Object
-            );
-
+            var service = CreateService(orderRepositoryMock, publishEndpointMock, deliveryReadClientMock, paymentReadClientMock);
 
             OrderDto result = await service.CreateOrderAsync(createDto, It.IsAny<CancellationToken>());
 
-            result.Should().BeEquivalentTo(expectedDto);
+            result.Should().NotBeNull();
+            result.UserId.Should().Be(createDto.UserId);
+            result.Note.Should().Be(createDto.Note);
+            result.Status.Should().Be(OrderStatus.Created);
 
-            mapperMock.Verify(m => m.Map<Order>(createDto), Times.Once);
-            orderRepositoryMock.Verify(r => r.InsertAsync(It.IsAny<Order>(), It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<OrderDto>(createdOrder), Times.Once);
+            orderRepositoryMock.Verify(o => o.AddAsync(It.IsAny<Order>(), It.IsAny<CancellationToken>()), Times.Once);
+            orderRepositoryMock.Verify(o => o.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
-
 
 
         [Fact]
         [Trait("Category", "Unit")]
         public async Task UpdateOrderNoteAsync_ReturnsOrderDto_WhenExists()
         {
-            Guid orderId = Guid.NewGuid();
-            UpdateOrderNoteDto updateDto = new() { Note = "Note" };
-
-            Order order = new() { Id = orderId, Note = "", UpdatedAt = DateTime.UtcNow };
-            OrderDto expectedDto = new() { Id = orderId, Note = updateDto.Note, UpdatedAt = order.UpdatedAt };
+            Order order = Order.Create(Guid.NewGuid(), "Old note");
+            Guid orderId = order.Id;
+            UpdateOrderNoteDto updateDto = new() { Note = "New note" };
 
             Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
+            Mock<IPublishEndpoint> publishEndpointMock = new();
+            Mock<IDeliveryReadClient> deliveryReadClientMock = new();
+            Mock<IPaymentReadClient> paymentReadClientMock = new();
 
             orderRepositoryMock
                 .Setup(o => o.FindByIdAsync(orderId, It.IsAny<CancellationToken>()))
@@ -334,29 +256,16 @@ namespace OrderService.UnitTests.Services
                 .Setup(o => o.SaveChangesAsync(It.IsAny<CancellationToken>()))
                 .Returns(Task.CompletedTask);
 
-            mapperMock
-                .Setup(m => m.Map<OrderDto>(order))
-                .Returns(expectedDto);
-
-            OrderServiceService service = new(
-                orderRepositoryMock.Object,
-                mapperMock.Object,
-                new Mock<ILogger<OrderServiceService>>().Object,
-                new Mock<IPublishEndpoint>().Object,
-                new Mock<IDeliveryReadClient>().Object,
-                new Mock<IPaymentReadClient>().Object
-            );
-
+            var service = CreateService(orderRepositoryMock, publishEndpointMock, deliveryReadClientMock, paymentReadClientMock);
 
             OrderDto? result = await service.UpdateOrderNoteAsync(orderId, updateDto, It.IsAny<CancellationToken>());
 
-            result.Should().BeEquivalentTo(expectedDto);
+            result.Should().NotBeNull();
+            result!.Note.Should().Be(updateDto.Note);
 
             orderRepositoryMock.Verify(o => o.FindByIdAsync(orderId, It.IsAny<CancellationToken>()), Times.Once);
             orderRepositoryMock.Verify(o => o.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<OrderDto>(order), Times.Once);
         }
-
 
 
         [Fact]
@@ -367,21 +276,15 @@ namespace OrderService.UnitTests.Services
             UpdateOrderNoteDto updateDto = new() { Note = "Note" };
 
             Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
+            Mock<IPublishEndpoint> publishEndpointMock = new();
+            Mock<IDeliveryReadClient> deliveryReadClientMock = new();
+            Mock<IPaymentReadClient> paymentReadClientMock = new();
 
             orderRepositoryMock
                 .Setup(o => o.FindByIdAsync(orderId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Order?)null);
 
-            OrderServiceService service = new(
-                orderRepositoryMock.Object,
-                mapperMock.Object,
-                new Mock<ILogger<OrderServiceService>>().Object,
-                new Mock<IPublishEndpoint>().Object,
-                new Mock<IDeliveryReadClient>().Object,
-                new Mock<IPaymentReadClient>().Object
-            );
-
+            var service = CreateService(orderRepositoryMock, publishEndpointMock, deliveryReadClientMock, paymentReadClientMock);
 
             OrderDto? result = await service.UpdateOrderNoteAsync(orderId, updateDto, It.IsAny<CancellationToken>());
 
@@ -389,106 +292,80 @@ namespace OrderService.UnitTests.Services
 
             orderRepositoryMock.Verify(o => o.FindByIdAsync(orderId, It.IsAny<CancellationToken>()), Times.Once);
             orderRepositoryMock.Verify(o => o.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
-            mapperMock.Verify(m => m.Map<OrderDto>(It.IsAny<Order>()), Times.Never);
         }
-
 
 
         [Fact]
         [Trait("Category", "Unit")]
-        public async Task DeleteOrderAsync_ReturnsOrderDto_WhenExists()
+        public async Task DeleteOrderAsync_ReturnsTrue_WhenExists()
         {
-            Guid orderId = Guid.NewGuid();
-
-            Order order = new() { Id = orderId, Items = [] };
-            OrderDto expectedDto = new() { Id = orderId };
+            Order order = Order.Create(Guid.NewGuid(), null);
+            Guid orderId = order.Id;
 
             Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
+            Mock<IPublishEndpoint> publishEndpointMock = new();
+            Mock<IDeliveryReadClient> deliveryReadClientMock = new();
+            Mock<IPaymentReadClient> paymentReadClientMock = new();
 
             orderRepositoryMock
                 .Setup(o => o.FindOrderByIdIncludeOrderItemAsync(orderId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(order);
 
-            mapperMock
-                .Setup(m => m.Map<OrderDto>(order))
-                .Returns(expectedDto);
-
             orderRepositoryMock
                 .Setup(o => o.SaveChangesAsync(It.IsAny<CancellationToken>()))
                 .Returns(Task.CompletedTask);
 
-            OrderServiceService service = new(
-                orderRepositoryMock.Object,
-                mapperMock.Object,
-                new Mock<ILogger<OrderServiceService>>().Object,
-                new Mock<IPublishEndpoint>().Object,
-                new Mock<IDeliveryReadClient>().Object,
-                new Mock<IPaymentReadClient>().Object
-            );
+            var service = CreateService(orderRepositoryMock, publishEndpointMock, deliveryReadClientMock, paymentReadClientMock);
 
+            bool result = await service.DeleteOrderAsync(orderId, It.IsAny<CancellationToken>());
 
-            OrderDto? result = await service.DeleteOrderAsync(orderId, It.IsAny<CancellationToken>());
-
-            result.Should().BeEquivalentTo(expectedDto);
+            result.Should().BeTrue();
 
             orderRepositoryMock.Verify(o => o.FindOrderByIdIncludeOrderItemAsync(orderId, It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<OrderDto>(order), Times.Once);
             orderRepositoryMock.Verify(o => o.Remove(order), Times.Once);
             orderRepositoryMock.Verify(o => o.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
 
 
-
         [Fact]
         [Trait("Category", "Unit")]
-        public async Task DeleteOrderAsync_ReturnsNull_WhenNotExists()
+        public async Task DeleteOrderAsync_ReturnsFalse_WhenNotExists()
         {
             Guid orderId = Guid.NewGuid();
 
             Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
+            Mock<IPublishEndpoint> publishEndpointMock = new();
+            Mock<IDeliveryReadClient> deliveryReadClientMock = new();
+            Mock<IPaymentReadClient> paymentReadClientMock = new();
 
             orderRepositoryMock
-                .Setup(r => r.FindOrderByIdIncludeOrderItemAsync(orderId, It.IsAny<CancellationToken>()))
+                .Setup(o => o.FindOrderByIdIncludeOrderItemAsync(orderId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Order?)null);
 
-            OrderServiceService service = new(
-                orderRepositoryMock.Object,
-                mapperMock.Object,
-                new Mock<ILogger<OrderServiceService>>().Object,
-                new Mock<IPublishEndpoint>().Object,
-                new Mock<IDeliveryReadClient>().Object,
-                new Mock<IPaymentReadClient>().Object
-            );
+            var service = CreateService(orderRepositoryMock, publishEndpointMock, deliveryReadClientMock, paymentReadClientMock);
 
+            bool result = await service.DeleteOrderAsync(orderId, It.IsAny<CancellationToken>());
 
-            OrderDto? result = await service.DeleteOrderAsync(orderId, It.IsAny<CancellationToken>());
+            result.Should().BeFalse();
 
-            result.Should().BeNull();
-
-            orderRepositoryMock.Verify(r => r.FindOrderByIdIncludeOrderItemAsync(orderId, It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<OrderDto>(It.IsAny<Order>()), Times.Never);
-            orderRepositoryMock.Verify(r => r.Remove(It.IsAny<Order>()), Times.Never);
-            orderRepositoryMock.Verify(r => r.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+            orderRepositoryMock.Verify(o => o.FindOrderByIdIncludeOrderItemAsync(orderId, It.IsAny<CancellationToken>()), Times.Once);
+            orderRepositoryMock.Verify(o => o.Remove(It.IsAny<Order>()), Times.Never);
+            orderRepositoryMock.Verify(o => o.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
         }
-
 
 
         [Fact]
         [Trait("Category", "Unit")]
         public async Task ChangeOrderStatusAsync_ReturnsUpdated_WhenValidTransition_CreatedToPaid()
         {
-            Guid orderId = Guid.NewGuid();
+            Order order = Order.Create(Guid.NewGuid(), null);
+            Guid orderId = order.Id;
             ChangeOrderStatusDto changeDto = new() { Status = OrderStatus.Paid };
-
-            Order order = new() { Id = orderId, Status = OrderStatus.Created, UserId = Guid.NewGuid() };
-            OrderDto expectedDto = new() { Id = orderId, Status = OrderStatus.Paid };
 
             Mock<IOrderRepository> orderRepositoryMock = new();
             Mock<IPublishEndpoint> publishEndpointMock = new();
-            Mock<IMapper> mapperMock = new();
             Mock<IDeliveryReadClient> deliveryReadClientMock = new();
+            Mock<IPaymentReadClient> paymentReadClientMock = new();
 
             orderRepositoryMock
                 .Setup(o => o.FindOrderByIdIncludeOrderItemAsync(orderId, It.IsAny<CancellationToken>()))
@@ -498,46 +375,33 @@ namespace OrderService.UnitTests.Services
                 .Setup(o => o.SaveChangesAsync(It.IsAny<CancellationToken>()))
                 .Returns(Task.CompletedTask);
 
-            mapperMock
-                .Setup(m => m.Map<OrderDto>(order))
-                .Returns(expectedDto);
-
-            OrderServiceService service = new(
-                orderRepositoryMock.Object,
-                mapperMock.Object,
-                new Mock<ILogger<OrderServiceService>>().Object,
-                publishEndpointMock.Object,
-                deliveryReadClientMock.Object,
-                new Mock<IPaymentReadClient>().Object
-            );
-
+            var service = CreateService(orderRepositoryMock, publishEndpointMock, deliveryReadClientMock, paymentReadClientMock);
 
             OrderDto? result = await service.ChangeOrderStatusAsync(orderId, changeDto, It.IsAny<CancellationToken>());
 
-            result.Should().BeEquivalentTo(expectedDto);
+            result.Should().NotBeNull();
+            result!.Status.Should().Be(OrderStatus.Paid);
 
             orderRepositoryMock.Verify(o => o.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<OrderDto>(order), Times.Once);
             publishEndpointMock.Verify(p => p.Publish(It.IsAny<OrderStatusChangedEvent>(), It.IsAny<CancellationToken>()), Times.Once);
             deliveryReadClientMock.Verify(d => d.GetDeliveryStatusByOrderIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
         }
-
 
 
         [Fact]
         [Trait("Category", "Unit")]
         public async Task ChangeOrderStatusAsync_ReturnsUpdated_WhenValidTransition_PaidToAccepted()
         {
-            Guid orderId = Guid.NewGuid();
+            Order order = Order.Create(Guid.NewGuid(), null);
+            order.ChangeStatus(OrderStatus.Paid);
+            order.PopDomainEvents(); // vyčistíme eventy z předchozí změny
+            Guid orderId = order.Id;
             ChangeOrderStatusDto changeDto = new() { Status = OrderStatus.Accepted };
-
-            Order order = new() { Id = orderId, Status = OrderStatus.Paid, UserId = Guid.NewGuid() };
-            OrderDto expectedDto = new() { Id = orderId, Status = OrderStatus.Accepted };
 
             Mock<IOrderRepository> orderRepositoryMock = new();
             Mock<IPublishEndpoint> publishEndpointMock = new();
-            Mock<IMapper> mapperMock = new();
             Mock<IDeliveryReadClient> deliveryReadClientMock = new();
+            Mock<IPaymentReadClient> paymentReadClientMock = new();
 
             orderRepositoryMock
                 .Setup(o => o.FindOrderByIdIncludeOrderItemAsync(orderId, It.IsAny<CancellationToken>()))
@@ -547,44 +411,33 @@ namespace OrderService.UnitTests.Services
                 .Setup(o => o.SaveChangesAsync(It.IsAny<CancellationToken>()))
                 .Returns(Task.CompletedTask);
 
-            mapperMock
-                .Setup(m => m.Map<OrderDto>(order))
-                .Returns(expectedDto);
-
-            OrderServiceService service = new(
-                orderRepositoryMock.Object,
-                mapperMock.Object,
-                new Mock<ILogger<OrderServiceService>>().Object,
-                publishEndpointMock.Object,
-                deliveryReadClientMock.Object,
-                new Mock<IPaymentReadClient>().Object
-            );
-
+            var service = CreateService(orderRepositoryMock, publishEndpointMock, deliveryReadClientMock, paymentReadClientMock);
 
             OrderDto? result = await service.ChangeOrderStatusAsync(orderId, changeDto, It.IsAny<CancellationToken>());
 
-            result.Should().BeEquivalentTo(expectedDto);
+            result.Should().NotBeNull();
+            result!.Status.Should().Be(OrderStatus.Accepted);
 
             publishEndpointMock.Verify(p => p.Publish(It.IsAny<OrderStatusChangedEvent>(), It.IsAny<CancellationToken>()), Times.Once);
             deliveryReadClientMock.Verify(d => d.GetDeliveryStatusByOrderIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
         }
-
 
 
         [Fact]
         [Trait("Category", "Unit")]
         public async Task ChangeOrderStatusAsync_ReturnsUpdated_WhenValidTransition_AcceptedToShipped()
         {
-            Guid orderId = Guid.NewGuid();
+            Order order = Order.Create(Guid.NewGuid(), null);
+            order.ChangeStatus(OrderStatus.Paid);
+            order.ChangeStatus(OrderStatus.Accepted);
+            order.PopDomainEvents();
+            Guid orderId = order.Id;
             ChangeOrderStatusDto changeDto = new() { Status = OrderStatus.Shipped };
-
-            Order order = new() { Id = orderId, Status = OrderStatus.Accepted, UserId = Guid.NewGuid() };
-            OrderDto expectedDto = new() { Id = orderId, Status = OrderStatus.Shipped };
 
             Mock<IOrderRepository> orderRepositoryMock = new();
             Mock<IPublishEndpoint> publishEndpointMock = new();
-            Mock<IMapper> mapperMock = new();
             Mock<IDeliveryReadClient> deliveryReadClientMock = new();
+            Mock<IPaymentReadClient> paymentReadClientMock = new();
 
             orderRepositoryMock
                 .Setup(o => o.FindOrderByIdIncludeOrderItemAsync(orderId, It.IsAny<CancellationToken>()))
@@ -594,44 +447,34 @@ namespace OrderService.UnitTests.Services
                 .Setup(o => o.SaveChangesAsync(It.IsAny<CancellationToken>()))
                 .Returns(Task.CompletedTask);
 
-            mapperMock
-                .Setup(m => m.Map<OrderDto>(order))
-                .Returns(expectedDto);
-
-            OrderServiceService service = new(
-                orderRepositoryMock.Object,
-                mapperMock.Object,
-                new Mock<ILogger<OrderServiceService>>().Object,
-                publishEndpointMock.Object,
-                deliveryReadClientMock.Object,
-                new Mock<IPaymentReadClient>().Object
-            );
-
+            var service = CreateService(orderRepositoryMock, publishEndpointMock, deliveryReadClientMock, paymentReadClientMock);
 
             OrderDto? result = await service.ChangeOrderStatusAsync(orderId, changeDto, It.IsAny<CancellationToken>());
 
-            result.Should().BeEquivalentTo(expectedDto);
+            result.Should().NotBeNull();
+            result!.Status.Should().Be(OrderStatus.Shipped);
 
             publishEndpointMock.Verify(p => p.Publish(It.IsAny<OrderStatusChangedEvent>(), It.IsAny<CancellationToken>()), Times.Once);
             deliveryReadClientMock.Verify(d => d.GetDeliveryStatusByOrderIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
         }
 
 
-
         [Fact]
         [Trait("Category", "Unit")]
         public async Task ChangeOrderStatusAsync_ReturnsUpdated_WhenValidTransition_ShippedToCompleted_WithDeliveredDelivery()
         {
-            Guid orderId = Guid.NewGuid();
+            Order order = Order.Create(Guid.NewGuid(), null);
+            order.ChangeStatus(OrderStatus.Paid);
+            order.ChangeStatus(OrderStatus.Accepted);
+            order.ChangeStatus(OrderStatus.Shipped);
+            order.PopDomainEvents();
+            Guid orderId = order.Id;
             ChangeOrderStatusDto changeDto = new() { Status = OrderStatus.Completed };
-
-            Order order = new() { Id = orderId, Status = OrderStatus.Shipped, UserId = Guid.NewGuid() };
-            OrderDto expectedDto = new() { Id = orderId, Status = OrderStatus.Completed };
 
             Mock<IOrderRepository> orderRepositoryMock = new();
             Mock<IPublishEndpoint> publishEndpointMock = new();
-            Mock<IMapper> mapperMock = new();
             Mock<IDeliveryReadClient> deliveryReadClientMock = new();
+            Mock<IPaymentReadClient> paymentReadClientMock = new();
 
             orderRepositoryMock
                 .Setup(o => o.FindOrderByIdIncludeOrderItemAsync(orderId, It.IsAny<CancellationToken>()))
@@ -645,46 +488,31 @@ namespace OrderService.UnitTests.Services
                 .Setup(o => o.SaveChangesAsync(It.IsAny<CancellationToken>()))
                 .Returns(Task.CompletedTask);
 
-            mapperMock
-                .Setup(m => m.Map<OrderDto>(order))
-                .Returns(expectedDto);
-
-            OrderServiceService service = new(
-                orderRepositoryMock.Object,
-                mapperMock.Object,
-                new Mock<ILogger<OrderServiceService>>().Object,
-                publishEndpointMock.Object,
-                deliveryReadClientMock.Object,
-                new Mock<IPaymentReadClient>().Object
-            );
-
+            var service = CreateService(orderRepositoryMock, publishEndpointMock, deliveryReadClientMock, paymentReadClientMock);
 
             OrderDto? result = await service.ChangeOrderStatusAsync(orderId, changeDto, It.IsAny<CancellationToken>());
 
-            result.Should().BeEquivalentTo(expectedDto);
+            result.Should().NotBeNull();
+            result!.Status.Should().Be(OrderStatus.Completed);
 
             deliveryReadClientMock.Verify(d => d.GetDeliveryStatusByOrderIdAsync(orderId, It.IsAny<CancellationToken>()), Times.Once);
             publishEndpointMock.Verify(p => p.Publish(It.IsAny<OrderStatusChangedEvent>(), It.IsAny<CancellationToken>()), Times.Once);
             orderRepositoryMock.Verify(o => o.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<OrderDto>(order), Times.Once);
         }
-
 
 
         [Fact]
         [Trait("Category", "Unit")]
         public async Task ChangeOrderStatusAsync_ReturnsUpdated_WhenValidTransition_CreatedToCancelled()
         {
-            Guid orderId = Guid.NewGuid();
+            Order order = Order.Create(Guid.NewGuid(), null);
+            Guid orderId = order.Id;
             ChangeOrderStatusDto changeDto = new() { Status = OrderStatus.Cancelled };
-
-            Order order = new() { Id = orderId, Status = OrderStatus.Created, UserId = Guid.NewGuid() };
-            OrderDto expectedDto = new() { Id = orderId, Status = OrderStatus.Cancelled };
 
             Mock<IOrderRepository> orderRepositoryMock = new();
             Mock<IPublishEndpoint> publishEndpointMock = new();
-            Mock<IMapper> mapperMock = new();
             Mock<IDeliveryReadClient> deliveryReadClientMock = new();
+            Mock<IPaymentReadClient> paymentReadClientMock = new();
 
             orderRepositoryMock
                 .Setup(o => o.FindOrderByIdIncludeOrderItemAsync(orderId, It.IsAny<CancellationToken>()))
@@ -694,44 +522,32 @@ namespace OrderService.UnitTests.Services
                 .Setup(o => o.SaveChangesAsync(It.IsAny<CancellationToken>()))
                 .Returns(Task.CompletedTask);
 
-            mapperMock
-                .Setup(m => m.Map<OrderDto>(order))
-                .Returns(expectedDto);
-
-            OrderServiceService service = new(
-                orderRepositoryMock.Object,
-                mapperMock.Object,
-                new Mock<ILogger<OrderServiceService>>().Object,
-                publishEndpointMock.Object,
-                deliveryReadClientMock.Object,
-                new Mock<IPaymentReadClient>().Object
-            );
-
+            var service = CreateService(orderRepositoryMock, publishEndpointMock, deliveryReadClientMock, paymentReadClientMock);
 
             OrderDto? result = await service.ChangeOrderStatusAsync(orderId, changeDto, It.IsAny<CancellationToken>());
 
-            result.Should().BeEquivalentTo(expectedDto);
+            result.Should().NotBeNull();
+            result!.Status.Should().Be(OrderStatus.Cancelled);
 
             publishEndpointMock.Verify(p => p.Publish(It.IsAny<OrderStatusChangedEvent>(), It.IsAny<CancellationToken>()), Times.Once);
             deliveryReadClientMock.Verify(d => d.GetDeliveryStatusByOrderIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
         }
-
 
 
         [Fact]
         [Trait("Category", "Unit")]
         public async Task ChangeOrderStatusAsync_ReturnsUpdated_WhenValidTransition_PaidToRejected()
         {
-            Guid orderId = Guid.NewGuid();
+            Order order = Order.Create(Guid.NewGuid(), null);
+            order.ChangeStatus(OrderStatus.Paid);
+            order.PopDomainEvents();
+            Guid orderId = order.Id;
             ChangeOrderStatusDto changeDto = new() { Status = OrderStatus.Rejected };
-
-            Order order = new() { Id = orderId, Status = OrderStatus.Paid, UserId = Guid.NewGuid() };
-            OrderDto expectedDto = new() { Id = orderId, Status = OrderStatus.Rejected };
 
             Mock<IOrderRepository> orderRepositoryMock = new();
             Mock<IPublishEndpoint> publishEndpointMock = new();
-            Mock<IMapper> mapperMock = new();
             Mock<IDeliveryReadClient> deliveryReadClientMock = new();
+            Mock<IPaymentReadClient> paymentReadClientMock = new();
 
             orderRepositoryMock
                 .Setup(o => o.FindOrderByIdIncludeOrderItemAsync(orderId, It.IsAny<CancellationToken>()))
@@ -741,28 +557,16 @@ namespace OrderService.UnitTests.Services
                 .Setup(o => o.SaveChangesAsync(It.IsAny<CancellationToken>()))
                 .Returns(Task.CompletedTask);
 
-            mapperMock
-                .Setup(m => m.Map<OrderDto>(order))
-                .Returns(expectedDto);
-
-            OrderServiceService service = new(
-                orderRepositoryMock.Object,
-                mapperMock.Object,
-                new Mock<ILogger<OrderServiceService>>().Object,
-                publishEndpointMock.Object,
-                deliveryReadClientMock.Object,
-                new Mock<IPaymentReadClient>().Object
-            );
-
+            var service = CreateService(orderRepositoryMock, publishEndpointMock, deliveryReadClientMock, paymentReadClientMock);
 
             OrderDto? result = await service.ChangeOrderStatusAsync(orderId, changeDto, It.IsAny<CancellationToken>());
 
-            result.Should().BeEquivalentTo(expectedDto);
+            result.Should().NotBeNull();
+            result!.Status.Should().Be(OrderStatus.Rejected);
 
             publishEndpointMock.Verify(p => p.Publish(It.IsAny<OrderStatusChangedEvent>(), It.IsAny<CancellationToken>()), Times.Once);
             deliveryReadClientMock.Verify(d => d.GetDeliveryStatusByOrderIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
         }
-
 
 
         [Fact]
@@ -774,22 +578,14 @@ namespace OrderService.UnitTests.Services
 
             Mock<IOrderRepository> orderRepositoryMock = new();
             Mock<IPublishEndpoint> publishEndpointMock = new();
-            Mock<IMapper> mapperMock = new();
             Mock<IDeliveryReadClient> deliveryReadClientMock = new();
+            Mock<IPaymentReadClient> paymentReadClientMock = new();
 
             orderRepositoryMock
                 .Setup(o => o.FindOrderByIdIncludeOrderItemAsync(orderId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Order?)null);
 
-            OrderServiceService service = new(
-                orderRepositoryMock.Object,
-                mapperMock.Object,
-                new Mock<ILogger<OrderServiceService>>().Object,
-                publishEndpointMock.Object,
-                deliveryReadClientMock.Object,
-                new Mock<IPaymentReadClient>().Object
-            );
-
+            var service = CreateService(orderRepositoryMock, publishEndpointMock, deliveryReadClientMock, paymentReadClientMock);
 
             OrderDto? result = await service.ChangeOrderStatusAsync(orderId, changeDto, It.IsAny<CancellationToken>());
 
@@ -798,38 +594,27 @@ namespace OrderService.UnitTests.Services
             publishEndpointMock.Verify(p => p.Publish(It.IsAny<OrderStatusChangedEvent>(), It.IsAny<CancellationToken>()), Times.Never);
             orderRepositoryMock.Verify(o => o.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
             deliveryReadClientMock.Verify(d => d.GetDeliveryStatusByOrderIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
-            mapperMock.Verify(m => m.Map<OrderDto>(It.IsAny<Order>()), Times.Never);
         }
-
 
 
         [Fact]
         [Trait("Category", "Unit")]
         public async Task ChangeOrderStatusAsync_ReturnsNull_WhenInvalidTransition()
         {
-            Guid orderId = Guid.NewGuid();
-            ChangeOrderStatusDto changeDto = new() { Status = OrderStatus.Shipped };
-
-            Order order = new() { Id = orderId, Status = OrderStatus.Created, UserId = Guid.NewGuid() };
+            Order order = Order.Create(Guid.NewGuid(), null); // Created
+            Guid orderId = order.Id;
+            ChangeOrderStatusDto changeDto = new() { Status = OrderStatus.Shipped }; // Created -> Shipped je invalid
 
             Mock<IOrderRepository> orderRepositoryMock = new();
             Mock<IPublishEndpoint> publishEndpointMock = new();
-            Mock<IMapper> mapperMock = new();
             Mock<IDeliveryReadClient> deliveryReadClientMock = new();
+            Mock<IPaymentReadClient> paymentReadClientMock = new();
 
             orderRepositoryMock
                 .Setup(o => o.FindOrderByIdIncludeOrderItemAsync(orderId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(order);
 
-            OrderServiceService service = new(
-                orderRepositoryMock.Object,
-                mapperMock.Object,
-                new Mock<ILogger<OrderServiceService>>().Object,
-                publishEndpointMock.Object,
-                deliveryReadClientMock.Object,
-                new Mock<IPaymentReadClient>().Object
-            );
-
+            var service = CreateService(orderRepositoryMock, publishEndpointMock, deliveryReadClientMock, paymentReadClientMock);
 
             OrderDto? result = await service.ChangeOrderStatusAsync(orderId, changeDto, It.IsAny<CancellationToken>());
 
@@ -838,24 +623,25 @@ namespace OrderService.UnitTests.Services
             publishEndpointMock.Verify(p => p.Publish(It.IsAny<OrderStatusChangedEvent>(), It.IsAny<CancellationToken>()), Times.Never);
             orderRepositoryMock.Verify(o => o.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
             deliveryReadClientMock.Verify(d => d.GetDeliveryStatusByOrderIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
-            mapperMock.Verify(m => m.Map<OrderDto>(It.IsAny<Order>()), Times.Never);
         }
-
 
 
         [Fact]
         [Trait("Category", "Unit")]
         public async Task ChangeOrderStatusAsync_ReturnsNull_WhenCompletingAndDeliveryNotFound()
         {
-            Guid orderId = Guid.NewGuid();
+            Order order = Order.Create(Guid.NewGuid(), null);
+            order.ChangeStatus(OrderStatus.Paid);
+            order.ChangeStatus(OrderStatus.Accepted);
+            order.ChangeStatus(OrderStatus.Shipped);
+            order.PopDomainEvents();
+            Guid orderId = order.Id;
             ChangeOrderStatusDto changeDto = new() { Status = OrderStatus.Completed };
-
-            Order order = new() { Id = orderId, Status = OrderStatus.Shipped, UserId = Guid.NewGuid() };
 
             Mock<IOrderRepository> orderRepositoryMock = new();
             Mock<IPublishEndpoint> publishEndpointMock = new();
-            Mock<IMapper> mapperMock = new();
             Mock<IDeliveryReadClient> deliveryReadClientMock = new();
+            Mock<IPaymentReadClient> paymentReadClientMock = new();
 
             orderRepositoryMock
                 .Setup(o => o.FindOrderByIdIncludeOrderItemAsync(orderId, It.IsAny<CancellationToken>()))
@@ -865,15 +651,7 @@ namespace OrderService.UnitTests.Services
                 .Setup(d => d.GetDeliveryStatusByOrderIdAsync(orderId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync((DeliveryStatusContract?)null);
 
-            OrderServiceService service = new(
-                orderRepositoryMock.Object,
-                mapperMock.Object,
-                new Mock<ILogger<OrderServiceService>>().Object,
-                publishEndpointMock.Object,
-                deliveryReadClientMock.Object,
-                new Mock<IPaymentReadClient>().Object
-            );
-
+            var service = CreateService(orderRepositoryMock, publishEndpointMock, deliveryReadClientMock, paymentReadClientMock);
 
             OrderDto? result = await service.ChangeOrderStatusAsync(orderId, changeDto, It.IsAny<CancellationToken>());
 
@@ -881,24 +659,25 @@ namespace OrderService.UnitTests.Services
 
             orderRepositoryMock.Verify(o => o.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
             publishEndpointMock.Verify(p => p.Publish(It.IsAny<OrderStatusChangedEvent>(), It.IsAny<CancellationToken>()), Times.Never);
-            mapperMock.Verify(m => m.Map<OrderDto>(It.IsAny<Order>()), Times.Never);
         }
-
 
 
         [Fact]
         [Trait("Category", "Unit")]
         public async Task ChangeOrderStatusAsync_ReturnsNull_WhenCompletingAndDeliveryNotDelivered()
         {
-            Guid orderId = Guid.NewGuid();
+            Order order = Order.Create(Guid.NewGuid(), null);
+            order.ChangeStatus(OrderStatus.Paid);
+            order.ChangeStatus(OrderStatus.Accepted);
+            order.ChangeStatus(OrderStatus.Shipped);
+            order.PopDomainEvents();
+            Guid orderId = order.Id;
             ChangeOrderStatusDto changeDto = new() { Status = OrderStatus.Completed };
-
-            Order order = new() { Id = orderId, Status = OrderStatus.Shipped, UserId = Guid.NewGuid() };
 
             Mock<IOrderRepository> orderRepositoryMock = new();
             Mock<IPublishEndpoint> publishEndpointMock = new();
-            Mock<IMapper> mapperMock = new();
             Mock<IDeliveryReadClient> deliveryReadClientMock = new();
+            Mock<IPaymentReadClient> paymentReadClientMock = new();
 
             orderRepositoryMock
                 .Setup(o => o.FindOrderByIdIncludeOrderItemAsync(orderId, It.IsAny<CancellationToken>()))
@@ -908,15 +687,7 @@ namespace OrderService.UnitTests.Services
                 .Setup(d => d.GetDeliveryStatusByOrderIdAsync(orderId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(DeliveryStatusContract.InProgress);
 
-            OrderServiceService service = new(
-                orderRepositoryMock.Object,
-                mapperMock.Object,
-                new Mock<ILogger<OrderServiceService>>().Object,
-                publishEndpointMock.Object,
-                deliveryReadClientMock.Object,
-                new Mock<IPaymentReadClient>().Object
-            );
-
+            var service = CreateService(orderRepositoryMock, publishEndpointMock, deliveryReadClientMock, paymentReadClientMock);
 
             OrderDto? result = await service.ChangeOrderStatusAsync(orderId, changeDto, It.IsAny<CancellationToken>());
 
@@ -924,9 +695,7 @@ namespace OrderService.UnitTests.Services
 
             orderRepositoryMock.Verify(o => o.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
             publishEndpointMock.Verify(p => p.Publish(It.IsAny<OrderStatusChangedEvent>(), It.IsAny<CancellationToken>()), Times.Never);
-            mapperMock.Verify(m => m.Map<OrderDto>(It.IsAny<Order>()), Times.Never);
         }
-
 
 
         [Fact]
@@ -948,37 +717,23 @@ namespace OrderService.UnitTests.Services
                 City = "Prague",
                 PostalCode = "12000",
                 State = "CZ",
-                Items = [new() { ProductId = Guid.NewGuid(), Quantity = 2 }]
+                Items = [new() { ProductId = Guid.NewGuid(), ProductName = "iPhone 16", UnitPrice = 1999, Quantity = 1 }]
             };
-
-            Order createdOrder = new()
-            {
-                Id = Guid.NewGuid(),
-                UserId = userId,
-                TotalPrice = createDto.TotalPrice,
-                Status = OrderStatus.Created,
-                CreatedAt = DateTime.UtcNow,
-                Items = []
-            };
-
-            List<OrderItem> mappedItems = [new() { Id = Guid.NewGuid(), ProductId = createDto.Items[0].ProductId, Quantity = createDto.Items[0].Quantity, Order = createdOrder }];
-            createdOrder.Items = mappedItems;
 
             Guid createdDeliveryId = Guid.NewGuid();
 
             Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
             Mock<IPublishEndpoint> publishEndpointMock = new();
             Mock<IDeliveryReadClient> deliveryReadClientMock = new();
             Mock<IPaymentReadClient> paymentReadClientMock = new();
 
-            mapperMock
-                .Setup(m => m.Map<List<OrderItem>>(createDto.Items))
-                .Returns(mappedItems);
+            orderRepositoryMock
+                .Setup(o => o.AddAsync(It.IsAny<Order>(), It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
 
             orderRepositoryMock
-                .Setup(o => o.InsertAsync(It.IsAny<Order>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(createdOrder);
+                .Setup(o => o.SaveChangesAsync(It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
 
             deliveryReadClientMock
                 .Setup(d => d.CreateDeliveryAsync(It.IsAny<CreateDeliveryDto>(), It.IsAny<CancellationToken>()))
@@ -986,33 +741,22 @@ namespace OrderService.UnitTests.Services
 
             paymentReadClientMock
                 .Setup(p => p.CreateCheckoutSessionAsync(It.IsAny<CreateCheckoutSessionRequestDto>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(It.IsAny<CreateCheckoutSessionResponseDto?>());
+                .ReturnsAsync(new CreateCheckoutSessionResponseDto { CheckoutUrl = "www.url.com" });
 
-
-            OrderServiceService service = new(
-                orderRepositoryMock.Object,
-                mapperMock.Object,
-                new Mock<ILogger<OrderServiceService>>().Object,
-                publishEndpointMock.Object,
-                deliveryReadClientMock.Object,
-                paymentReadClientMock.Object
-            );
-
+            var service = CreateService(orderRepositoryMock, publishEndpointMock, deliveryReadClientMock, paymentReadClientMock);
 
             CreateOrderFromCartResponseDto result = await service.CreateOrderAndDeliveryFromCartAsync(createDto, It.IsAny<CancellationToken>());
 
-            result.OrderId.Should().Be(createdOrder.Id);
             result.DeliveryId.Should().Be(createdDeliveryId);
+            result.CheckoutUrl.Should().Be("www.url.com");
 
-            mapperMock.Verify(m => m.Map<List<OrderItem>>(createDto.Items), Times.Once);
-            orderRepositoryMock.Verify(o => o.InsertAsync(It.IsAny<Order>(), It.IsAny<CancellationToken>()), Times.Once);
+            orderRepositoryMock.Verify(o => o.AddAsync(It.IsAny<Order>(), It.IsAny<CancellationToken>()), Times.Once);
+            orderRepositoryMock.Verify(o => o.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
             deliveryReadClientMock.Verify(d => d.CreateDeliveryAsync(It.IsAny<CreateDeliveryDto>(), It.IsAny<CancellationToken>()), Times.Once);
             publishEndpointMock.Verify(p => p.Publish(It.IsAny<OrderCreatedEvent>(), It.IsAny<CancellationToken>()), Times.Once);
             publishEndpointMock.Verify(p => p.Publish(It.IsAny<OrderItemsReservedEvent>(), It.IsAny<CancellationToken>()), Times.Once);
             paymentReadClientMock.Verify(p => p.CreateCheckoutSessionAsync(It.IsAny<CreateCheckoutSessionRequestDto>(), It.IsAny<CancellationToken>()), Times.Once);
-            orderRepositoryMock.Verify(o => o.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
         }
-
 
 
         [Fact]
@@ -1034,36 +778,17 @@ namespace OrderService.UnitTests.Services
                 City = "Prague",
                 PostalCode = "12000",
                 State = "CZ",
-                Items = [new() { ProductId = Guid.NewGuid(), Quantity = 2 }]
+                Items = [new() { ProductId = Guid.NewGuid(), ProductName = "iPhone 16", UnitPrice = 1999, Quantity = 1 }]
             };
-
-            Order createdOrder = new()
-            {
-                Id = Guid.NewGuid(),
-                UserId = userId,
-                TotalPrice = createDto.TotalPrice,
-                Status = OrderStatus.Created,
-                CreatedAt = DateTime.UtcNow,
-                Items = []
-            };
-
-            List<OrderItem> mappedItems = [new() { Id = Guid.NewGuid(), ProductId = createDto.Items[0].ProductId, Quantity = createDto.Items[0].Quantity, Order = createdOrder }];
-            createdOrder.Items = mappedItems;
 
             Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
             Mock<IPublishEndpoint> publishEndpointMock = new();
             Mock<IDeliveryReadClient> deliveryReadClientMock = new();
             Mock<IPaymentReadClient> paymentReadClientMock = new();
 
-
-            mapperMock
-                .Setup(m => m.Map<List<OrderItem>>(createDto.Items))
-                .Returns(mappedItems);
-
             orderRepositoryMock
-                .Setup(o => o.InsertAsync(It.IsAny<Order>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(createdOrder);
+                .Setup(o => o.AddAsync(It.IsAny<Order>(), It.IsAny<CancellationToken>()))
+                .Returns(Task.CompletedTask);
 
             orderRepositoryMock
                 .Setup(o => o.SaveChangesAsync(It.IsAny<CancellationToken>()))
@@ -1075,45 +800,34 @@ namespace OrderService.UnitTests.Services
 
             paymentReadClientMock
                 .Setup(p => p.CreateCheckoutSessionAsync(It.IsAny<CreateCheckoutSessionRequestDto>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(It.IsAny<CreateCheckoutSessionResponseDto?>());
+                .ReturnsAsync((CreateCheckoutSessionResponseDto?)null);
 
-            OrderServiceService service = new(
-                orderRepositoryMock.Object,
-                mapperMock.Object,
-                new Mock<ILogger<OrderServiceService>>().Object,
-                publishEndpointMock.Object,
-                deliveryReadClientMock.Object,
-                paymentReadClientMock.Object
-            );
-
+            var service = CreateService(orderRepositoryMock, publishEndpointMock, deliveryReadClientMock, paymentReadClientMock);
 
             CreateOrderFromCartResponseDto result = await service.CreateOrderAndDeliveryFromCartAsync(createDto, It.IsAny<CancellationToken>());
 
-            result.OrderId.Should().Be(createdOrder.Id);
             result.DeliveryId.Should().BeNull();
 
-            orderRepositoryMock.Verify(o => o.InsertAsync(It.IsAny<Order>(), It.IsAny<CancellationToken>()), Times.Once);
-            orderRepositoryMock.Verify(o => o.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+            orderRepositoryMock.Verify(o => o.AddAsync(It.IsAny<Order>(), It.IsAny<CancellationToken>()), Times.Once);
+            orderRepositoryMock.Verify(o => o.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Exactly(2));
+            deliveryReadClientMock.Verify(d => d.CreateDeliveryAsync(It.IsAny<CreateDeliveryDto>(), It.IsAny<CancellationToken>()), Times.Once);
             publishEndpointMock.Verify(p => p.Publish(It.IsAny<OrderCreatedEvent>(), It.IsAny<CancellationToken>()), Times.Once);
             publishEndpointMock.Verify(p => p.Publish(It.IsAny<OrderItemsReservedEvent>(), It.IsAny<CancellationToken>()), Times.Once);
-            deliveryReadClientMock.Verify(d => d.CreateDeliveryAsync(It.IsAny<CreateDeliveryDto>(), It.IsAny<CancellationToken>()), Times.Once);
-            paymentReadClientMock.Verify(p => p.CreateCheckoutSessionAsync(It.IsAny<CreateCheckoutSessionRequestDto>(), It.IsAny<CancellationToken>()), Times.Once);
         }
-
 
 
         [Fact]
         [Trait("Category", "Unit")]
         public async Task ChangeInternalOrderStatusAsync_ReturnsOrderDto_WhenExists()
         {
-            Guid orderId = Guid.NewGuid();
+            Order order = Order.Create(Guid.NewGuid(), null);
+            Guid orderId = order.Id;
             ChangeInternalOrderStatusDto changeDto = new() { InternalStatus = InternalOrderStatus.DeliveryFaild };
 
-            Order order = new() { Id = orderId, InternalStatus = InternalOrderStatus.None, UpdatedAt = DateTime.UtcNow };
-            OrderDto expectedDto = new() { Id = orderId, UpdatedAt = order.UpdatedAt };
-
             Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
+            Mock<IPublishEndpoint> publishEndpointMock = new();
+            Mock<IDeliveryReadClient> deliveryReadClientMock = new();
+            Mock<IPaymentReadClient> paymentReadClientMock = new();
 
             orderRepositoryMock
                 .Setup(o => o.FindByIdAsync(orderId, It.IsAny<CancellationToken>()))
@@ -1123,29 +837,15 @@ namespace OrderService.UnitTests.Services
                 .Setup(o => o.SaveChangesAsync(It.IsAny<CancellationToken>()))
                 .Returns(Task.CompletedTask);
 
-            mapperMock
-                .Setup(m => m.Map<OrderDto>(order))
-                .Returns(expectedDto);
-
-            OrderServiceService service = new(
-                orderRepositoryMock.Object,
-                mapperMock.Object,
-                new Mock<ILogger<OrderServiceService>>().Object,
-                new Mock<IPublishEndpoint>().Object,
-                new Mock<IDeliveryReadClient>().Object,
-                new Mock<IPaymentReadClient>().Object
-            );
-
+            var service = CreateService(orderRepositoryMock, publishEndpointMock, deliveryReadClientMock, paymentReadClientMock);
 
             OrderDto? result = await service.ChangeInternalOrderStatusAsync(orderId, changeDto, It.IsAny<CancellationToken>());
 
-            result.Should().BeEquivalentTo(expectedDto);
+            result.Should().NotBeNull();
 
             orderRepositoryMock.Verify(o => o.FindByIdAsync(orderId, It.IsAny<CancellationToken>()), Times.Once);
             orderRepositoryMock.Verify(o => o.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<OrderDto>(order), Times.Once);
         }
-
 
 
         [Fact]
@@ -1156,21 +856,15 @@ namespace OrderService.UnitTests.Services
             ChangeInternalOrderStatusDto changeDto = new() { InternalStatus = InternalOrderStatus.DeliveryFaild };
 
             Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
+            Mock<IPublishEndpoint> publishEndpointMock = new();
+            Mock<IDeliveryReadClient> deliveryReadClientMock = new();
+            Mock<IPaymentReadClient> paymentReadClientMock = new();
 
             orderRepositoryMock
                 .Setup(o => o.FindByIdAsync(orderId, It.IsAny<CancellationToken>()))
                 .ReturnsAsync((Order?)null);
 
-            OrderServiceService service = new(
-                orderRepositoryMock.Object,
-                mapperMock.Object,
-                new Mock<ILogger<OrderServiceService>>().Object,
-                new Mock<IPublishEndpoint>().Object,
-                new Mock<IDeliveryReadClient>().Object,
-                new Mock<IPaymentReadClient>().Object
-            );
-
+            var service = CreateService(orderRepositoryMock, publishEndpointMock, deliveryReadClientMock, paymentReadClientMock);
 
             OrderDto? result = await service.ChangeInternalOrderStatusAsync(orderId, changeDto, It.IsAny<CancellationToken>());
 
@@ -1178,9 +872,7 @@ namespace OrderService.UnitTests.Services
 
             orderRepositoryMock.Verify(o => o.FindByIdAsync(orderId, It.IsAny<CancellationToken>()), Times.Once);
             orderRepositoryMock.Verify(o => o.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
-            mapperMock.Verify(m => m.Map<OrderDto>(It.IsAny<Order>()), Times.Never);
         }
-
 
 
         [Fact]
@@ -1189,84 +881,49 @@ namespace OrderService.UnitTests.Services
         {
             List<Order> orders =
             [
-                new() { Id = Guid.NewGuid(), InternalStatus = InternalOrderStatus.DeliveryFaild },
-                new() { Id = Guid.NewGuid(), InternalStatus = InternalOrderStatus.DeliveryFaild }
-            ];
-
-            List<OrderDto> expectedDto =
-            [
-                new() { Id = orders[0].Id },
-                new() { Id = orders[1].Id }
+                Order.Create(Guid.NewGuid(), null),
+                Order.Create(Guid.NewGuid(), null)
             ];
 
             Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
+            Mock<IPublishEndpoint> publishEndpointMock = new();
+            Mock<IDeliveryReadClient> deliveryReadClientMock = new();
+            Mock<IPaymentReadClient> paymentReadClientMock = new();
 
             orderRepositoryMock
                 .Setup(o => o.GetAllOrderStatusWithDeliveryFaildInternalStatus(It.IsAny<CancellationToken>()))
                 .ReturnsAsync(orders);
 
-            mapperMock
-                .Setup(m => m.Map<List<OrderDto>>(orders))
-                .Returns(expectedDto);
-
-            OrderServiceService service = new(
-                orderRepositoryMock.Object,
-                mapperMock.Object,
-                new Mock<ILogger<OrderServiceService>>().Object,
-                new Mock<IPublishEndpoint>().Object,
-                new Mock<IDeliveryReadClient>().Object,
-                new Mock<IPaymentReadClient>().Object
-            );
-
+            var service = CreateService(orderRepositoryMock, publishEndpointMock, deliveryReadClientMock, paymentReadClientMock);
 
             IReadOnlyList<OrderDto> result = await service.GetAllOrdersWithDeliveryFaildInternalStatusAsync(It.IsAny<CancellationToken>());
 
-            result.Should().BeEquivalentTo(expectedDto);
+            result.Should().HaveCount(2);
 
             orderRepositoryMock.Verify(o => o.GetAllOrderStatusWithDeliveryFaildInternalStatus(It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<List<OrderDto>>(orders), Times.Once);
         }
-
 
 
         [Fact]
         [Trait("Category", "Unit")]
         public async Task GetAllOrdersWithDeliveryFaildInternalStatusAsync_ReturnsEmptyList_WhenNotExists()
         {
-            List<Order> orders = [];
-            List<OrderDto> expectedDto = [];
-
             Mock<IOrderRepository> orderRepositoryMock = new();
-            Mock<IMapper> mapperMock = new();
+            Mock<IPublishEndpoint> publishEndpointMock = new();
+            Mock<IDeliveryReadClient> deliveryReadClientMock = new();
+            Mock<IPaymentReadClient> paymentReadClientMock = new();
 
             orderRepositoryMock
                 .Setup(o => o.GetAllOrderStatusWithDeliveryFaildInternalStatus(It.IsAny<CancellationToken>()))
-                .ReturnsAsync(orders);
+                .ReturnsAsync([]);
 
-            mapperMock
-                .Setup(m => m.Map<List<OrderDto>>(orders))
-                .Returns(expectedDto);
-
-            OrderServiceService service = new(
-                orderRepositoryMock.Object,
-                mapperMock.Object,
-                new Mock<ILogger<OrderServiceService>>().Object,
-                new Mock<IPublishEndpoint>().Object,
-                new Mock<IDeliveryReadClient>().Object,
-                new Mock<IPaymentReadClient>().Object
-            );
-
+            var service = CreateService(orderRepositoryMock, publishEndpointMock, deliveryReadClientMock, paymentReadClientMock);
 
             IReadOnlyList<OrderDto> result = await service.GetAllOrdersWithDeliveryFaildInternalStatusAsync(It.IsAny<CancellationToken>());
 
-            result.Should().BeEquivalentTo(expectedDto);
+            result.Should().BeEmpty();
 
             orderRepositoryMock.Verify(o => o.GetAllOrderStatusWithDeliveryFaildInternalStatus(It.IsAny<CancellationToken>()), Times.Once);
-            mapperMock.Verify(m => m.Map<List<OrderDto>>(orders), Times.Once);
         }
-
-
-
     }
 }

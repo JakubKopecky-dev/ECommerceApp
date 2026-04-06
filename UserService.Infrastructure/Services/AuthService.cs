@@ -1,5 +1,4 @@
 ﻿using System.Security.Claims;
-using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using UserService.Application.DTOs.Auth;
@@ -11,11 +10,10 @@ using UserService.Infrastructure.Identity;
 
 namespace UserService.Infrastructure.Services
 {
-    public class AuthService(UserManager<ApplicationUser> userManager, IJwtTokenGenerator tokenGenerator, IMapper mapper, ILogger<AuthService> logger) : IAuthService
+    public class AuthService(UserManager<ApplicationUser> userManager, IJwtTokenGenerator tokenGenerator,  ILogger<AuthService> logger) : IAuthService
     {
         private readonly UserManager<ApplicationUser> _userManager = userManager;
         private readonly IJwtTokenGenerator _tokenGenerator = tokenGenerator;
-        private readonly IMapper _mapper = mapper;
         private readonly ILogger<AuthService> _logger = logger;
 
 
@@ -24,17 +22,8 @@ namespace UserService.Infrastructure.Services
         {
             _logger.LogInformation("Registering user. UserEmail: {Email}.", authRegisterDto.Email);
 
-            ApplicationUser newUser = new()
-            {
-                UserName = authRegisterDto.Email,
-                Email = authRegisterDto.Email,
-                FirstName = authRegisterDto.FirstName,
-                LastName = authRegisterDto.LastName,
-                Street = authRegisterDto.Street,
-                City = authRegisterDto.City,
-                PostalCode = authRegisterDto.PostalCode,
-                Country = authRegisterDto.Country
-            };
+            ApplicationUser newUser = ApplicationUser.Create(authRegisterDto.Email, authRegisterDto.FirstName, authRegisterDto.LastName,
+                authRegisterDto.PhoneNumber, authRegisterDto.Street, authRegisterDto.City, authRegisterDto.PostalCode, authRegisterDto.Country, false);
 
             var result = await _userManager.CreateAsync(newUser, authRegisterDto.Password);
 
@@ -43,13 +32,11 @@ namespace UserService.Infrastructure.Services
                 await _userManager.AddToRoleAsync(newUser, UserRoles.User);
 
                 IEnumerable<string> roles = await _userManager.GetRolesAsync(newUser);
-                string token = _tokenGenerator.GenerateToken(newUser.Id, newUser.Email, newUser.UserName, roles);
+                string token = _tokenGenerator.GenerateToken(newUser.Id, newUser.Email!, newUser.UserName!, roles);
 
                 _logger.LogInformation("User registred. UserEmail: {Email}, UserId: {Id}.", newUser.Email, newUser.Id);
 
-                UserDto userDto = _mapper.Map<UserDto>(newUser);
-
-                AuthResponseDto response = new() { User = userDto, Token = token };
+                AuthResponseDto response = new() { User = newUser.UserToUserDto(), Token = token };
 
                 return response;
             }
@@ -84,9 +71,8 @@ namespace UserService.Infrastructure.Services
 
             _logger.LogInformation("User successfully logged in. UserEmail: {Email}.", authLoginDto.Email);
 
-            UserDto userDto = _mapper.Map<UserDto>(user);
 
-            AuthResponseDto response = new() { User = userDto, Token = token };
+            AuthResponseDto response = new() { User = user.UserToUserDto(), Token = token };
 
             return response;
         }
@@ -97,7 +83,7 @@ namespace UserService.Infrastructure.Services
         {
             ApplicationUser? user = await _userManager.GetUserAsync(claimsPrincipal);
 
-            return user is not null ? _mapper.Map<UserDto>(user) : null;
+            return user?.UserToUserDto();
         }
 
 

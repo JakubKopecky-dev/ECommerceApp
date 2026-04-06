@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using ProductService.Application.DTOs.Brand;
 using ProductService.Application.Interfaces.Repositories;
 using ProductService.Application.Interfaces.Services;
@@ -7,12 +6,11 @@ using ProductService.Domain.Entities;
 
 namespace ProductService.Application.Services
 {
-    public class BrandService(IBrandRepository brandRepository, IProductRepository productRepository, IProductReviewRepository productReviewRepository, IMapper mapper, ILogger<BrandService> logger) : IBrandService
+    public class BrandService(IBrandRepository brandRepository, IProductRepository productRepository, IProductReviewRepository productReviewRepository, ILogger<BrandService> logger) : IBrandService
     {
         private readonly IBrandRepository _brandRepository = brandRepository;
         private readonly IProductRepository _productRepository = productRepository;
         private readonly IProductReviewRepository _productReviewRepository = productReviewRepository;
-        private readonly IMapper _mapper = mapper;
         private readonly ILogger<BrandService> _logger = logger;
 
 
@@ -24,7 +22,7 @@ namespace ProductService.Application.Services
             IReadOnlyList<Brand> brands = await _brandRepository.GetAllAsync(ct);
             _logger.LogInformation("Retrieved all brands. Count: {Count.}", brands.Count);
 
-            return _mapper.Map<List<BrandDto>>(brands);
+            return [.. brands.Select(x => x.BrandToBrandDto())];
         }
 
 
@@ -33,16 +31,13 @@ namespace ProductService.Application.Services
         {
             _logger.LogInformation("Retrieving brand. BrandId: {BrandId}.", brandId);
 
-            Brand? brand = await _brandRepository.FindByIdAsync(brandId,ct);
+            Brand? brand = await _brandRepository.FindByIdAsync(brandId, ct);
             if (brand is null)
-            {
                 _logger.LogWarning("Brand not found. BrandId: {BrandId}.", brandId);
-                return null;
-            }
+            else
+                _logger.LogInformation("Brand found. BrandId: {BrandId}.", brandId);
 
-            _logger.LogInformation("Brand found. BrandId: {BrandId}.", brandId);
-
-            return _mapper.Map<BrandDto>(brand);
+            return brand?.BrandToBrandDto();
         }
 
 
@@ -51,14 +46,13 @@ namespace ProductService.Application.Services
         {
             _logger.LogInformation("Creating new brand. Title: {Title}.", createDto.Title);
 
-            Brand brand = _mapper.Map<Brand>(createDto);
-            brand.Id = Guid.Empty;
-            brand.CreatedAt = DateTime.UtcNow;
+            Brand brand = Brand.Create(createDto.Title, createDto.Description);
 
-            Brand createdBrand = await _brandRepository.InsertAsync(brand,ct);
-            _logger.LogInformation("Brand created. BrandId: {BrandId}.", createdBrand.Id);
+            await _brandRepository.AddAsync(brand, ct);
+            await _brandRepository.SaveChangesAsync(ct);
+            _logger.LogInformation("Brand created. BrandId: {BrandId}.", brand.Id);
 
-            return _mapper.Map<BrandDto>(createdBrand);
+            return brand.BrandToBrandDto();
         }
 
 
@@ -67,26 +61,24 @@ namespace ProductService.Application.Services
         {
             _logger.LogInformation("Updating brand. BrandId: {BrandId}", brandId);
 
-            Brand? brandDb = await _brandRepository.FindByIdAsync(brandId, ct);
-            if (brandDb is null)
+            Brand? brand = await _brandRepository.FindByIdAsync(brandId, ct);
+            if (brand is null)
             {
                 _logger.LogWarning("Cannot update. Brand not found. BrandId: {BrandId}.", brandId);
                 return null;
             }
 
-            _mapper.Map<CreateUpdateBrandDto, Brand>(updateDto, brandDb);
-
-            brandDb.UpdatedAt = DateTime.UtcNow;
+            brand.Update(updateDto.Title, updateDto.Description);
 
             await _brandRepository.SaveChangesAsync(ct);
             _logger.LogInformation("Brand updated. BrandId: {BrandId}.", brandId);
 
-            return _mapper.Map<BrandDto>(brandDb);
+            return brand.BrandToBrandDto();
         }
 
 
 
-        public async Task<BrandDto?> DeleteBrandAsync(Guid brandId, CancellationToken ct = default)
+        public async Task<bool> DeleteBrandAsync(Guid brandId, CancellationToken ct = default)
         {
             _logger.LogInformation("Deleting brand. BrandId: {BrandId}.", brandId);
 
@@ -94,46 +86,15 @@ namespace ProductService.Application.Services
             if (brand is null)
             {
                 _logger.LogWarning("Cannot delete. Brand not foud. BrandId: {BrandId}.", brandId);
-                return null;
+                return false;
             }
 
-            BrandDto deletedBrand = _mapper.Map<BrandDto>(brand);
-
-            List<Product> products = [.. brand.Products];
-            List<ProductReview> reviews = [.. brand.Products.SelectMany(p => p.Reviews)];
-
-            if (products.Count > 0)
-            {
-                _logger.LogInformation("Deleting all related products before deleting brand. BrandId: {BrandId}, Product count: {Count}.", brandId, products.Count);
-                
-                if (reviews.Count > 0)
-                {
-                    _logger.LogInformation("Deleting all related reviews before deleting products. BrandId: {BrandId}, Product reviews count: {Count}.", brandId, reviews.Count);
-
-                    var deletedReviewTasks = reviews.Select(r => _productReviewRepository.DeleteAsync(r.Id,ct));
-                    await Task.WhenAll(deletedReviewTasks);
-                    _logger.LogInformation("All related reviews deleted.");
-                }
-
-
-                _logger.LogInformation("Clearing all related categories before deleting products.");
-
-                products.ForEach(p => p.Categories.Clear());
-                var updatedProductTasks = products.Select(p => _productRepository.UpdateAsync(p,ct));
-                await Task.WhenAll(updatedProductTasks);
-                _logger.LogInformation("All related categories cleared.");
-
-
-                var deletedProductTasks = products.Select(p => _productRepository.DeleteAsync(p.Id, ct));
-                await Task.WhenAll(deletedProductTasks);
-                _logger.LogInformation("All related products deleted.");
-            }
 
             _brandRepository.Remove(brand);
             await _brandRepository.SaveChangesAsync(ct);
             _logger.LogInformation("Brand deleted. BrandId: {BrandId}.", brandId);
 
-            return deletedBrand;
+            return true;
         }
 
 

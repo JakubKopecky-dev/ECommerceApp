@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using CartService.Application.DTOs.Cart;
+﻿using CartService.Application.DTOs.Cart;
 using CartService.Application.Interfaces.Repositories;
 using CartService.Application.Interfaces.Services;
 using Microsoft.Extensions.Logging;
@@ -12,10 +11,9 @@ using CartService.Domain.Entities;
 
 namespace CartService.Application.Services
 {
-    public class CartService(ICartRepository cartRepository, IMapper mapper, ILogger<CartService> logger, IProductReadClient productClient, IOrderReadClient orderClient) : ICartService
+    public class CartService(ICartRepository cartRepository, ILogger<CartService> logger, IProductReadClient productClient, IOrderReadClient orderClient) : ICartService
     {
         private readonly ICartRepository _cartRepository = cartRepository;
-        private readonly IMapper _mapper = mapper;
         private readonly ILogger<CartService> _logger = logger;
         private readonly IProductReadClient _productClient = productClient;
         private readonly IOrderReadClient _orderClient = orderClient;
@@ -42,28 +40,32 @@ namespace CartService.Application.Services
             {
                 _logger.LogInformation("Cart not found. Creating new cart for user. UserId: {UserId}.", userId);
 
-                Cart newCart = new() { Id = Guid.Empty, UserId = userId };
-                Cart createdCart = await _cartRepository.InsertAsync(newCart, ct);
-                _logger.LogInformation("New cart created. CartId: {CartId}.", createdCart.Id);
+                Cart newCart = Cart.Create(userId);
 
-                return _mapper.Map<CartExtendedDto>(createdCart);
+                await _cartRepository.AddAsync(newCart, ct);
+                await _cartRepository.SaveChangesAsync(ct);
+                _logger.LogInformation("New cart created. CartId: {CartId}.", newCart.Id);
+
+                return newCart.CartToCartExtendedDto();
             }
 
             _logger.LogInformation("Cart found. CartId: {CartId}, UserId: {UserId}.", cart.Id, userId);
 
-            return _mapper.Map<CartExtendedDto>(cart);
+            return cart.CartToCartExtendedDto();
         }
 
 
 
-        /// <summary>
-        /// Deletes the cart and its items associated with the specified user identifier.
-        /// </summary>
-        /// <param name="userId">The unique identifier of the user whose cart is to be deleted.</param>
-        /// <param name="ct">A cancellation token that can be used to cancel the asynchronous operation.</param>
-        /// <returns>A <see cref="CartDto"/> representing the deleted cart and its items, or <see langword="null"/> if no cart
-        /// exists for the specified user.</returns>
-        public async Task<CartDto?> DeleteCartByUserIdAsync(Guid userId, CancellationToken ct = default)
+       /// <summary>
+       /// Asynchronously deletes the shopping cart and its items for the specified user, if one exists.
+       /// </summary>
+       /// <remarks>If no cart exists for the specified user, the method returns <see langword="false"/>
+       /// and no action is taken.</remarks>
+       /// <param name="userId">The unique identifier of the user whose cart should be deleted.</param>
+       /// <param name="ct">A cancellation token that can be used to cancel the operation.</param>
+       /// <returns>A task that represents the asynchronous operation. The task result is <see langword="true"/> if a cart was
+       /// found and deleted; otherwise, <see langword="false"/>.</returns>
+        public async Task<bool> DeleteCartByUserIdAsync(Guid userId, CancellationToken ct = default)
         {
             _logger.LogInformation("Deleting cart. UserId: {UserId}.", userId);
 
@@ -71,21 +73,14 @@ namespace CartService.Application.Services
             if (cart is null)
             {
                 _logger.LogInformation("Cannot delete. Cart not found. UserId: {UserId}.", userId);
-                return null;
+                return false;
             }
-
-            CartDto deletedCart = new()
-            {
-                Id = cart.Id,
-                UserId = cart.UserId,
-                TotalPrice = cart.Items.Sum(i => i.UnitPrice * i.Quantity)
-            };
 
             _cartRepository.Remove(cart);
             await _cartRepository.SaveChangesAsync(ct);
             _logger.LogInformation("Deleted cart and its items. UserId: {UserId}.", userId);
 
-            return deletedCart;
+            return true;
         }
 
 
@@ -133,7 +128,7 @@ namespace CartService.Application.Services
             {
                 UserId = userId,
                 CourierId = cartCheckoutRequestDto.CourierId,
-                TotalPrice = cart.Items.Sum(i => i.UnitPrice * i.Quantity),
+                TotalPrice = cart.TotalPrice,
                 Note = cartCheckoutRequestDto.Note,
                 Email = cartCheckoutRequestDto.Email,
                 FirstName = cartCheckoutRequestDto.FirstName,

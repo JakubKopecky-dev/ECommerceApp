@@ -205,14 +205,14 @@ namespace UserService.UnitTests.Controllers
 
             userServiceMock
                 .Setup(u => u.DeleteUserAsync(userId))
-                .ReturnsAsync(expectedDto);
+                .ReturnsAsync(true);
 
             UserController controller = new(userServiceMock.Object);
 
                 
             var result = await controller.DeleteUser(userId);
 
-            (result as OkObjectResult)!.Value.Should().BeEquivalentTo(expectedDto);
+            result.Should().BeOfType<NoContentResult>();
 
             userServiceMock.Verify(u => u.DeleteUserAsync(userId), Times.Once);
         }
@@ -229,7 +229,7 @@ namespace UserService.UnitTests.Controllers
 
             userServiceMock
                 .Setup(u => u.DeleteUserAsync(userId))
-                .ReturnsAsync((UserDto?)null);
+                .ReturnsAsync(false);
 
             UserController controller = new(userServiceMock.Object);
 

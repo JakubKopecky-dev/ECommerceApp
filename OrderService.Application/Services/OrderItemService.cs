@@ -1,19 +1,14 @@
-﻿using AutoMapper;
-using MassTransit;
-using MassTransit.Transports;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using OrderService.Application.DTOs.OrderItem;
 using OrderService.Application.Interfaces.Repositories;
 using OrderService.Application.Interfaces.Services;
 using OrderService.Domain.Entities;
-using Shared.Contracts.Events;
 
 namespace OrderService.Application.Services
 {
-    public class OrderItemService(IOrderItemRepository orderItemRepository, IMapper mapper, ILogger<OrderItemService> logger) : IOrderItemService
+    public class OrderItemService(IOrderItemRepository orderItemRepository, ILogger<OrderItemService> logger) : IOrderItemService
     {
         private readonly IOrderItemRepository _orderItemRepository = orderItemRepository;
-        private readonly IMapper _mapper = mapper;
         private readonly ILogger<OrderItemService> _logger = logger;
 
 
@@ -25,7 +20,7 @@ namespace OrderService.Application.Services
             IReadOnlyList<OrderItem> orderItems = await _orderItemRepository.GetAllOrderItemsByOrderId(orderId,ct);
             _logger.LogInformation("Retrieved all orderItems. Count: {Count}, OrderId: {OrderId}.", orderItems.Count,orderId);
 
-            return _mapper.Map<List<OrderItemDto>>(orderItems);
+            return [..orderItems.Select(x => x.OrderItemToOrderItemDto())];
         }
 
 
@@ -42,7 +37,7 @@ namespace OrderService.Application.Services
             }
 
             _logger.LogInformation("OrderItem found. OrderItemId: {OrderItemId}.", orderItemId);
-            return _mapper.Map<OrderItemDto>(orderItem);
+            return orderItem.OrderItemToOrderItemDto();
         }
 
 
@@ -51,14 +46,13 @@ namespace OrderService.Application.Services
         {
             _logger.LogInformation("Creating new orderItem. ProductId: {ProductId}, OrderId: {OrderId}.", createDto.ProductId, createDto.OrderId);
 
-            OrderItem orderItem = _mapper.Map<OrderItem>(createDto);
-            orderItem.Id = Guid.Empty;
-            orderItem.CreatedAt = DateTime.UtcNow;
+            OrderItem orderItem = OrderItem.Create(createDto.ProductId, createDto.ProductName, createDto.UnitPrice, createDto.Quantity, createDto.OrderId);
 
-            OrderItem createdOrderItem = await _orderItemRepository.InsertAsync(orderItem, ct);
-            _logger.LogInformation("OrderItem created. OrderItemId: {OrderItemId}.",createdOrderItem.Id);
+             await _orderItemRepository.AddAsync(orderItem, ct);
+            await _orderItemRepository.SaveChangesAsync(ct);
+            _logger.LogInformation("OrderItem created. OrderItemId: {OrderItemId}.",orderItem.Id);
 
-            return _mapper.Map<OrderItemDto>(createdOrderItem);
+            return orderItem.OrderItemToOrderItemDto();
         }
 
 
@@ -74,18 +68,17 @@ namespace OrderService.Application.Services
                 return null;
             }
 
-            orderItem.Quantity = changeDto.Quantity;
-            orderItem.UpdatedAt = DateTime.UtcNow;
+            orderItem.ChangeQuantity(changeDto.Quantity);
 
             await _orderItemRepository.SaveChangesAsync(ct);
             _logger.LogInformation("OrderItem quantity changed. OrderItemId: {OrderItemId}.", orderItemId);
 
-            return _mapper.Map<OrderItemDto>(orderItem);
+            return orderItem.OrderItemToOrderItemDto();
         }
 
 
 
-        public async Task<OrderItemDto?> DeleteOrderItemAsync(Guid orderItemId, CancellationToken ct = default)
+        public async Task<bool> DeleteOrderItemAsync(Guid orderItemId, CancellationToken ct = default)
         {
             _logger.LogInformation("Deleting orderItem. OrderItemId: {OrderItemId}.", orderItemId);
 
@@ -93,16 +86,14 @@ namespace OrderService.Application.Services
             if (orderItem is null)
             {
                 _logger.LogWarning("Cannot delete. OrderItem not found. OrderItemId: {OrderItemId}.", orderItemId);
-                return null;
+                return false;
             }
-
-            OrderItemDto deletedOrderItem = _mapper.Map<OrderItemDto>(orderItem);
 
             _orderItemRepository.Remove(orderItem);
             await _orderItemRepository.SaveChangesAsync(ct);
             _logger.LogInformation("OrderItem deleted. OrderItemId: {OrderItemId}.", orderItemId);
 
-            return deletedOrderItem;
+            return true;
         }
 
 

@@ -243,24 +243,22 @@ namespace OrderService.UnitTests.Controllers
 
         [Fact]
         [Trait("Category", "Unit")]
-        public async Task DeleteOrder_ReturnsOk_WhenExists()
+        public async Task DeleteOrder_ReturnsNoContent_WhenExists()
         {
             Guid orderId = Guid.NewGuid();
-
-            OrderDto expectedDto = new() { Id = orderId };
 
             Mock<IOrderService> orderServiceMock = new();
 
             orderServiceMock
                 .Setup(o => o.DeleteOrderAsync(orderId, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(expectedDto);
+                .ReturnsAsync(true);
 
             OrderController controller = new(orderServiceMock.Object);
 
 
             var result = await controller.DeleteOrder(orderId, It.IsAny<CancellationToken>());
 
-            (result as OkObjectResult)!.Value.Should().BeEquivalentTo(expectedDto);
+            result.Should().BeOfType<NoContentResult>();
 
             orderServiceMock.Verify(o => o.DeleteOrderAsync(orderId, It.IsAny<CancellationToken>()), Times.Once);
         }
@@ -277,7 +275,7 @@ namespace OrderService.UnitTests.Controllers
 
             orderServiceMock
                 .Setup(o => o.DeleteOrderAsync(orderId, It.IsAny<CancellationToken>()))
-                .ReturnsAsync((OrderDto?)null);
+                .ReturnsAsync(false);
 
             OrderController controller = new(orderServiceMock.Object);
 

@@ -29,7 +29,6 @@ namespace NotificationService.Api.Consumers
                 UserId = message.UserId,
                 Title = "Delivery canceled",
                 Message = $"Your order #{message.OrderId} delivery was canceled.",
-                CreatedAt = DateTime.UtcNow,
                 Type = NotificationType.DeliveryStatusChanged
             };
 

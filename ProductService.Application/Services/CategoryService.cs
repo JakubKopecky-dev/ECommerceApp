@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
 using ProductService.Application.DTOs.Category;
 using ProductService.Application.Interfaces.Repositories;
 using ProductService.Application.Interfaces.Services;
@@ -7,10 +6,9 @@ using ProductService.Domain.Entities;
 
 namespace ProductService.Application.Services
 {
-    public class CategoryService(ICategoryRepository categoryRepository, IMapper mapper, ILogger<CategoryService> logger) : ICategoryService
+    public class CategoryService(ICategoryRepository categoryRepository, ILogger<CategoryService> logger) : ICategoryService
     {
         private readonly ICategoryRepository _categoryRepository = categoryRepository;
-        private readonly IMapper _mapper = mapper;
         private readonly ILogger<CategoryService> _logger = logger;
 
 
@@ -23,7 +21,7 @@ namespace ProductService.Application.Services
             IReadOnlyList<Category> categories = await _categoryRepository.GetAllAsync(ct);
             _logger.LogInformation("Retrieved all categories. Count: {Count}.", categories.Count);
 
-            return _mapper.Map<List<CategoryDto>>(categories);
+            return [.. categories.Select(x => x.CategoryToCategoryDto())];
         }
 
 
@@ -32,16 +30,13 @@ namespace ProductService.Application.Services
         {
             _logger.LogInformation("Retrieving category. CategoryId: {CategoryId}.", categoryId);
 
-            Category? category = await _categoryRepository.FindByIdAsync(categoryId,ct);
+            Category? category = await _categoryRepository.FindByIdAsync(categoryId, ct);
             if (category is null)
-            {
                 _logger.LogWarning("Category not found. CategoryId: {CategoryId}.", categoryId);
-                return null;
-            }
+            else
+                _logger.LogInformation("Category found. CategoryId: {CategoryId}.", categoryId);
 
-            _logger.LogInformation("Category found. CategoryId: {CategoryId}.", categoryId);
-
-            return _mapper.Map<CategoryDto>(category);
+            return category?.CategoryToCategoryDto();
         }
 
 
@@ -50,14 +45,14 @@ namespace ProductService.Application.Services
         {
             _logger.LogInformation("Creating new category. Title: {Title}.", createDto.Title);
 
-            Category category = _mapper.Map<Category>(createDto);
-            category.Id = Guid.Empty;
-            category.CreatedAt = DateTime.UtcNow;
+            Category category = Category.Create(createDto.Title);
 
-            Category createdCategory = await _categoryRepository.InsertAsync(category,ct);
-            _logger.LogInformation("Category created. CategoryId: {CategoryId}.", createdCategory.Id);
+            await _categoryRepository.AddAsync(category, ct);
+            await _categoryRepository.SaveChangesAsync(ct);
 
-            return _mapper.Map<CategoryDto>(createdCategory);
+            _logger.LogInformation("Category created. CategoryId: {CategoryId}.", category.Id);
+
+            return category.CategoryToCategoryDto();
         }
 
 
@@ -66,26 +61,24 @@ namespace ProductService.Application.Services
         {
             _logger.LogInformation("Updating category. CategoryId: {CategoryId}.", categoryId);
 
-            Category? categoryDb = await _categoryRepository.FindByIdAsync(categoryId, ct);
-            if (categoryDb is null)
+            Category? category = await _categoryRepository.FindByIdAsync(categoryId, ct);
+            if (category is null)
             {
                 _logger.LogWarning("Cannot update. Category not foud. CategoryId: {CategoryId}.", categoryId);
                 return null;
             }
 
-            _mapper.Map<CreateUpdateCategoryDto, Category>(updateDto, categoryDb);
-
-            categoryDb.UpdatedAt = DateTime.UtcNow;
+            category.Update(updateDto.Title);
 
             await _categoryRepository.SaveChangesAsync(ct);
             _logger.LogInformation("Category updated. CategoryId: {CategoryId}.", categoryId);
 
-            return _mapper.Map<CategoryDto>(categoryDb);
+            return category.CategoryToCategoryDto();
         }
 
 
 
-        public async Task<CategoryDto?> DeleteCategoryAsync(Guid categoryId, CancellationToken ct = default)
+        public async Task<bool> DeleteCategoryAsync(Guid categoryId, CancellationToken ct = default)
         {
             _logger.LogInformation("Deleting category. CategoryId: {CategoryId}.", categoryId);
 
@@ -93,20 +86,15 @@ namespace ProductService.Application.Services
             if (category is null)
             {
                 _logger.LogWarning("Cannot delete. Category not foud. CategoryId: {CategoryId}.", categoryId);
-                return null;
+                return false;
             }
 
-            CategoryDto deletedCategory = _mapper.Map<CategoryDto>(category);
-
-            _logger.LogInformation("Clearing all related products");
-
-            category.Products.Clear();
             _categoryRepository.Remove(category);
 
             await _categoryRepository.SaveChangesAsync(ct);
             _logger.LogInformation("Category deleted. CategoryId: {CategoryId}.", categoryId);
 
-            return deletedCategory;
+            return true;
         }
 
 
