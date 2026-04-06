@@ -9,7 +9,7 @@ All external traffic is routed through a centralized **API Gateway** (YARP Rever
 ## Tech Stack
 
 ### Back-end
-- .NET 9  
+- .NET 10
 - SignalR  
 - gRPC  
 - MassTransit, RabbitMQ, Azure Service Bus  
@@ -70,7 +70,7 @@ The project includes a fully automated CI/CD pipeline using **GitHub Actions**:
 ### Tests
 - Contains positive and negative xUnit tests for all services and controllers
 - All tests are also executed automatically in the CI/CD pipeline
-- **301 xUnit tests in total**  
+- **302 xUnit tests in total**  
 - Integration tests cover critical application flows  
 - **29 integration tests in total**  
 
@@ -86,7 +86,7 @@ The project includes a fully automated CI/CD pipeline using **GitHub Actions**:
 - Order creation and delivery handling  
 - Order and delivery status management  
 - Real-time notifications when an order is created, status changes, or delivery is canceled (SignalR)  
-- Automated tests (301 xUnit, 29 integration)  
+- Automated tests (302 xUnit, 29 integration)  
 
 ## Stripe
 - Integration with the Stripe payment service  
@@ -101,7 +101,7 @@ The project includes a fully automated CI/CD pipeline using **GitHub Actions**:
 ## Running the Project Locally
 
 ### Requirements
-- .NET 9 SDK  
+- .NET 10 SDK  
 - Docker + Docker Compose  
 - SQL Server database (recommended to run in Docker)  
 
