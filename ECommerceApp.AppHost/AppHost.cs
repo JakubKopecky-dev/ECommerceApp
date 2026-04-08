@@ -27,7 +27,7 @@ var sql = builder.AddSqlServer("sqldb")
     .WithEndpoint("sql", e =>
     {
         e.Port = 1433;
-        e.TargetPort = 0; 
+        e.TargetPort = 1433; 
     })
     .WithLifetime(ContainerLifetime.Persistent);
 

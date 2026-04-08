@@ -10,9 +10,9 @@ namespace ECommerceApp.AppHost
             this IResourceBuilder<ProjectResource> service)
         {
             return service
-                .WithEnvironment("Jwt__Key", "a851091109b0dad8b3834341577e990f")
-                .WithEnvironment("Jwt__Issuer", "ECommerceApp.AuthService")
-                .WithEnvironment("Jwt__Audience", "ECommerceApp.Frontend");
+            .WithEnvironment("Jwt__PublicKey", "-----BEGIN PUBLIC KEY----- MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAElaSojkTx7x9ud4Q6H8RnTP22yNRs tksLUL6MXApsm7J/lC4AdCNYR422CnS3UUqpRPkxPESyULdl4Woc7bXKog== -----END PUBLIC KEY-----")
+            .WithEnvironment("Jwt__Issuer", "ECommerceApp.AuthService")
+            .WithEnvironment("Jwt__Audience", "ECommerceApp.Frontend");
         }
 
         public static IResourceBuilder<ProjectResource> WithRabbitEnv(
