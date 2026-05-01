@@ -29,6 +29,18 @@ namespace UserService.Api.DependencyInjection
                     };
                     return Task.CompletedTask;
                 });
+
+                options.AddOperationTransformer((operation, context, cancellationToken) =>
+                {
+                    operation.Security ??= [];
+
+                    operation.Security.Add(new OpenApiSecurityRequirement
+                    {
+                        [new OpenApiSecuritySchemeReference("Bearer", context.Document)] = []
+                    });
+
+                    return Task.CompletedTask;
+                });
             });
             return services;
         }
